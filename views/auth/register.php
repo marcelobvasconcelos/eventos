@@ -20,13 +20,7 @@ ob_start();
         <label for="password" class="form-label">Senha</label>
         <input type="password" name="password" id="password" class="form-control" required>
     </div>
-    <div class="col-md-6">
-        <label for="role" class="form-label">Função</label>
-        <select name="role" id="role" class="form-select">
-            <option value="user">Usuário</option>
-            <option value="admin">Administrador</option>
-        </select>
-    </div>
+
     <div class="col-12">
         <button type="submit" class="btn btn-primary">Registrar</button>
     </div>

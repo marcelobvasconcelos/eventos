@@ -30,6 +30,7 @@ ob_start();
                         <th class="ps-4">Nome</th>
                         <th>Email</th>
                         <th>Função</th>
+                        <th>Status</th>
                         <th class="text-end pe-4">Ações</th>
                     </tr>
                 </thead>
@@ -48,7 +49,30 @@ ob_start();
                                     </select>
                                 </form>
                             </td>
+                            <td>
+                                <?php 
+                                    $statusClass = 'bg-secondary';
+                                    $statusText = $user['status'] ?? 'N/A';
+                                    if ($statusText === 'Ativo') $statusClass = 'bg-success';
+                                    elseif ($statusText === 'Pendente') $statusClass = 'bg-warning text-dark';
+                                    elseif ($statusText === 'Inativo') $statusClass = 'bg-danger';
+                                ?>
+                                <span class="badge <?php echo $statusClass; ?> rounded-pill"><?php echo htmlspecialchars($statusText); ?></span>
+                            </td>
                             <td class="text-end pe-4">
+                                <?php if (($user['status'] ?? '') === 'Pendente'): ?>
+                                    <form action="/eventos/admin/approveUser" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                        <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                        <button type="submit" class="btn btn-sm btn-success rounded-circle me-1" title="Aprovar"><i class="fas fa-check"></i></button>
+                                    </form>
+                                    <form action="/eventos/admin/rejectUser" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                                        <input type="hidden" name="user_id" value="<?php echo $user['id']; ?>">
+                                        <button type="submit" class="btn btn-sm btn-danger rounded-circle me-1" title="Rejeitar"><i class="fas fa-times"></i></button>
+                                    </form>
+                                <?php endif; ?>
+
                                 <button type="button" class="btn btn-sm btn-outline-primary rounded-circle me-1" 
                                         data-bs-toggle="modal" 
                                         data-bs-target="#editUserModal" 

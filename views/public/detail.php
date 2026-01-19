@@ -10,6 +10,16 @@ ob_start();
                 <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 70px; height: 70px;">
                     <i class="fas fa-calendar-alt fa-2x"></i>
                 </div>
+                <?php
+                    $isPublic = $event['is_public'] ?? 1;
+                    $isAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
+                    $isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == ($event['created_by'] ?? 0);
+                    
+                    if (!$isPublic && !$isAdmin && !$isOwner) {
+                        $event['name'] = "Agendamento Privado";
+                        $event['description'] = "Detalhes restritos ao responsável.";
+                    }
+                ?>
                 <h1 class="fw-bold text-primary mb-1"><?php echo htmlspecialchars($event['name']); ?></h1>
                 <p class="text-muted"><i class="fas fa-tag me-1"></i><?php echo htmlspecialchars($event['category_name'] ?? 'Sem Categoria'); ?></p>
             </div>

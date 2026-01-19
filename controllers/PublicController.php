@@ -46,6 +46,20 @@ class PublicController {
         include __DIR__ . '/../views/public/calendar.php';
     }
 
+    public function day() {
+        $date = $_GET['date'] ?? date('Y-m-d');
+        
+        // Basic validation for date format YYYY-MM-DD
+        if (!preg_match("/^\d{4}-\d{2}-\d{2}$/", $date)) {
+            $date = date('Y-m-d');
+        }
+
+        $eventModel = new Event();
+        $events = $eventModel->getApprovedEventsByDate($date);
+
+        include __DIR__ . '/../views/public/day_timeline.php';
+    }
+
     public function detail() {
         $id = $_GET['id'] ?? 0;
         $eventModel = new Event();
@@ -73,6 +87,20 @@ class PublicController {
             if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
                 $errorMessages = 'Invalid CSRF token';
                 $csrf_token = Security::generateCsrfToken();
+                
+                // Fetch necessary data for re-render
+                $locationModel = new Location();
+                $categoryModel = new Category();
+                $assetModel = new Asset();
+                
+                // Use current time as default or try to rescue from POST if possible (logic simplified)
+                $startDateTime = date('Y-m-d H:i');
+                $endDateTime = date('Y-m-d H:i', strtotime('+1 hour'));
+
+                $locations = $locationModel->getLocationsWithAvailability($startDateTime, $endDateTime);
+                $categories = $categoryModel->getAllCategories();
+                $assets = $assetModel->getAllAssetsWithAvailability($startDateTime, $endDateTime);
+
                 include __DIR__ . '/../views/public/create.php';
                 return;
             }
@@ -136,14 +164,19 @@ class PublicController {
                 $assetModel = new Asset();
                 // Pass the proposed start and end times for availability check
                 $assets = $assetModel->getAllAssetsWithAvailability($startDateTime, $endDateTime);
+                
+                $csrf_token = Security::generateCsrfToken();
+                
                 include __DIR__ . '/../views/public/create.php';
                 return;
             }
 
 
+            $isPublic = isset($_POST['is_public']) ? (int)$_POST['is_public'] : 1;
+
             $eventModel = new Event();
             // Modified: Pass endDateTime to createEvent
-            $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id']);
+            $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic);
 
             // Handle asset loans
             $selectedAssets = $_POST['assets'] ?? [];

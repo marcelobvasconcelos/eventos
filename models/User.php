@@ -17,8 +17,9 @@ class User {
     public function register($name, $email, $password, $role = 'user') {
 
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-
-        $stmt = $this->pdo->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
+        // Default status is 'Pendente' as per DB default, but explicit here for clarity
+        // If it's the very first user, maybe make them admin/active? ignoring for now as directed.
+        $stmt = $this->pdo->prepare("INSERT INTO users (name, email, password, role, status) VALUES (?, ?, ?, ?, 'Pendente')");
 
         return $stmt->execute([$name, $email, $hashedPassword, $role]);
 
@@ -33,7 +34,10 @@ class User {
         $user = $stmt->fetch();
 
         if ($user && password_verify($password, $user['password'])) {
-
+            // Check status
+            if ($user['status'] !== 'Ativo') {
+                return 'pending_approval';
+            }
             return $user;
 
         }
@@ -56,7 +60,7 @@ class User {
 
     public function getAllUsers() {
 
-        $stmt = $this->pdo->prepare("SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC");
+        $stmt = $this->pdo->prepare("SELECT id, name, email, role, status, created_at FROM users ORDER BY created_at DESC");
 
         $stmt->execute();
 
@@ -70,6 +74,11 @@ class User {
 
         return $stmt->execute([$role, $userId]);
 
+    }
+
+    public function updateStatus($userId, $status) {
+        $stmt = $this->pdo->prepare("UPDATE users SET status = ? WHERE id = ?");
+        return $stmt->execute([$status, $userId]);
     }
 
     public function updateUser($userId, $name, $email) {

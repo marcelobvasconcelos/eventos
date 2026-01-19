@@ -156,6 +156,28 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
 
                     <div class="col-12">
+                        <label class="form-label fw-semibold text-secondary">Visibilidade do Evento</label>
+                        <div class="d-flex gap-3">
+                            <div class="form-check card-radio">
+                                <input class="form-check-input" type="radio" name="is_public" id="public_yes" value="1" <?php echo (!isset($_POST['is_public']) || $_POST['is_public'] == '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="public_yes">
+                                    <i class="fas fa-globe-americas me-2 text-primary"></i>
+                                    <strong>Público</strong>
+                                    <small class="d-block text-muted">Todos podem ver os detalhes (Título, Descrição, etc).</small>
+                                </label>
+                            </div>
+                            <div class="form-check card-radio">
+                                <input class="form-check-input" type="radio" name="is_public" id="public_no" value="0" <?php echo (isset($_POST['is_public']) && $_POST['is_public'] == '0') ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="public_no">
+                                    <i class="fas fa-lock me-2 text-danger"></i>
+                                    <strong>Privado</strong>
+                                    <small class="d-block text-muted">Apenas horário e local visíveis. Detalhes ocultos.</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
                         <label for="description" class="form-label fw-semibold text-secondary">Descrição Detalhada</label>
                         <textarea name="description" id="description" class="form-control bg-light" rows="4" placeholder="Descreva os detalhes do evento..." required><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
                     </div>

@@ -24,7 +24,11 @@ class AuthController {
             $userModel = new User();
             $user = $userModel->login($email, $password);
 
-            if ($user) {
+            if ($user === 'pending_approval') {
+                $error = 'Sua conta aguarda aprovação do administrador.';
+                $csrf_token = Security::generateCsrfToken();
+                include __DIR__ . '/../views/auth/login.php';
+            } elseif ($user) {
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_role'] = $user['role'];
                 $_SESSION['user_name'] = $user['name'];
@@ -36,7 +40,7 @@ class AuthController {
                 }
                 exit;
             } else {
-                $error = 'Invalid email or password';
+                $error = 'Email ou senha inválidos.';
                 $csrf_token = Security::generateCsrfToken();
                 include __DIR__ . '/../views/auth/login.php';
             }
@@ -63,7 +67,7 @@ class AuthController {
 
             $password = $_POST['password'] ?? '';
 
-            $role = $_POST['role'] ?? 'user';
+            $role = 'user';
 
             $userModel = new User();
 

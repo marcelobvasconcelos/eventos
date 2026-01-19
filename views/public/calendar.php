@@ -86,18 +86,27 @@ ob_start();
                             $currentDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
                             $todayClass = ($currentDate == date('Y-m-d')) ? 'bg-primary-subtle border-primary' : '';
                             
-                            echo '<td class="align-top p-2 ' . $todayClass . '" style="height: 120px;">';
+                            echo '<td class="align-top p-2 ' . $todayClass . '" style="height: 120px; cursor: pointer;" onclick="window.location.href=\'/eventos/public/day?date=' . $currentDate . '\'">';
                             echo '<div class="d-flex justify-content-between align-items-start">';
                             echo '<span class="fw-bold ' . ($currentDate == date('Y-m-d') ? 'text-primary' : 'text-secondary') . '">' . $day . '</span>';
-                            // Add button with tooltip
-                            echo '<a href="/eventos/public/create?date=' . $currentDate . 'T09:00" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" title="Adicionar evento"><i class="fas fa-plus-circle"></i></a>';
+                            // Add button with tooltip, clicking it should NOT trigger the row click
+                            echo '<a href="/eventos/public/create?date=' . $currentDate . 'T09:00" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" title="Adicionar evento" onclick="event.stopPropagation();"><i class="fas fa-plus-circle"></i></a>';
                             echo '</div>';
                             
                             if (isset($eventsByDate[$currentDate])) {
                                 echo '<div class="mt-2 d-grid gap-1">';
                                 foreach ($eventsByDate[$currentDate] as $event) {
-                                    echo '<a href="/eventos/public/detail?id=' . htmlspecialchars($event['id']) . '" class="badge bg-primary text-white text-decoration-none text-truncate d-block text-start py-1 px-2" title="' . htmlspecialchars($event['name']) . '">';
-                                    echo '<i class="fas fa-circle fa-xs me-1 text-white-50"></i>' . htmlspecialchars($event['name']);
+                                    $eventName = $event['name'];
+                                    $isPublic = $event['is_public'] ?? 1;
+                                    $isAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
+                                    $isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == ($event['created_by'] ?? 0);
+
+                                    if (!$isPublic && !$isAdmin && !$isOwner) {
+                                        $eventName = "Agendamento Privado";
+                                    }
+
+                                    echo '<a href="/eventos/public/detail?id=' . htmlspecialchars($event['id']) . '" class="badge bg-primary text-white text-decoration-none text-truncate d-block text-start py-1 px-2" title="' . htmlspecialchars($eventName) . '" onclick="event.stopPropagation();">';
+                                    echo '<i class="fas fa-circle fa-xs me-1 text-white-50"></i>' . htmlspecialchars($eventName);
                                     echo '</a>';
                                 }
                                 echo '</div>';

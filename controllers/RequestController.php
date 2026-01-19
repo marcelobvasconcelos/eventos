@@ -1,9 +1,11 @@
 <?php
 
 require_once __DIR__ . '/../models/EventRequest.php';
+require_once __DIR__ . '/../models/Event.php';
 require_once __DIR__ . '/../models/Location.php';
 require_once __DIR__ . '/../models/Category.php';
 require_once __DIR__ . '/../models/Asset.php';
+require_once __DIR__ . '/../models/Loan.php';
 require_once __DIR__ . '/../lib/Security.php';
 
 class RequestController {
@@ -28,8 +30,22 @@ class RequestController {
         $locations = $locationModel->getLocationsWithAvailability($startDateTime, $endDateTime);
         $categories = $categoryModel->getAllCategories();
         $assets = $assetModel->getAllAssetsWithAvailability($startDateTime, $endDateTime);
+        
+        $csrf_token = Security::generateCsrfToken();
 
         include __DIR__ . '/../views/request/form.php';
+    }
+
+    public function my_requests() {
+        if (!isset($_SESSION['user_id'])) {
+            header('Location: /eventos/auth/login');
+            exit;
+        }
+
+        $requestModel = new EventRequest();
+        $requests = $requestModel->getRequestsByUserId($_SESSION['user_id']);
+
+        include __DIR__ . '/../views/request/my_requests.php';
     }
 
     public function submit() {
@@ -46,6 +62,22 @@ class RequestController {
         if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
             $errorMessages = 'Invalid CSRF token';
             $csrf_token = Security::generateCsrfToken();
+            
+            // Fetch necessary data for the view
+            $locationModel = new Location();
+            $categoryModel = new Category();
+            $assetModel = new Asset();
+            
+            // Re-use posted dates or default to now for availability
+            $checkDate = $_POST['date'] ?? date('Y-m-d');
+            $checkEndDate = $_POST['end_date'] ?? $checkDate;
+            $startDateTime = $checkDate . ' ' . ($_POST['time'] ?? '00:00');
+            $endDateTime = $checkEndDate . ' ' . ($_POST['end_time'] ?? '23:59');
+
+            $locations = $locationModel->getLocationsWithAvailability($startDateTime, $endDateTime);
+            $categories = $categoryModel->getAllCategories();
+            $assets = $assetModel->getAllAssetsWithAvailability($startDateTime, $endDateTime);
+
             include __DIR__ . '/../views/request/form.php';
             return;
         }
@@ -99,8 +131,10 @@ class RequestController {
             return;
         }
 
+        $isPublic = isset($_POST['is_public']) ? (int)$_POST['is_public'] : 1;
+
         $eventModel = new Event();
-        $eventId = $eventModel->createEvent($title, $description, $formattedDate, $endDateTime, $locationId, $categoryId, $_SESSION['user_id']);
+        $eventId = $eventModel->createEvent($title, $description, $formattedDate, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic);
         
         $requestModel = new EventRequest();
         $requestId = $requestModel->createRequest($_SESSION['user_id'], $eventId);

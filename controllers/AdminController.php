@@ -164,6 +164,41 @@ class AdminController {
         exit;
     }
 
+    public function approveUser() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
+            if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                header('Location: /eventos/admin/users?error=Invalid CSRF token');
+                exit;
+            }
+            $userId = $_POST['user_id'];
+            $userModel = new User();
+            $userModel->updateStatus($userId, 'Ativo');
+        }
+        header('Location: /eventos/admin/users?success=Usuário aprovado');
+        exit;
+    }
+
+    public function rejectUser() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
+            if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                header('Location: /eventos/admin/users?error=Invalid CSRF token');
+                exit;
+            }
+            $userId = $_POST['user_id'];
+            $userModel = new User();
+            // Or 'Inativo'? Or delete? Assuming Inativo for now or just delete. 
+            // Better to delete if it's a new registration? 
+            // Let's set to Inativo so they know they were rejected? Or Delete. 
+            // Plan says approve/reject. Let's delete for "Reject" or set Inativo.
+            // Let's set Inativo.
+            $userModel->updateStatus($userId, 'Inativo');
+        }
+        header('Location: /eventos/admin/users?success=Usuário rejeitado/inativado');
+        exit;
+    }
+
     public function getUserStats() {
         $this->checkAdminAccess();
         if (isset($_GET['user_id'])) {

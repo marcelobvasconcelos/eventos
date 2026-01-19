@@ -12,22 +12,40 @@ class Event {
     }
 
     public function getAllApprovedEvents() {
-        $stmt = $this->pdo->prepare("SELECT e.*, l.name as location_name, c.name as category_name FROM events e LEFT JOIN locations l ON e.location_id = l.id LEFT JOIN categories c ON e.category_id = c.id WHERE e.status = 'Aprovado' ORDER BY e.date ASC");
+        $stmt = $this->pdo->prepare("SELECT e.*, l.name as location_name, c.name as category_name, u.name as creator_name FROM events e LEFT JOIN locations l ON e.location_id = l.id LEFT JOIN categories c ON e.category_id = c.id LEFT JOIN users u ON e.created_by = u.id WHERE e.status = 'Aprovado' ORDER BY e.date ASC");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getEventsByDateRange($startDate, $endDate) {
-        $stmt = $this->pdo->prepare("SELECT * FROM events WHERE status = 'Aprovado' AND date BETWEEN ? AND ? ORDER BY date ASC");
+        $stmt = $this->pdo->prepare("SELECT e.*, u.name as creator_name FROM events e LEFT JOIN users u ON e.created_by = u.id WHERE e.status = 'Aprovado' AND e.date BETWEEN ? AND ? ORDER BY e.date ASC");
+        $stmt->execute([$startDate, $endDate]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getApprovedEventsByDate($date) {
+        $startDate = $date . ' 00:00:00';
+        $endDate = $date . ' 23:59:59';
+        // Left join to get location and creator, important for display
+        $stmt = $this->pdo->prepare("
+            SELECT e.*, l.name as location_name, u.name as creator_name 
+            FROM events e 
+            LEFT JOIN locations l ON e.location_id = l.id 
+            LEFT JOIN users u ON e.created_by = u.id 
+            WHERE e.status = 'Aprovado' 
+            AND e.date BETWEEN ? AND ? 
+            ORDER BY e.date ASC
+        ");
         $stmt->execute([$startDate, $endDate]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getActiveEvents() {
         $stmt = $this->pdo->prepare("
-            SELECT e.*, l.name as location_name 
+            SELECT e.*, l.name as location_name, u.name as creator_name
             FROM events e 
             LEFT JOIN locations l ON e.location_id = l.id 
+            LEFT JOIN users u ON e.created_by = u.id
             WHERE e.status = 'Aprovado' 
             AND (
                 (e.date <= NOW() AND e.end_date >= NOW())
@@ -90,9 +108,9 @@ class Event {
         }
     }
 
-    public function updateEvent($id, $name, $description, $date, $locationId, $categoryId, $status) {
-        $stmt = $this->pdo->prepare("UPDATE events SET name = ?, description = ?, date = ?, location_id = ?, category_id = ?, status = ? WHERE id = ?");
-        return $stmt->execute([$name, $description, $date, $locationId ?: null, $categoryId ?: null, $status, $id]);
+    public function updateEvent($id, $name, $description, $date, $locationId, $categoryId, $status, $isPublic) {
+        $stmt = $this->pdo->prepare("UPDATE events SET name = ?, description = ?, date = ?, location_id = ?, category_id = ?, status = ?, is_public = ? WHERE id = ?");
+        return $stmt->execute([$name, $description, $date, $locationId ?: null, $categoryId ?: null, $status, $isPublic, $id]);
     }
 
     public function deleteEvent($id) {
@@ -100,9 +118,9 @@ class Event {
         return $stmt->execute([$id]);
     }
 
-    public function createEvent($name, $description, $date, $endDate, $locationId, $categoryId, $createdBy) {
-        $stmt = $this->pdo->prepare("INSERT INTO events (name, description, date, end_date, location_id, category_id, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $description, $date, $endDate ?: null, $locationId, $categoryId, $createdBy]);
+    public function createEvent($name, $description, $date, $endDate, $locationId, $categoryId, $createdBy, $isPublic = 1) {
+        $stmt = $this->pdo->prepare("INSERT INTO events (name, description, date, end_date, location_id, category_id, created_by, is_public) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $description, $date, $endDate ?: null, $locationId, $categoryId, $createdBy, $isPublic]);
         return $this->pdo->lastInsertId();
     }
 

@@ -11,12 +11,22 @@ class EventRequest {
         $this->pdo = $pdo;
     }
 
-    public function createEventRequest($title, $description, $date, $time, $locationId, $categoryId, $userId) {
-        $datetime = $date . ' ' . $time;
-
-        $stmt = $this->pdo->prepare("INSERT INTO events (name, description, date, location_id, category_id, status, created_by) VALUES (?, ?, ?, ?, ?, 'Pendente', ?)");
-        $stmt->execute([$title, $description, $datetime, $locationId, $categoryId, $userId]);
+    public function createRequest($userId, $eventId) {
+        $stmt = $this->pdo->prepare("INSERT INTO event_requests (user_id, event_id, status) VALUES (?, ?, 'Pendente')");
+        $stmt->execute([$userId, $eventId]);
         return $this->pdo->lastInsertId();
+    }
+
+    public function getRequestsByUserId($userId) {
+        $stmt = $this->pdo->prepare("
+            SELECT er.*, e.name as event_name, e.date as event_date, e.status as event_status 
+            FROM event_requests er 
+            JOIN events e ON er.event_id = e.id 
+            WHERE er.user_id = ? 
+            ORDER BY er.request_date DESC
+        ");
+        $stmt->execute([$userId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
 }

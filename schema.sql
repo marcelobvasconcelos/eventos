@@ -39,6 +39,7 @@ CREATE TABLE events (
     category_id INT,
     status ENUM('Pendente', 'Aprovado', 'Rejeitado', 'Concluido') NOT NULL DEFAULT 'Pendente',
     created_by INT,
+    is_public BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
     FOREIGN KEY (location_id) REFERENCES locations(id) ON DELETE SET NULL,

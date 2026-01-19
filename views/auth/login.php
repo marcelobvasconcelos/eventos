@@ -2,6 +2,18 @@
 $title = 'Entrar';
 ob_start();
 ?>
+<style>
+    body {
+        background-image: url('/eventos/public/img/audi.png');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        min-height: 100vh;
+    }
+    .card {
+        background-color: rgba(255, 255, 255, 0.95) !important; /* Slight transparency for the card */
+    }
+</style>
 <div class="row justify-content-center">
     <div class="col-md-5">
         <div class="card shadow-lg border-0 rounded-lg mt-5">

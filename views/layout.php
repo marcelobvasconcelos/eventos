@@ -21,18 +21,29 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/eventos/"><i class="fas fa-list"></i>Eventos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/eventos/public/calendar"><i class="fas fa-calendar-alt"></i>Calendário</a></li>
+                    <?php 
+                    $uri = $_SERVER['REQUEST_URI'] ?? '/';
+                    // Simple helper to check if path contains string
+                    function isActive($uri, $path) {
+                        return strpos($uri, $path) !== false ? 'active' : '';
+                    }
+                    // Specific check for Home to avoid matching everything
+                    $isHome = ($uri == '/eventos/' || $uri == '/eventos/index.php' || $uri == '/eventos/?');
+                    ?>
+                    <li class="nav-item"><a class="nav-link <?php echo $isHome ? 'active' : ''; ?>" href="/eventos/"><i class="fas fa-list"></i>Eventos</a></li>
+                    
+                    <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/public/'); ?>" href="/eventos/public/calendar"><i class="fas fa-calendar-alt"></i>Calendário</a></li>
+                    
                     <?php if (!isset($_SESSION['user_id'])): ?>
-                        <li class="nav-item"><a class="nav-link" href="/eventos/auth/login"><i class="fas fa-sign-in-alt"></i>Entrar</a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/auth/login'); ?>" href="/eventos/auth/login"><i class="fas fa-sign-in-alt"></i>Entrar</a></li>
 
                     <?php else: ?>
-                        <li class="nav-item"><a class="nav-link" href="/eventos/request/form"><i class="fas fa-calendar-plus"></i>Solicitar Evento</a></li>
-                        <li class="nav-item"><a class="nav-link" href="/eventos/asset"><i class="fas fa-boxes-stacked"></i>Ativos</a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/request/'); ?>" href="/eventos/request/form"><i class="fas fa-calendar-plus"></i>Solicitar Evento</a></li>
+                        <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/asset'); ?>" href="/eventos/asset"><i class="fas fa-boxes-stacked"></i>Ativos</a></li>
                         <?php if ($_SESSION['user_role'] == 'admin'): ?>
-                            <li class="nav-item"><a class="nav-link" href="/eventos/admin/dashboard"><i class="fas fa-tachometer-alt"></i>Painel Admin</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/eventos/admin/events"><i class="fas fa-calendar-check"></i>Gerenciar Eventos</a></li>
-                            <li class="nav-item"><a class="nav-link" href="/eventos/admin/users"><i class="fas fa-users"></i>Gerenciar Usuários</a></li>
+                            <li class="nav-item"><a class="nav-link <?php echo ($uri == '/eventos/admin/dashboard' || $uri == '/eventos/admin/') ? 'active' : ''; ?>" href="/eventos/admin/dashboard"><i class="fas fa-tachometer-alt"></i>Painel Admin</a></li>
+                            <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/admin/events'); ?>" href="/eventos/admin/events"><i class="fas fa-calendar-check"></i>Gerenciar Eventos</a></li>
+                            <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/admin/users'); ?>" href="/eventos/admin/users"><i class="fas fa-users"></i>Gerenciar Usuários</a></li>
                         <?php endif; ?>
                         <li class="nav-item"><a class="nav-link" href="/eventos/auth/logout"><i class="fas fa-sign-out-alt"></i>Sair</a></li>
                     <?php endif; ?>

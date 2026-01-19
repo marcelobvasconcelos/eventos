@@ -101,18 +101,20 @@ ob_start();
                                         <td><span class="badge bg-secondary-subtle text-secondary"><i class="fas fa-calendar-day me-1"></i><?php echo htmlspecialchars($loan['event_name']); ?></span></td>
                                         <td>
                                             <?php 
-                                            $statusClass = match($loan['status']) {
+                                            // PHP < 8.0 compatibility: use array lookup instead of match
+                                            $statusClasses = [
                                                 'Emprestado' => 'text-primary',
                                                 'Devolvido' => 'text-success',
-                                                'Atrasado' => 'text-danger',
-                                                default => 'text-secondary'
-                                            };
-                                            $statusIcon = match($loan['status']) {
+                                                'Atrasado' => 'text-danger'
+                                            ];
+                                            $statusClass = $statusClasses[$loan['status']] ?? 'text-secondary';
+
+                                            $statusIcons = [
                                                 'Emprestado' => 'fa-clock',
                                                 'Devolvido' => 'fa-check-circle',
-                                                'Atrasado' => 'fa-exclamation-circle',
-                                                default => 'fa-circle'
-                                            };
+                                                'Atrasado' => 'fa-exclamation-circle'
+                                            ];
+                                            $statusIcon = $statusIcons[$loan['status']] ?? 'fa-circle';
                                             ?>
                                             <span class="fw-bold <?php echo $statusClass; ?>"><i class="fas <?php echo $statusIcon; ?> me-1"></i><?php echo htmlspecialchars($loan['status']); ?></span>
                                         </td>

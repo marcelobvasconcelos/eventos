@@ -30,6 +30,18 @@ ob_start();
         <?php else: ?>
             <div class="row g-3">
                 <?php foreach ($activeEvents as $active): ?>
+                    <?php
+                        $isPublic = $active['is_public'] ?? 1;
+                        $isAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
+                        $isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == ($active['created_by'] ?? 0);
+
+                        if (!$isPublic && !$isAdmin && !$isOwner) {
+                             $active['name'] = "Agendamento Privado";
+                             // Hide location if strictly private? Plan said show location.
+                             // Show Responsible
+                             $active['location_name'] = $active['location_name'] . " | Resp: " . ($active['creator_name'] ?? 'N/A');
+                        }
+                    ?>
                     <div class="col-md-6 lg-4">
                         <div class="card h-100 border-0 shadow-sm" style="background-color: #fff; border-left: 5px solid #0d6efd !important;">
                             <div class="card-body">
@@ -89,6 +101,16 @@ ob_start();
 <?php else: ?>
     <div class="row" id="eventsContainer">
         <?php foreach ($events as $event): ?>
+            <?php
+                $isPublic = $event['is_public'] ?? 1;
+                $isAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
+                $isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == ($event['created_by'] ?? 0);
+
+                if (!$isPublic && !$isAdmin && !$isOwner) {
+                        $event['name'] = "Agendamento Privado";
+                        $event['location_name'] = ($event['location_name'] ?? 'Local a definir') . " | Resp: " . ($event['creator_name'] ?? 'N/A');
+                }
+            ?>
             <div class="col-md-4 mb-4 event-item" data-date="<?php echo $event['date']; ?>">
                 <div class="card h-100 border-0 shadow-sm hover-card event-card" style="border-radius: 12px; transition: transform 0.2s;">
                     <div class="card-body d-flex flex-column p-4">
