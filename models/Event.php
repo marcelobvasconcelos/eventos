@@ -12,13 +12,13 @@ class Event {
     }
 
     public function getAllApprovedEvents() {
-        $stmt = $this->pdo->prepare("SELECT e.*, l.name as location_name, c.name as category_name, u.name as creator_name FROM events e LEFT JOIN locations l ON e.location_id = l.id LEFT JOIN categories c ON e.category_id = c.id LEFT JOIN users u ON e.created_by = u.id WHERE e.status = 'Aprovado' ORDER BY e.date ASC");
+        $stmt = $this->pdo->prepare("SELECT e.*, l.name as location_name, c.name as category_name, u.name as creator_name FROM events e LEFT JOIN locations l ON e.location_id = l.id LEFT JOIN categories c ON e.category_id = c.id LEFT JOIN users u ON e.created_by = u.id WHERE e.status IN ('Aprovado', 'Cancelado') ORDER BY e.date ASC");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function getEventsByDateRange($startDate, $endDate) {
-        $stmt = $this->pdo->prepare("SELECT e.*, u.name as creator_name FROM events e LEFT JOIN users u ON e.created_by = u.id WHERE e.status = 'Aprovado' AND e.date BETWEEN ? AND ? ORDER BY e.date ASC");
+        $stmt = $this->pdo->prepare("SELECT e.*, l.name as location_name, u.name as creator_name FROM events e LEFT JOIN locations l ON e.location_id = l.id LEFT JOIN users u ON e.created_by = u.id WHERE e.status IN ('Aprovado', 'Cancelado') AND e.date BETWEEN ? AND ? ORDER BY e.date ASC");
         $stmt->execute([$startDate, $endDate]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -27,16 +27,20 @@ class Event {
         $startDate = $date . ' 00:00:00';
         $endDate = $date . ' 23:59:59';
         // Left join to get location and creator, important for display
+        // Logic change: Include events that overlap this day, not just start on it.
+        // Overlap Condition: (Start <= DayEnd) AND (End >= DayStart)
+        // Handling NULL end_date: Treat as same as start date (point event or short duration)
         $stmt = $this->pdo->prepare("
             SELECT e.*, l.name as location_name, u.name as creator_name 
             FROM events e 
             LEFT JOIN locations l ON e.location_id = l.id 
             LEFT JOIN users u ON e.created_by = u.id 
-            WHERE e.status = 'Aprovado' 
-            AND e.date BETWEEN ? AND ? 
+            WHERE e.status IN ('Aprovado', 'Cancelado') 
+            AND e.date <= ? 
+            AND COALESCE(e.end_date, e.date) >= ?
             ORDER BY e.date ASC
         ");
-        $stmt->execute([$startDate, $endDate]);
+        $stmt->execute([$endDate, $startDate]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -80,7 +84,7 @@ class Event {
             LEFT JOIN event_requests er ON e.id = er.event_id
 
             LEFT JOIN users approver ON e.approved_by = approver.id
-            WHERE e.id = ? AND (e.status = 'Aprovado' OR e.status = 'Concluido' OR e.status = 'Pendente')
+            WHERE e.id = ? AND (e.status = 'Aprovado' OR e.status = 'Concluido' OR e.status = 'Pendente' OR e.status = 'Cancelado')
         ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
@@ -108,9 +112,9 @@ class Event {
         }
     }
 
-    public function updateEvent($id, $name, $description, $date, $locationId, $categoryId, $status, $isPublic) {
-        $stmt = $this->pdo->prepare("UPDATE events SET name = ?, description = ?, date = ?, location_id = ?, category_id = ?, status = ?, is_public = ? WHERE id = ?");
-        return $stmt->execute([$name, $description, $date, $locationId ?: null, $categoryId ?: null, $status, $isPublic, $id]);
+    public function updateEvent($id, $name, $description, $date, $endDate, $locationId, $categoryId, $status, $isPublic) {
+        $stmt = $this->pdo->prepare("UPDATE events SET name = ?, description = ?, date = ?, end_date = ?, location_id = ?, category_id = ?, status = ?, is_public = ? WHERE id = ?");
+        return $stmt->execute([$name, $description, $date, $endDate ?: null, $locationId ?: null, $categoryId ?: null, $status, $isPublic, $id]);
     }
 
     public function deleteEvent($id) {

@@ -1,5 +1,5 @@
 <?php
-$title = 'Ativos';
+$title = 'Equipamentos';
 ob_start();
 ?>
 
@@ -9,12 +9,12 @@ ob_start();
         <div class="card shadow rounded-lg border-0">
             <div class="card-header bg-white border-0 py-4 d-flex justify-content-between align-items-center">
                 <div>
-                    <h2 class="fw-bold text-primary mb-0"><i class="fas fa-boxes-stacked me-2"></i>Ativos Disponíveis</h2>
+                    <h2 class="fw-bold text-primary mb-0"><i class="fas fa-boxes-stacked me-2"></i>Equipamentos Disponíveis</h2>
                     <p class="text-muted small mb-0 mt-1">Lista de todos os equipamentos e recursos do sistema</p>
                 </div>
                 <?php if (isset($_SESSION['user_id'])): ?>
                      <div>
-                        <a href="/eventos/asset/create" class="btn btn-primary rounded-pill me-2"><i class="fas fa-plus me-2"></i>Novo Ativo</a>
+                        <a href="/eventos/asset/create" class="btn btn-primary rounded-pill me-2"><i class="fas fa-plus me-2"></i>Novo Equipamento</a>
                         <a href="/eventos/request/form" class="btn btn-outline-primary rounded-pill"><i class="fas fa-calendar-plus me-2"></i>Novo Evento</a>
                      </div>
                 <?php endif; ?>
@@ -24,7 +24,7 @@ ob_start();
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-light">
                             <tr class="text-uppercase small text-muted">
-                                <th class="ps-4">Nome do Ativo</th>
+                                <th class="ps-4">Nome do Equipamento</th>
                                 <th>Descrição</th>
                                 <th class="text-center">Disponibilidade</th>
                                 <th class="text-end pe-4">Ações</th>
@@ -52,6 +52,19 @@ ob_start();
                                         </span>
                                     </td>
                                     <td class="text-end pe-4">
+                                        <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                                            <a href="/eventos/admin/editAsset?id=<?php echo $asset['id']; ?>" class="btn btn-sm btn-outline-primary rounded-pill px-2 me-1" title="Editar">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <form action="/eventos/admin/deleteAsset" method="POST" class="d-inline me-1" onsubmit="return confirm('Tem certeza?');">
+                                                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token ?? ''); ?>">
+                                                <input type="hidden" name="id" value="<?php echo $asset['id']; ?>">
+                                                <button class="btn btn-sm btn-outline-danger rounded-pill px-2" title="Excluir">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        <?php endif; ?>
+
                                         <?php if (isset($_SESSION['user_id']) && $asset['available_quantity'] > 0): ?>
                                             <a href="/eventos/request/form?asset_id=<?php echo htmlspecialchars($asset['id']); ?>" class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
                                                 <i class="fas fa-hand-holding me-1"></i>Solicitar
@@ -81,14 +94,14 @@ ob_start();
         <div class="col-12">
             <div class="card shadow-sm rounded-lg border-0">
                 <div class="card-header bg-light border-0 py-3">
-                    <h4 class="fw-bold text-secondary mb-0"><i class="fas fa-history me-2"></i>Seus Empréstimos Ativos</h4>
+                    <h4 class="fw-bold text-secondary mb-0"><i class="fas fa-history me-2"></i>Seus Empréstimos</h4>
                 </div>
                 <div class="card-body p-0">
                      <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
                             <thead>
                                 <tr class="text-uppercase small text-muted">
-                                    <th class="ps-4">Ativo</th>
+                                    <th class="ps-4">Equipamento</th>
                                     <th>Evento</th>
                                     <th>Status</th>
                                     <th class="text-end pe-4">Ações</th>

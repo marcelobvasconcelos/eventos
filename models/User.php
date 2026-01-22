@@ -86,6 +86,12 @@ class User {
         return $stmt->execute([$name, $email, $userId]);
     }
 
+    public function updatePassword($userId, $password) {
+        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+        $stmt = $this->pdo->prepare("UPDATE users SET password = ? WHERE id = ?");
+        return $stmt->execute([$hashedPassword, $userId]);
+    }
+
     public function deleteUser($userId) {
         try {
             $this->pdo->beginTransaction();

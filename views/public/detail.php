@@ -22,8 +22,18 @@ ob_start();
                 ?>
                 <h1 class="fw-bold text-primary mb-1"><?php echo htmlspecialchars($event['name']); ?></h1>
                 <p class="text-muted"><i class="fas fa-tag me-1"></i><?php echo htmlspecialchars($event['category_name'] ?? 'Sem Categoria'); ?></p>
+                <?php if ($isAdmin): ?>
+                    <a href="/eventos/admin/printEvent?id=<?php echo $event['id']; ?>" target="_blank" class="btn btn-sm btn-outline-dark rounded-pill mt-2">
+                        <i class="fas fa-file-pdf me-2"></i>Gerar Relatório PDF
+                    </a>
+                <?php endif; ?>
             </div>
             <div class="card-body p-4 p-md-5">
+                <?php if (($event['status'] ?? '') === 'Cancelado'): ?>
+                    <div class="alert alert-danger text-center mb-4">
+                        <i class="fas fa-ban me-2"></i><strong>EVENTO CANCELADO</strong>
+                    </div>
+                <?php endif; ?>
                 <div class="row g-4">
                     <!-- Date and Time -->
                     <div class="col-md-6">
@@ -80,7 +90,7 @@ $canViewAssets = isset($_SESSION['user_id']) && (
                     <div class="col-12">
                         <div class="card bg-white border shadow-sm">
                             <div class="card-header bg-light border-0 py-3">
-                                <h6 class="fw-bold mb-0 text-primary"><i class="fas fa-boxes me-2"></i>Ativos Solicitados</h6>
+                                <h6 class="fw-bold mb-0 text-primary"><i class="fas fa-boxes me-2"></i>Equipamentos Solicitados</h6>
                             </div>
                             <div class="card-body p-0">
                                 <?php if (!empty($loans)): ?>
@@ -88,7 +98,7 @@ $canViewAssets = isset($_SESSION['user_id']) && (
                                         <table class="table table-hover mb-0 align-middle">
                                             <thead class="table-light">
                                                 <tr>
-                                                    <th class="ps-4">Item / Ativo</th>
+                                                    <th class="ps-4">Item / Equipamento</th>
                                                     <th>Status</th>
                                                     <th class="text-end pe-4">Data de Devolução Prevista</th>
                                                 </tr>
@@ -121,7 +131,7 @@ $canViewAssets = isset($_SESSION['user_id']) && (
                                 <?php else: ?>
                                     <div class="p-4 text-center text-muted">
                                         <i class="fas fa-box-open fa-3x mb-3 text-secondary opacity-25"></i>
-                                        <p class="mb-0">Nenhum ativo/equipamento solicitado para este evento.</p>
+                                        <p class="mb-0">Nenhum equipamento solicitado para este evento.</p>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -159,7 +169,24 @@ $canViewAssets = isset($_SESSION['user_id']) && (
                 </div>
             </div>
             <div class="card-footer bg-white border-0 text-center pb-4">
-                <a href="/eventos/public/calendar" class="btn btn-outline-secondary rounded-pill px-4"><i class="fas fa-arrow-left me-2"></i>Voltar ao Calendário</a>
+                <a href="/eventos/public/calendar" class="btn btn-outline-secondary rounded-pill px-4 me-2"><i class="fas fa-arrow-left me-2"></i>Voltar ao Calendário</a>
+                <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                    <a href="/eventos/admin/editEvent?id=<?php echo $event['id']; ?>&return_url=<?php echo urlencode('/eventos/public/detail?id=' . $event['id']); ?>" class="btn btn-primary rounded-pill px-4 ms-2"><i class="fas fa-edit me-2"></i>Editar</a>
+                    
+                    <?php if ($event['status'] !== 'Cancelado'): ?>
+                        <form action="/eventos/admin/cancelEvent" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja CANCELAR este evento? Ele continuará visível no mapa/calendário como CANCELADO.');">
+                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                            <input type="hidden" name="id" value="<?php echo $event['id']; ?>">
+                            <button type="submit" class="btn btn-warning rounded-pill px-4 ms-2"><i class="fas fa-ban me-2"></i>Cancelar</button>
+                        </form>
+                    <?php endif; ?>
+
+                    <form action="/eventos/admin/deleteEvent" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja EXCLUIR permanentemente este evento? Ele sumirá do mapa. Se quiser manter histórico, opte por CANCELAR.');">
+                        <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                        <input type="hidden" name="id" value="<?php echo $event['id']; ?>">
+                        <button type="submit" class="btn btn-danger rounded-pill px-4 ms-2"><i class="fas fa-trash me-2"></i>Excluir</button>
+                    </form>
+                <?php endif; ?>
             </div>
         </div>
     </div>

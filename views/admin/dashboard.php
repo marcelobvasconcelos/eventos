@@ -49,7 +49,7 @@ ob_start();
             <div class="card-body text-center d-flex flex-column justify-content-center">
                 <i class="fas fa-boxes-stacked fa-3x mb-3"></i>
                 <h5 class="card-title">Patrimônio</h5>
-                <p class="card-text">Gestão de Ativos.</p>
+                <p class="card-text">Gestão de Equipamentos.</p>
                 <a href="/eventos/asset" class="btn btn-outline-primary mt-auto">Acessar</a>
             </div>
         </div>

@@ -9,7 +9,7 @@ ob_start();
                 <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 60px; height: 60px;">
                     <i class="fas fa-hand-holding fa-2x"></i>
                 </div>
-                <h2 class="fw-bold text-primary mb-1">Solicitar Empréstimo de Ativo</h2>
+                <h2 class="fw-bold text-primary mb-1">Solicitar Empréstimo de Equipamento</h2>
                 <p class="text-muted mb-0">Registre a retirada de um equipamento</p>
             </div>
             <div class="card-body p-4 p-md-5">
@@ -24,11 +24,11 @@ ob_start();
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     
                     <div class="col-12">
-                        <label for="asset_id" class="form-label fw-semibold text-secondary">Ativo</label>
+                        <label for="asset_id" class="form-label fw-semibold text-secondary">Equipamento</label>
                         <div class="input-group">
                              <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-box"></i></span>
                             <select name="asset_id" id="asset_id" class="form-select border-start-0 ps-0 bg-light" required>
-                                <option value="" disabled selected>Selecione o ativo...</option>
+                                <option value="" disabled selected>Selecione o equipamento...</option>
                                 <?php foreach ($assets as $asset): ?>
                                     <option value="<?php echo htmlspecialchars($asset['id']); ?>" <?php if (isset($_GET['asset_id']) && $_GET['asset_id'] == $asset['id']) echo 'selected'; ?>>
                                         <?php echo htmlspecialchars($asset['name']); ?> (Disponível: <?php echo htmlspecialchars($asset['available_quantity']); ?>)

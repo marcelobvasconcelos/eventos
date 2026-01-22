@@ -48,26 +48,34 @@ class Asset {
         return $this->getAllAssetsWithAvailability($eventDate);
     }
 
-    public function getAllAssetsWithAvailability($startDateTime = null, $endDateTime = null) {
+    public function getAllAssetsWithAvailability($startDateTime = null, $endDateTime = null, $excludeEventId = null) {
         if ($startDateTime && $endDateTime) {
             // Temporal Availability Logic with Range:
             // Check for overlaps: (LoanStart < RequestEnd) AND (LoanEnd > RequestStart)
             // Available = Total Quantity - Count of Active Loans overlapping the requested range
+            // If excludeEventId is provided, do NOT count loans from that event.
             
-            $stmt = $this->pdo->prepare("
-                SELECT a.*, 
+            $sql = "SELECT a.*, 
                 (a.quantity - (
                     SELECT COUNT(*) 
                     FROM loans l 
                     JOIN asset_items ai ON l.item_id = ai.id 
                     WHERE ai.asset_id = a.id 
                     AND l.status = 'Emprestado' 
-                    AND (l.loan_date < ? AND COALESCE(l.return_date, l.loan_date) > ?)
-                )) as available_count
+                    AND (l.loan_date < ? AND COALESCE(l.return_date, l.loan_date) > ?)";
+            
+            $params = [$endDateTime, $startDateTime];
+            if ($excludeEventId) {
+                $sql .= " AND l.event_id != ?";
+                $params[] = $excludeEventId;
+            }
+            
+            $sql .= ")) as available_count
                 FROM assets a
-                ORDER BY a.name ASC
-            ");
-            $stmt->execute([$endDateTime, $startDateTime]);
+                ORDER BY a.name ASC";
+
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
             
             // Post-process to add is_available boolean for backward compatibility if needed, 
             // though views should use available_count now.
@@ -89,6 +97,68 @@ class Asset {
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
+    }
+
+    public function getAssetById($id) {
+        $stmt = $this->pdo->prepare("SELECT * FROM assets WHERE id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function updateAsset($id, $name, $description, $quantity) {
+        $this->pdo->beginTransaction();
+        try {
+            // Get current quantity
+            $stmt = $this->pdo->prepare("SELECT quantity FROM assets WHERE id = ? FOR UPDATE");
+            $stmt->execute([$id]);
+            $current = $stmt->fetchColumn();
+            
+            $delta = $quantity - $current;
+
+            $stmt = $this->pdo->prepare("UPDATE assets SET name = ?, description = ?, quantity = ?, available_quantity = available_quantity + ? WHERE id = ?");
+            $stmt->execute([$name, $description, $quantity, $delta, $id]);
+            
+            $this->pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function deleteAsset($id) {
+        $this->pdo->beginTransaction();
+        try {
+            $stmt = $this->pdo->prepare("DELETE FROM loans WHERE item_id IN (SELECT id FROM asset_items WHERE asset_id = ?)");
+            $stmt->execute([$id]);
+
+            $stmt = $this->pdo->prepare("DELETE FROM asset_items WHERE asset_id = ?");
+            $stmt->execute([$id]);
+
+            $stmt = $this->pdo->prepare("DELETE FROM assets WHERE id = ?");
+            $stmt->execute([$id]);
+            
+            $this->pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            return false;
+        }
+    }
+
+    public function getFutureReservations($asset_id) {
+        $stmt = $this->pdo->prepare("
+            SELECT DISTINCT e.id, e.name, e.date, e.end_date
+            FROM events e
+            JOIN loans l ON e.id = l.event_id
+            JOIN asset_items ai ON l.item_id = ai.id
+            WHERE ai.asset_id = ?
+            AND e.date >= CURDATE()
+            AND e.status IN ('Aprovado', 'Pendente')
+            ORDER BY e.date ASC
+        ");
+        $stmt->execute([$asset_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
 }

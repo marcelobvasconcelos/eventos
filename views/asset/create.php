@@ -1,5 +1,5 @@
 <?php
-$title = 'Cadastrar Novo Ativo';
+$title = 'Cadastrar Novo Equipamento';
 ob_start();
 ?>
 <div class="row justify-content-center">
@@ -9,7 +9,7 @@ ob_start();
                 <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 60px; height: 60px;">
                     <i class="fas fa-box-open fa-2x"></i>
                 </div>
-                <h2 class="fw-bold text-primary mb-1">Cadastrar Novo Ativo</h2>
+                <h2 class="fw-bold text-primary mb-1">Cadastrar Novo Equipamento</h2>
                 <p class="text-muted mb-0">Adicione um novo recurso ao inventário</p>
             </div>
             <div class="card-body p-4 p-md-5">
@@ -24,7 +24,7 @@ ob_start();
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     
                     <div class="col-12">
-                        <label for="name" class="form-label fw-semibold text-secondary">Nome do Ativo</label>
+                        <label for="name" class="form-label fw-semibold text-secondary">Nome do Equipamento</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-tag"></i></span>
                             <input type="text" name="name" id="name" class="form-control border-start-0 ps-0 bg-light" placeholder="Ex: Projetor Epson" value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>" required>
@@ -48,7 +48,7 @@ ob_start();
                     <div class="col-12 mt-5">
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <a href="/eventos/asset" class="btn btn-outline-secondary px-4 rounded-pill">Cancelar</a>
-                            <button type="submit" class="btn btn-primary px-5 rounded-pill shadow-sm"><i class="fas fa-save me-2"></i>Salvar Ativo</button>
+                            <button type="submit" class="btn btn-primary px-5 rounded-pill shadow-sm"><i class="fas fa-save me-2"></i>Salvar Equipamento</button>
                         </div>
                     </div>
                 </form>

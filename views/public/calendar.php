@@ -86,27 +86,112 @@ ob_start();
                             $currentDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
                             $todayClass = ($currentDate == date('Y-m-d')) ? 'bg-primary-subtle border-primary' : '';
                             
-                            echo '<td class="align-top p-2 ' . $todayClass . '" style="height: 120px; cursor: pointer;" onclick="window.location.href=\'/eventos/public/day?date=' . $currentDate . '\'">';
+                            // Calculate day summary for popover
+                            $dayContent = '';
+                            $hasEvents = isset($eventsByDate[$currentDate]);
+                            if ($hasEvents) {
+                                $dayContent .= '<ul class="list-unstyled mb-0 small">';
+                                $count = 0;
+                                foreach ($eventsByDate[$currentDate] as $ev) {
+                                    if ($count >= 5) {
+                                        $dayContent .= '<li><em>e mais ' . (count($eventsByDate[$currentDate]) - 5) . '...</em></li>';
+                                        break;
+                                    }
+                                    $evTime = date('H:i', strtotime($ev['date']));
+                                    $evName = htmlspecialchars($ev['name']);
+                                    // Privacy check for popover content as well
+                                    $evIsPublic = $ev['is_public'] ?? 1;
+                                    $evIsAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
+                                    $evIsOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == ($ev['created_by'] ?? 0);
+                                    if (!$evIsPublic && !$evIsAdmin && !$evIsOwner) {
+                                        $evName = "Agendamento Privado";
+                                    }
+                                    $dayContent .= "<li><strong>{$evTime}</strong> - {$evName}</li>";
+                                    $count++;
+                                }
+                                $dayContent .= '</ul>';
+                            } else {
+                                $dayContent = 'Nenhum evento agendado.';
+                            }
+                            
+                            echo '<td class="align-top p-2 ' . $todayClass . '" style="height: 120px; cursor: pointer;" 
+                                      onclick="window.location.href=\'/eventos/public/day?date=' . $currentDate . '\'"
+                                      data-bs-toggle="popover" data-bs-trigger="hover" data-bs-html="true" data-bs-placement="top" 
+                                      title="Eventos de ' . date('d/m', strtotime($currentDate)) . '" 
+                                      data-bs-content="' . htmlspecialchars($dayContent) . '">';
+                                      
                             echo '<div class="d-flex justify-content-between align-items-start">';
                             echo '<span class="fw-bold ' . ($currentDate == date('Y-m-d') ? 'text-primary' : 'text-secondary') . '">' . $day . '</span>';
                             // Add button with tooltip, clicking it should NOT trigger the row click
-                            echo '<a href="/eventos/public/create?date=' . $currentDate . 'T09:00" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" title="Adicionar evento" onclick="event.stopPropagation();"><i class="fas fa-plus-circle"></i></a>';
+                            echo '<a href="/eventos/public/create?date=' . $currentDate . 'T09:00" class="btn btn-sm btn-link text-decoration-none p-0 text-muted" title="Adicionar evento" onclick="event.stopPropagation();"><i class="fas fa-plus-circle" style="font-size: 1.5em;"></i></a>';
                             echo '</div>';
                             
                             if (isset($eventsByDate[$currentDate])) {
                                 echo '<div class="mt-2 d-grid gap-1">';
                                 foreach ($eventsByDate[$currentDate] as $event) {
                                     $eventName = $event['name'];
+                                    $eventDesc = $event['description'] ?? '';
                                     $isPublic = $event['is_public'] ?? 1;
                                     $isAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
                                     $isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == ($event['created_by'] ?? 0);
 
                                     if (!$isPublic && !$isAdmin && !$isOwner) {
                                         $eventName = "Agendamento Privado";
+                                        $eventDesc = "Detalhes restritos.";
+                                    }
+                                    
+                                    // Popover content for event
+                                    $startTs = strtotime($event['date']);
+                                    $endTs = $event['end_date'] ? strtotime($event['end_date']) : $startTs + 3600;
+                                    
+                                    if (date('Y-m-d', $startTs) !== date('Y-m-d', $endTs)) {
+                                        $endTime = date('d/m H:i', $endTs);
+                                    } else {
+                                        $endTime = date('H:i', $endTs);
+                                    }
+                                    
+                                    $eventPopover = "<strong>Hora:</strong> " . date('H:i', $startTs) . " - " . $endTime . "<br>";
+                                    $eventPopover .= "<strong>Local:</strong> " . htmlspecialchars($event['location_name'] ?? 'N/A') . "<br>";
+                                    $eventPopover .= "<small>" . htmlspecialchars(substr($eventDesc, 0, 100)) . (strlen($eventDesc)>100?'...':'') . "</small>";
+
+                                    // Color Logic based on Location (Same palette as day_timeline)
+                                    $colors = [
+                                        ['bg' => '#0d6efd', 'text' => '#ffffff'], // Blue
+                                        ['bg' => '#198754', 'text' => '#ffffff'], // Green
+                                        ['bg' => '#dc3545', 'text' => '#ffffff'], // Red
+                                        ['bg' => '#ffc107', 'text' => '#000000'], // Yellow
+                                        ['bg' => '#0dcaf0', 'text' => '#000000'], // Cyan
+                                        ['bg' => '#6f42c1', 'text' => '#ffffff'], // Purple
+                                        ['bg' => '#fd7e14', 'text' => '#ffffff'], // Orange
+                                        ['bg' => '#20c997', 'text' => '#ffffff'], // Teal
+                                        ['bg' => '#d63384', 'text' => '#ffffff'], // Pink
+                                        ['bg' => '#6610f2', 'text' => '#ffffff'], // Indigo
+                                    ];
+                                    
+                                    $locId = $event['location_id'] ?? 0;
+                                    $colorIndex = $locId % count($colors);
+                                    $style = $colors[$colorIndex];
+                                    
+                                    // Private events override
+                                    if (!$isPublic && !$isAdmin && !$isOwner) {
+                                        $style = ['bg' => '#6c757d', 'text' => '#ffffff'];
+                                    }
+                                    
+                                    $extraStyle = '';
+                                    if (($event['status']??'') === 'Cancelado') {
+                                        $style = ['bg' => '#dc3545', 'text' => '#ffffff'];
+                                        $extraStyle = 'text-decoration: line-through; opacity: 0.8;';
                                     }
 
-                                    echo '<a href="/eventos/public/detail?id=' . htmlspecialchars($event['id']) . '" class="badge bg-primary text-white text-decoration-none text-truncate d-block text-start py-1 px-2" title="' . htmlspecialchars($eventName) . '" onclick="event.stopPropagation();">';
-                                    echo '<i class="fas fa-circle fa-xs me-1 text-white-50"></i>' . htmlspecialchars($eventName);
+                                    // Removed title attribute to avoid double tooltip, using data-bs-title or just content
+                                    echo '<a href="/eventos/public/detail?id=' . htmlspecialchars($event['id']) . '" 
+                                             class="badge text-decoration-none text-truncate d-block text-start py-1 px-2" 
+                                             style="background-color: ' . $style['bg'] . '; color: ' . $style['text'] . '; ' . $extraStyle . '"
+                                             onclick="event.stopPropagation();"
+                                             data-bs-toggle="popover" data-bs-trigger="hover" data-bs-html="true" data-bs-placement="right"
+                                             title="' . htmlspecialchars($eventName) . '"
+                                             data-bs-content="' . htmlspecialchars($eventPopover) . '">';
+                                    echo '<i class="fas fa-circle fa-xs me-1" style="opacity: 0.7;"></i>' . htmlspecialchars($eventName);
                                     echo '</a>';
                                 }
                                 echo '</div>';
@@ -131,6 +216,15 @@ ob_start();
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl)
+    })
+});
+</script>
 <?php
 $content = ob_get_clean();
 include __DIR__ . '/../layout.php';

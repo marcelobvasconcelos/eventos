@@ -8,6 +8,7 @@ $nextDay = date('Y-m-d', strtotime($date . ' +1 day'));
 // Helper validation for private events
 $isAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
 $userId = $_SESSION['user_id'] ?? 0;
+$currentDate = $date; // Mapping for consistency with new logic
 ?>
 
 <div class="row">
@@ -61,35 +62,59 @@ $userId = $_SESSION['user_id'] ?? 0;
                     <!-- Events Rendering -->
                     <div class="events-layer position-absolute" style="top: 0; left: 60px; right: 0; bottom: 0; z-index: 2;">
                         <?php 
-                        // Pre-process events to handle overlaps
+                        // Pre-process events to handle overlaps and multi-day rendering
                         $processedEvents = [];
+                        
+                        // Define Grid Boundaries for the current view Date
+                        $gridStartTs = strtotime($currentDate . sprintf(' %02d:00:00', $startHour));
+                        // Grid ends at endHour + 1 (e.g. 22:00 start -> 23:00 end of block? Or just cover until 23:59?)
+                        // Timeline shows 07:00 to 22:00. The last block is 22:00-23:00? 
+                        // The loop goes $h <= $endHour. If $endHour is 22, it prints 22:00 line.
+                        // Ideally we support up to 24:00 if needed, but let's stick to visual grid.
+                        // Let's assume visibility cutoff is roughly 23:59 for now to allow late events to show at bottom.
+                        $gridEndTs = strtotime($currentDate . ' 23:59:59');
+
                         foreach ($events as $event) {
                             $eventStartTimestamp = strtotime($event['date']);
-                            $eventHour = (int)date('H', $eventStartTimestamp);
                             
-                            // Skip if out of view range
-                            if ($eventHour < $startHour || $eventHour > $endHour) continue;
-                            
-                            $eventMinute = (int)date('i', $eventStartTimestamp);
-                            $startOffsetMinutes = ($eventHour - $startHour) * 60 + $eventMinute;
-                            
-                            $durationMinutes = 60; // Default 1h
+                            // Determine End Timestamp
                             if (!empty($event['end_date'])) {
-                                $endTimestamp = strtotime($event['end_date']);
-                                $durationMinutes = ($endTimestamp - $eventStartTimestamp) / 60;
+                                $eventEndTimestamp = strtotime($event['end_date']);
+                            } else {
+                                $eventEndTimestamp = $eventStartTimestamp + 3600; // Default 1h
                             }
+
+                            // Skip if event is completely outside the current day's visible grid
+                            // (Ends before grid start OR Starts after grid end)
+                            // We use lenient grid end (24h) to ensure we capture late night events even if grid lines stop at 22h,
+                            // allowing them to overflow container if needed or just hang at bottom.
+                            if ($eventEndTimestamp <= $gridStartTs || $eventStartTimestamp > $gridEndTs) {
+                                continue;
+                            }
+
+                            // Clamp start/end to Grid/Day boundaries for visual rendering
+                            $visualStartTs = max($eventStartTimestamp, $gridStartTs);
+                            $visualEndTs = min($eventEndTimestamp, $gridEndTs);
                             
-                            $topPx = ($startOffsetMinutes / 60) * $hourHeight;
-                            $heightPx = ($durationMinutes / 60) * $hourHeight;
+                            // Calculate dimensions relative to Grid Start (7:00)
+                            $startOffsetSeconds = $visualStartTs - $gridStartTs;
+                            $durationSeconds = $visualEndTs - $visualStartTs;
+                            
+                            $topPx = ($startOffsetSeconds / 3600) * $hourHeight;
+                            $heightPx = ($durationSeconds / 3600) * $hourHeight;
+                            
                             if ($heightPx < 30) $heightPx = 30; // Min height
 
+                            // Store original timestamps for logic/sorting, but use clamped for display
                             $processedEvents[] = [
                                 'data' => $event,
                                 'top' => $topPx,
                                 'height' => $heightPx,
                                 'bottom' => $topPx + $heightPx,
-                                'start_ts' => $eventStartTimestamp,
-                                'end_ts' => $eventStartTimestamp + ($durationMinutes * 60),
+                                'start_ts' => $visualStartTs,
+                                'end_ts' => $visualEndTs,
+                                'original_start_ts' => $eventStartTimestamp,
+                                'original_end_ts' => $eventEndTimestamp,
                                 'col_index' => 0,
                                 'total_cols' => 1
                             ];
@@ -172,17 +197,43 @@ $userId = $_SESSION['user_id'] ?? 0;
                                 // Override for private/hidden events
                                 $style = ['bg' => 'rgba(108, 117, 125, 0.1)', 'border' => '#6c757d', 'text' => '#6c757d'];
                             }
+                            
+                            $extraStyle = '';
+                            $statusBadge = '';
+                            if (($event['status'] ?? '') === 'Cancelado') {
+                                $style = ['bg' => 'rgba(220, 53, 69, 0.1)', 'border' => '#dc3545', 'text' => '#dc3545'];
+                                $extraStyle = 'text-decoration: line-through; opacity: 0.8;';
+                                $statusBadge = ' <span class="badge bg-danger" style="font-size: 0.6em; text-decoration: none;">CANCELADO</span>';
+                            }
+
+                            // Popover Content
+                            $eventDesc = $event['description'] ?? '';
+                            if (!$canViewDetails) $eventDesc = "Detalhes restritos.";
+                            
+                            $pStart = $item['original_start_ts'];
+                            $pEnd = $item['original_end_ts'];
+                            // Check if dates differ from view date
+                            $viewDateStr = date('Ymd', strtotime($currentDate));
+                            $pStartStr = (date('Ymd', $pStart) != $viewDateStr) ? date('d/m H:i', $pStart) : date('H:i', $pStart);
+                            $pEndStr = (date('Ymd', $pEnd) != $viewDateStr) ? date('d/m H:i', $pEnd) : date('H:i', $pEnd);
+
+                            $popoverContent = "<strong>Horário:</strong> " . $pStartStr . " até " . $pEndStr . "<br>";
+                            $popoverContent .= "<strong>Local:</strong> " . htmlspecialchars($eventLocation) . "<br>";
+                            $popoverContent .= "<small>" . htmlspecialchars(substr($eventDesc, 0, 100)) . (strlen($eventDesc)>100?'...':'') . "</small>";
                         ?>
                             <div class="event-block position-absolute rounded shadow-sm p-2" 
                                  style="top: <?php echo $item['top']; ?>px; height: <?php echo $item['height']; ?>px; 
                                         left: <?php echo $leftPercent; ?>%; width: <?php echo $widthPercent; ?>%;
                                         background-color: <?php echo $style['bg']; ?>; 
                                         border-left: 4px solid <?php echo $style['border']; ?>; 
-                                        overflow: hidden; cursor: pointer; z-index: 10;"
-                                 onclick="window.location.href='/eventos/public/detail?id=<?php echo $event['id']; ?>'">
+                                        overflow: hidden; cursor: pointer; z-index: 10; <?php echo $extraStyle; ?>"
+                                 onclick="window.location.href='/eventos/public/detail?id=<?php echo $event['id']; ?>'"
+                                 data-bs-toggle="popover" data-bs-trigger="hover" data-bs-html="true" data-bs-placement="top"
+                                 title="<?php echo htmlspecialchars($eventName . (($event['status']??'')==='Cancelado'?' (CANCELADO)':'')); ?>"
+                                 data-bs-content="<?php echo htmlspecialchars($popoverContent); ?>">
                                 
                                 <div class="fw-bold small text-truncate" style="color: <?php echo $style['text']; ?>">
-                                    <?php echo htmlspecialchars($eventName); ?>
+                                    <?php echo htmlspecialchars($eventName); ?><?php echo $statusBadge; ?>
                                 </div>
                                 <div class="small text-muted text-truncate">
                                     <i class="fas fa-clock me-1"></i>
@@ -209,6 +260,15 @@ $userId = $_SESSION['user_id'] ?? 0;
     <a href="/eventos/request/form?date=<?php echo $date; ?>" class="btn btn-primary rounded-pill ms-2"><i class="fas fa-plus me-2"></i>Novo Evento</a>
     <?php endif; ?>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl)
+    })
+});
+</script>
 
 <?php
 $content = ob_get_clean();

@@ -28,6 +28,11 @@ $action = !empty($url[1]) ? $url[1] : 'index';
 
 $controllerFile = 'controllers/' . ucfirst($controller) . 'Controller.php';
 
+if ($controller === 'pending') {
+    $controllerFile = 'controllers/PendingItemController.php';
+    $controller = 'PendingItem';
+}
+
 if (file_exists($controllerFile)) {
 
     require_once $controllerFile;

@@ -141,6 +141,8 @@ class RequestController {
 
         // Handle Assets
         $selectedAssets = $_POST['assets'] ?? [];
+        $failedAssets = [];
+        
         if (!empty($selectedAssets)) {
             $loanModel = new Loan();
             // Return date defaults to end time or +1 hour if no end time
@@ -150,13 +152,29 @@ class RequestController {
                 $qty = (int)($quantities[$assetId] ?? 1);
                 if ($qty < 1) $qty = 1;
                 
-                if (!$loanModel->requestLoan($assetId, $_SESSION['user_id'], $eventId, $formattedDate, $returnDate, $qty)) {
-                    // Optionally log error or add to a list of failed loans
+                try {
+                    if (!$loanModel->requestLoan($assetId, $_SESSION['user_id'], $eventId, $formattedDate, $returnDate, $qty)) {
+                        $failedAssets[] = $assetId;
+                    }
+                } catch (Exception $e) {
+                    $failedAssets[] = $assetId;
                 }
             }
         }
 
-        header('Location: /eventos/request/my_requests?message=Solicitação enviada com sucesso');
+        if (!empty($failedAssets)) {
+            // Fetch asset names for better error message
+            $assetModel = new Asset();
+            $failedNames = [];
+            foreach ($failedAssets as $fid) {
+                $a = $assetModel->getAssetById($fid);
+                if ($a) $failedNames[] = $a['name'];
+            }
+            $msg = 'Solicitação criada, MAS alguns equipamentos não puderam ser reservados (estoque insuficiente ou erro): ' . implode(', ', $failedNames);
+            header('Location: /eventos/request/my_requests?error=' . urlencode($msg));
+        } else {
+            header('Location: /eventos/request/my_requests?message=Solicitação enviada com sucesso');
+        }
         exit;
     }
 

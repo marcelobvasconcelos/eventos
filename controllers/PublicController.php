@@ -73,6 +73,8 @@ class PublicController {
         $loanModel = new Loan();
         $loans = $loanModel->getLoansByEvent($id);
 
+        $csrf_token = Security::generateCsrfToken();
+
         include __DIR__ . '/../views/public/detail.php';
     }
 

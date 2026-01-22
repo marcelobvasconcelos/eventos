@@ -90,6 +90,14 @@ ob_start();
                                         title="Excluir">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
+                                <button type="button" class="btn btn-sm btn-outline-warning rounded-circle" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#changePasswordModal" 
+                                        data-user-id="<?php echo $user['id']; ?>" 
+                                        data-user-name="<?php echo htmlspecialchars($user['name']); ?>"
+                                        title="Alterar Senha">
+                                    <i class="fas fa-key"></i>
+                                </button>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -131,6 +139,38 @@ ob_start();
                     <div class="d-flex justify-content-end">
                         <button type="button" class="btn btn-light rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary rounded-pill px-4">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-warning" id="changePasswordModalLabel"><i class="fas fa-key me-2"></i>Alterar Senha</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-4">Defina uma nova senha para o usuário <strong id="pwdUserName" class="text-dark">User</strong>.</p>
+                <form action="/eventos/admin/changePassword" method="POST">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                    <input type="hidden" name="user_id" id="pwdUserId">
+                    
+                    <div class="mb-4">
+                        <label for="newPassword" class="form-label text-secondary fw-semibold">Nova Senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-lock"></i></span>
+                            <input type="password" class="form-control border-start-0 ps-0 bg-light" id="newPassword" name="password" required minlength="6">
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-light rounded-pill px-4 me-2" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning text-white rounded-pill px-4">Salvar Senha</button>
                     </div>
                 </form>
             </div>
@@ -188,6 +228,22 @@ document.addEventListener('DOMContentLoaded', function () {
         userIdInput.value = userId;
         userNameInput.value = userName;
         userEmailInput.value = userEmail;
+    });
+
+    // Change Password Modal Logic
+    var changePwdModal = document.getElementById('changePasswordModal');
+    changePwdModal.addEventListener('show.bs.modal', function (event) {
+        var button = event.relatedTarget;
+        var userId = button.getAttribute('data-user-id');
+        var userName = button.getAttribute('data-user-name');
+
+        var userIdInput = changePwdModal.querySelector('#pwdUserId');
+        var userNameLabel = changePwdModal.querySelector('#pwdUserName');
+        var pwdInput = changePwdModal.querySelector('#newPassword');
+
+        userIdInput.value = userId;
+        userNameLabel.textContent = userName;
+        pwdInput.value = ''; // Clear previous input
     });
 
     // Delete Modal Logic

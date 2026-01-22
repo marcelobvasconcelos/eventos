@@ -2,13 +2,16 @@
 $title = 'Event List';
 ob_start();
 ?>
-<div class="text-center mb-5">
-    <?php if (isset($_SESSION['user_name'])): ?>
-        <h5 class="text-primary mb-2">Bem-vindo, <?php echo htmlspecialchars($_SESSION['user_name']); ?>! <i class="fas fa-smile-beam"></i></h5>
-    <?php endif; ?>
-    <h1 class="fw-bold text-primary">Próximos Eventos</h1>
-    <p class="text-muted">Confira nossa programação e participe!</p>
-    <a href="/eventos/public/calendar" class="btn btn-primary rounded-pill px-4"><i class="fas fa-calendar-alt me-2"></i>Ver Calendário</a>
+<div class="text-center mb-5 p-5 rounded-3 shadow-sm position-relative overflow-hidden" style="background: url('/eventos/lib/banner.jpeg') center center / cover no-repeat;">
+    
+    <div class="position-relative text-white z-1">
+        <?php if (isset($_SESSION['user_name'])): ?>
+            <h5 class="mb-2 fw-light">Bem-vindo, <?php echo htmlspecialchars($_SESSION['user_name']); ?>! <i class="fas fa-smile-beam"></i></h5>
+        <?php endif; ?>
+        <h1 class="fw-bold display-4">UAST REALIZA</h1>
+        <p class="lead mb-4">Confira nossa programação e participe!</p>
+        <a href="/eventos/public/calendar" class="btn btn-light rounded-pill px-4 fw-bold text-primary"><i class="fas fa-calendar-alt me-2"></i>Ver Calendário</a>
+    </div>
 </div>
 
 <div class="card mb-5 border-0 shadow-sm" style="border-radius: 15px; background: linear-gradient(to right, #ffffff, #f8f9fa);">
@@ -18,7 +21,7 @@ ob_start();
                 <i class="fas fa-bolt fa-lg"></i>
             </div>
             <div>
-                <h3 class="fw-bold text-primary mb-0">Acontecendo Agora</h3>
+                <h3 class="fw-bold text-primary mb-0">Acontece agora</h3>
                 <small class="text-muted">Eventos em andamento neste exato momento</small>
             </div>
         </div>
@@ -92,6 +95,8 @@ ob_start();
     </div>
 </div>
 
+<h3 class="fw-bold text-primary mb-3">Eventos Futuros</h3>
+
 <?php if (empty($events)): ?>
     <div class="text-center py-5">
         <i class="far fa-calendar-times fa-4x text-muted mb-3"></i>
@@ -110,12 +115,35 @@ ob_start();
                         $event['name'] = "Agendamento Privado";
                         $event['location_name'] = ($event['location_name'] ?? 'Local a definir') . " | Resp: " . ($event['creator_name'] ?? 'N/A');
                 }
+
+                // Color Logic based on Location (Same palette)
+                $colors = [
+                    ['bg' => 'rgba(13, 110, 253, 0.1)', 'border' => '#0d6efd'], // Blue
+                    ['bg' => 'rgba(25, 135, 84, 0.1)', 'border' => '#198754'], // Green
+                    ['bg' => 'rgba(220, 53, 69, 0.1)', 'border' => '#dc3545'], // Red
+                    ['bg' => 'rgba(255, 193, 7, 0.1)', 'border' => '#ffc107'], // Yellow
+                    ['bg' => 'rgba(13, 202, 240, 0.1)', 'border' => '#0dcaf0'], // Cyan
+                    ['bg' => 'rgba(111, 66, 193, 0.1)', 'border' => '#6f42c1'], // Purple
+                    ['bg' => 'rgba(253, 126, 20, 0.1)', 'border' => '#fd7e14'], // Orange
+                    ['bg' => 'rgba(32, 201, 151, 0.1)', 'border' => '#20c997'], // Teal
+                    ['bg' => 'rgba(214, 51, 132, 0.1)', 'border' => '#d63384'], // Pink
+                    ['bg' => 'rgba(102, 16, 242, 0.1)', 'border' => '#6610f2'], // Indigo
+                ];
+                
+                $locId = $event['location_id'] ?? 0;
+                $colorIndex = $locId % count($colors);
+                $style = $colors[$colorIndex];
+                
+                if (!$isPublic && !$isAdmin && !$isOwner) {
+                    $style = ['bg' => '#f8f9fa', 'border' => '#6c757d']; // Gray default
+                }
             ?>
             <div class="col-md-4 mb-4 event-item" data-date="<?php echo $event['date']; ?>">
-                <div class="card h-100 border-0 shadow-sm hover-card event-card" style="border-radius: 12px; transition: transform 0.2s;">
+                <div class="card h-100 border-0 shadow-sm hover-card event-card" 
+                     style="border-radius: 12px; transition: transform 0.2s; background-color: <?php echo $style['bg']; ?>; border-left: 5px solid <?php echo $style['border']; ?> !important;">
                     <div class="card-body d-flex flex-column p-4">
                         <div class="mb-3">
-                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 mb-2">
+                            <span class="badge rounded-pill px-3 py-2 mb-2" style="background-color: white; color: <?php echo $style['border']; ?>; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
                                 <i class="far fa-clock me-1"></i> 
                                 <?php echo date('d/m/Y', strtotime($event['date'])); ?>
                             </span>
@@ -123,16 +151,17 @@ ob_start();
                         <h5 class="card-title fw-bold text-dark mb-3"><?php echo htmlspecialchars($event['name']); ?></h5>
                         
                         <div class="mb-4 text-muted small">
-                            <i class="fas fa-map-marker-alt me-2 text-danger"></i>
+                            <i class="fas fa-map-marker-alt me-2" style="color: <?php echo $style['border']; ?>;"></i>
                             <?php echo htmlspecialchars($event['location_name'] ?? 'Local a definir'); ?>
                         </div>
 
-                        <div class="mt-auto pt-3 border-top actions-footer">
-                            <a href="/eventos/public/detail?id=<?php echo htmlspecialchars($event['id']); ?>" class="btn btn-outline-primary w-100 mb-2 rounded-pill">Ver Detalhes</a>
+                        <div class="mt-auto pt-3 border-top actions-footer" style="border-color: rgba(0,0,0,0.1) !important;">
+                            <a href="/eventos/public/detail?id=<?php echo htmlspecialchars($event['id']); ?>" class="btn btn-sm w-100 mb-2 rounded-pill fw-medium" 
+                               style="background-color: white; color: <?php echo $style['border']; ?>; border: 1px solid <?php echo $style['border']; ?>;">Ver Detalhes</a>
                             
                             <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                                 <div class="d-flex gap-2">
-                                    <a href="/eventos/admin/editEvent?id=<?php echo htmlspecialchars($event['id']); ?>" class="btn btn-sm btn-light flex-grow-1" title="Editar"><i class="fas fa-edit"></i></a>
+                                    <a href="/eventos/admin/editEvent?id=<?php echo htmlspecialchars($event['id']); ?>&return_url=<?php echo urlencode('/eventos/'); ?>" class="btn btn-sm btn-light flex-grow-1" title="Editar"><i class="fas fa-edit"></i></a>
                                     <button type="button" 
                                             class="btn btn-sm btn-light text-danger" 
                                             title="Excluir"

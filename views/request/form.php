@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     <div class="col-12">
                         <div class="card bg-light border-0 rounded-3">
                             <div class="card-body">
-                                <h6 class="card-title fw-bold text-secondary mb-3"><i class="fas fa-boxes me-2"></i>Ativos / Equipamentos Necessários</h6>
+                                <h6 class="card-title fw-bold text-secondary mb-3"><i class="fas fa-boxes me-2"></i>Equipamentos Necessários</h6>
                                 <div class="row g-3">
                                     <?php foreach ($assets as $asset): ?>
                                         <div class="col-md-6">
@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                                 </label>
                                                 <div class="mt-2" style="position: relative; z-index: 2;">
                                                     <label class="small text-muted">Quantidade:</label>
-                                                    <input type="number" name="quantities[<?php echo $asset['id']; ?>]" id="qty_<?php echo $asset['id']; ?>" class="form-control form-control-sm d-inline-block w-auto ms-1" value="1" min="1" max="<?php echo $asset['available_count']; ?>" <?php echo $checked ? '' : 'disabled'; ?> onclick="event.stopPropagation()">
+                                                    <input type="number" name="quantities[<?php echo $asset['id']; ?>]" id="qty_<?php echo $asset['id']; ?>" class="form-control form-control-sm d-inline-block w-auto ms-1" value="<?php echo htmlspecialchars($_POST['quantities'][$asset['id']] ?? 1); ?>" min="1" max="<?php echo $asset['available_count']; ?>" <?php echo $checked ? '' : 'disabled'; ?> onclick="event.stopPropagation()">
                                                 </div>
                                             </div>
                                         </div>

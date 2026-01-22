@@ -97,7 +97,12 @@ class AdminController {
             }
             $eventId = $_POST['event_id'];
             $eventModel = new Event();
-            $eventModel->updateStatus($eventId, 'Reprovado');
+            $eventModel->updateStatus($eventId, 'Reprovado', $_SESSION['user_id']);
+
+            // Release assets upon rejection
+            require_once __DIR__ . '/../models/Loan.php';
+            $loanModel = new Loan();
+            $loanModel->cancelLoansForEvent($eventId);
 
             // Send rejection email
             require_once __DIR__ . '/../lib/Notification.php';
@@ -161,6 +166,27 @@ class AdminController {
             $userModel->updateUser($userId, $name, $email);
         }
         header('Location: /eventos/admin/users');
+        exit;
+    }
+
+    public function changePassword() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
+            if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                header('Location: /eventos/admin/users?error=Invalid CSRF token');
+                exit;
+            }
+            $userId = $_POST['user_id'];
+            $password = $_POST['password'] ?? '';
+            
+            if (!empty($password)) {
+                $userModel = new User();
+                $userModel->updatePassword($userId, $password);
+                header('Location: /eventos/admin/users?success=Senha atualizada com sucesso');
+                exit;
+            }
+        }
+        header('Location: /eventos/admin/users?error=Erro ao atualizar senha');
         exit;
     }
 
@@ -236,7 +262,7 @@ class AdminController {
         $locationModel = new Location();
         $locations = $locationModel->getAllLocations();
         $csrf_token = Security::generateCsrfToken();
-        include __DIR__ . '/../views/admin/locations.php';
+        include __DIR__ . '/../views/location/index.php';
     }
 
     public function createLocation() {
@@ -354,10 +380,38 @@ class AdminController {
             header('Location: /eventos/admin/events');
             exit;
         }
+        
+        // Capture return URL
+        $returnUrl = $_GET['return_url'] ?? '/eventos/admin/events';
+
         $locationModel = new Location();
-        $locations = $locationModel->getAllLocations();
+        // Use event dates to check availability
+        $checkDate = $event['date'];
+        $checkEndDate = $event['end_date'] ?? date('Y-m-d H:i:s', strtotime($checkDate . ' +1 hour'));
+        $locations = $locationModel->getLocationsWithAvailability($checkDate, $checkEndDate, $id);
         $categoryModel = new Category();
         $categories = $categoryModel->getAllCategories();
+        
+        // Load Assets and Loans
+        require_once __DIR__ . '/../models/Loan.php';
+        require_once __DIR__ . '/../models/Asset.php';
+        $loanModel = new Loan();
+        $assetModel = new Asset();
+        
+        // Get existing loans, grouped by asset
+        $rawLoans = $loanModel->getLoansByEvent($id);
+        $currentAssets = [];
+        foreach ($rawLoans as $loan) {
+            $aId = $loan['asset_id'];
+            if (!isset($currentAssets[$aId])) {
+                $currentAssets[$aId] = 0;
+            }
+            $currentAssets[$aId]++;
+        }
+        
+        // Pass $id (event ID) as 3rd argument to exclude current event's loans from availability check
+        // This effectively returns "Total Capacity Available for this Event"
+        $allAssets = $assetModel->getAllAssetsWithAvailability($event['date'], $event['end_date'] ?? $event['date'], $id);
         $csrf_token = Security::generateCsrfToken();
         include __DIR__ . '/../views/admin/edit_event.php';
     }
@@ -370,16 +424,114 @@ class AdminController {
                 exit;
             }
             $id = (int)($_POST['id'] ?? 0);
+            $returnUrl = $_POST['return_url'] ?? '/eventos/admin/events';
+            
             $name = trim($_POST['name'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $date = $_POST['date'] ?? '';
             $time = $_POST['time'] ?? '';
+            $endDateInput = $_POST['end_date'] ?? '';
+            $endTimeInput = $_POST['end_time'] ?? '';
+            
+            $formattedDate = $date . ' ' . $time;
+            $formattedEndDate = null;
+            if (!empty($endDateInput) && !empty($endTimeInput)) {
+                $formattedEndDate = $endDateInput . ' ' . $endTimeInput;
+            }
+
             $locationId = (int)($_POST['location'] ?? 0);
             $categoryId = (int)($_POST['category'] ?? 0);
             $status = $_POST['status'] ?? 'Pendente';
+            $isPublic = (int)($_POST['is_public'] ?? 1);
+
+            // 1. Validate Location Availability (excluding current event)
+            require_once __DIR__ . '/../models/Location.php';
+            $locationModel = new Location();
+            $checkEnd = $formattedEndDate ?: date('Y-m-d H:i:s', strtotime($formattedDate . ' +1 hour'));
+            
+            if (!$locationModel->isAvailable($locationId, $formattedDate, $checkEnd, $id)) {
+                 header('Location: /eventos/admin/editEvent?id=' . $id . '&return_url=' . urlencode($returnUrl) . '&error=' . urlencode('O local selecionado já está ocupado neste horário.'));
+                 exit;
+            }
+
+            // 2. Validate Asset Availability
+            require_once __DIR__ . '/../models/Asset.php';
+            $assetModel = new Asset();
+            $submittedAssets = $_POST['assets'] ?? [];
+            
+            // Get what's available globally (excluding THIS event's loans)
+            $availableAssetsMap = [];
+            $allAssetsAvail = $assetModel->getAllAssetsWithAvailability($formattedDate, $checkEnd, $id);
+            foreach ($allAssetsAvail as $a) {
+                $availableAssetsMap[$a['id']] = $a;
+            }
+
+            foreach ($submittedAssets as $assetId => $qty) {
+                 $qty = (int)$qty;
+                 $availItem = $availableAssetsMap[$assetId] ?? null;
+                 if (!$availItem) {
+                      // Asset doesn't exist or logic error
+                      continue;
+                 }
+                 if ($qty > $availItem['available_count']) {
+                      header('Location: /eventos/admin/editEvent?id=' . $id . '&return_url=' . urlencode($returnUrl) . '&error=' . urlencode('O equipamento ' . $availItem['name'] . ' não possui quantidade suficiente (' . $availItem['available_count'] . ' disponíveis).'));
+                      exit;
+                 }
+            }
 
             $eventModel = new Event();
-            $eventModel->updateEvent($id, $name, $description, $date . ' ' . $time, $locationId, $categoryId, $status);
+            $eventModel->updateEvent($id, $name, $description, $formattedDate, $formattedEndDate, $locationId, $categoryId, $status, $isPublic);
+            
+            // --- Asset Update Logic ---
+            require_once __DIR__ . '/../models/Loan.php';
+            $loanModel = new Loan();
+
+            // Sync dates of existing loans
+            $loanModel->updateEventLoans($id, $formattedDate, $formattedEndDate);
+
+            // 1. Fetch current active loans for this event
+            $currentLoans = $loanModel->getLoansByEvent($id);
+            // Group active loans by Asset ID -> Stack of Loan IDs
+            $activeLoanStacks = [];
+            foreach ($currentLoans as $loan) {
+                if ($loan['status'] === 'Emprestado' || $loan['status'] === 'Aguardando') {
+                   $activeLoanStacks[$loan['asset_id']][] = $loan['id'];
+                }
+            }
+
+            // 2. Process each submitted asset
+            foreach ($submittedAssets as $assetId => $qty) {
+                $qty = (int)$qty;
+                $currentStack = $activeLoanStacks[$assetId] ?? [];
+                $currentCount = count($currentStack);
+
+                if ($qty > $currentCount) {
+                    // Need more items
+                    $diff = $qty - $currentCount;
+                    $eventInfo = $eventModel->getEventById($id);
+                    $borrowerId = $eventInfo['created_by']; 
+                    
+                    // Use updated time
+                    $loanDate = $formattedDate;
+                    $returnDate = $formattedEndDate ?: date('Y-m-d H:i:s', strtotime($loanDate . ' +1 hour'));
+                    
+                    $loanModel->requestLoan($assetId, $borrowerId, $id, $loanDate, $returnDate, $diff);
+                } elseif ($qty < $currentCount) {
+                    // Need to return items (reduce quantity)
+                    $diff = $currentCount - $qty;
+                    // Remove $diff items from stack
+                    for ($i = 0; $i < $diff; $i++) {
+                        $loanIdToRemove = array_pop($currentStack);
+                        if ($loanIdToRemove) {
+                            $loanModel->returnLoan($loanIdToRemove);
+                        }
+                    }
+                }
+            }
+            // --------------------------
+            
+            header('Location: ' . $returnUrl);
+            exit;
         }
         header('Location: /eventos/admin/events');
         exit;
@@ -393,11 +545,183 @@ class AdminController {
                 exit;
             }
             $id = (int)($_POST['id'] ?? 0);
+            
+            // Release assets before deletion
+            require_once __DIR__ . '/../models/Loan.php';
+            $loanModel = new Loan();
+            $loanModel->cancelLoansForEvent($id);
+
             $eventModel = new Event();
             $eventModel->deleteEvent($id);
         }
-        header('Location: /eventos/');
+        header('Location: /eventos/public/calendar');
         exit;
+    }
+
+    public function cancelEvent() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                header('Location: /eventos/?error=Invalid CSRF token');
+                exit;
+            }
+            $id = (int)($_POST['id'] ?? 0);
+            $eventModel = new Event();
+            $eventModel->updateStatus($id, 'Cancelado');
+            
+            // Release assets
+            require_once __DIR__ . '/../models/Loan.php';
+            $loanModel = new Loan();
+            $loanModel->cancelLoansForEvent($id);
+
+            header("Location: /eventos/public/detail?id=$id&status=cancelled");
+            exit;
+        }
+        header('Location: /eventos/public/calendar');
+        exit;
+    }
+
+    // --- Asset Management ---
+
+    public function assets() {
+        $this->checkAdminAccess();
+        require_once __DIR__ . '/../models/Asset.php';
+        // Need Loan model for view? view performs 'new Loan()' (line 77 of view).
+        // But good to ensure it's loaded if not autoloaded.
+        require_once __DIR__ . '/../models/Loan.php'; 
+        $assetModel = new Asset();
+        // Use getAllAssets (like AssetController) or getAllAssetsWithAvailability? 
+        // View uses available_quantity column.
+        // getAllAssetsWithAvailability also returns 'available_count'.
+        // Let's use getAllAssetsWithAvailability (default) which mimics 'available_quantity' if no date passed.
+        $assets = $assetModel->getAllAssetsWithAvailability(); 
+        $csrf_token = Security::generateCsrfToken();
+        include __DIR__ . '/../views/asset/index.php';
+    }
+
+    public function createAsset() {
+        $this->checkAdminAccess();
+        // Determine if handling POST or GET
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+             // Handle creation... (omitted for brevity unless requested, but needed for complete CRUD)
+             // Prioritizing Edit/Delete as requested.
+        }
+    }
+
+    public function editAsset() {
+        $this->checkAdminAccess();
+        $id = (int)($_GET['id'] ?? 0);
+        require_once __DIR__ . '/../models/Asset.php';
+        $assetModel = new Asset();
+        $asset = $assetModel->getAssetById($id);
+        if (!$asset) {
+            header('Location: /eventos/admin/assets');
+            exit;
+        }
+        $csrf_token = Security::generateCsrfToken();
+        include __DIR__ . '/../views/admin/edit_asset.php';
+    }
+
+    public function updateAsset() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+             if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                 header('Location: /eventos/admin/assets?error=Invalid CSRF token');
+                 exit;
+             }
+             $id = (int)($_POST['id'] ?? 0);
+             $name = trim($_POST['name'] ?? '');
+             $description = trim($_POST['description'] ?? '');
+             $quantity = (int)($_POST['quantity'] ?? 0);
+             
+             require_once __DIR__ . '/../models/Asset.php';
+             $assetModel = new Asset();
+             // Validation could go here
+             if ($assetModel->updateAsset($id, $name, $description, $quantity)) {
+                 header('Location: /eventos/admin/assets?success=Equipamento atualizado');
+             } else {
+                 header('Location: /eventos/admin/assets?error=Erro ao atualizar');
+             }
+             exit;
+        }
+        header('Location: /eventos/admin/assets');
+        exit;
+    }
+
+    public function deleteAsset() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                header('Location: /eventos/admin/assets?error=Invalid CSRF token');
+                exit;
+            }
+            $id = (int)($_POST['id'] ?? 0);
+            $confirmed = isset($_POST['confirm_delete']);
+
+            require_once __DIR__ . '/../models/Asset.php';
+            $assetModel = new Asset();
+            
+            if (!$confirmed) {
+                // Check for future reservations
+                $futureReservations = $assetModel->getFutureReservations($id);
+                if (!empty($futureReservations)) {
+                    // Show confirmation warning page
+                    $asset = $assetModel->getAssetById($id);
+                    $csrf_token = $_POST['csrf_token']; // Reuse token
+                    include __DIR__ . '/../views/admin/delete_asset_confirm.php';
+                    exit;
+                }
+            }
+
+            // Delete (force if confirmed or no reservations)
+            if ($assetModel->deleteAsset($id)) {
+                header('Location: /eventos/admin/assets?success=Equipamento excluído');
+            } else {
+                header('Location: /eventos/admin/assets?error=Erro ao excluir');
+            }
+            exit;
+        }
+        header('Location: /eventos/admin/assets');
+        exit;
+    }
+
+    public function printEvent() {
+        $this->checkAdminAccess();
+        $id = (int)($_GET['id'] ?? 0);
+        
+        $eventModel = new Event();
+        $event = $eventModel->getEventById($id);
+        
+        if (!$event) {
+            die('Evento não encontrado.');
+        }
+
+        require_once __DIR__ . '/../models/Loan.php';
+        require_once __DIR__ . '/../models/PendingItem.php';
+        require_once __DIR__ . '/../models/User.php';
+        
+        $loanModel = new Loan();
+        $pendingItemModel = new PendingItem();
+        $userModel = new User();
+        
+        $loans = $loanModel->getLoansByEvent($id);
+        
+        // Fetch global pending items to filter in-memory (simplest for now)
+        $allPending = $pendingItemModel->getAllItems(); 
+        $eventPendingItems = array_filter($allPending, function($item) use ($id) {
+            return $item['event_id'] == $id;
+        });
+
+        // Determine context
+        $isFinished = false;
+        if (!empty($event['end_date'])) {
+            $isFinished = strtotime($event['end_date']) < time();
+        } else {
+            // If only start date, assume finished if start date was yesterday
+            $isFinished = strtotime($event['date']) < strtotime('-1 day');
+        }
+        
+        include __DIR__ . '/../views/admin/print_event.php';
     }
 
 }

@@ -18,7 +18,7 @@ ob_start();
                         <p class="card-text"><?php echo htmlspecialchars($event['description']); ?></p>
                         <p class="card-text"><strong>Data:</strong> <?php echo htmlspecialchars($event['date']); ?></p>
                         <p class="card-text"><strong>Localização:</strong> <?php echo htmlspecialchars($event['location_name'] ?? 'N/A'); ?></p>
-                        <p class="card-text"><strong>Ativos Solicitados:</strong> <?php echo htmlspecialchars($event['assets_display']); ?></p>
+                        <p class="card-text"><strong>Equipamentos Solicitados:</strong> <?php echo htmlspecialchars($event['assets_display']); ?></p>
                         <div class="d-flex gap-2">
                             <a href="/eventos/admin/editEvent?id=<?php echo $event['id']; ?>" class="btn btn-primary">Editar</a>
                             <form action="/eventos/admin/approve" method="post" class="d-inline">
