@@ -150,7 +150,12 @@ ob_start();
                                         $endTime = date('H:i', $endTs);
                                     }
                                     
-                                    $eventPopover = "<strong>Hora:</strong> " . date('H:i', $startTs) . " - " . $endTime . "<br>";
+                                    $imgPop = !empty($event['image_path']) ? $event['image_path'] : '/eventos/lib/banner.jpeg';
+                                    
+                                    $eventPopover = "<div class='mb-2'>";
+                                    $eventPopover .= "<img src='" . htmlspecialchars($imgPop) . "' class='img-fluid rounded shadow-sm' style='width: 100%; height: 100px; object-fit: cover;'>";
+                                    $eventPopover .= "</div>";
+                                    $eventPopover .= "<strong>Hora:</strong> " . date('H:i', $startTs) . " - " . $endTime . "<br>";
                                     $eventPopover .= "<strong>Local:</strong> " . htmlspecialchars($event['location_name'] ?? 'N/A') . "<br>";
                                     $eventPopover .= "<small>" . htmlspecialchars(substr($eventDesc, 0, 100)) . (strlen($eventDesc)>100?'...':'') . "</small>";
 

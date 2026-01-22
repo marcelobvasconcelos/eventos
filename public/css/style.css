@@ -1,7 +1,8 @@
 /* Global Styles */
 body {
     font-family: 'Poppins', sans-serif !important;
-    background-color: #f8f9fa !important;
+    background-color: #e9ecef !important;
+    /* Soft gray for side background */
 }
 
 /* Navbar */

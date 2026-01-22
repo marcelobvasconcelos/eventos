@@ -479,8 +479,29 @@ class AdminController {
                  }
             }
 
+            $imagePath = null;
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../public/uploads/events/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                $fileTmpPath = $_FILES['image']['tmp_name'];
+                $fileName = $_FILES['image']['name'];
+                $fileNameCmps = explode(".", $fileName);
+                $fileExtension = strtolower(end($fileNameCmps));
+                $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
+                
+                if (in_array($fileExtension, $allowedfileExtensions)) {
+                    $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
+                    $dest_path = $uploadDir . $newFileName;
+                    if(move_uploaded_file($fileTmpPath, $dest_path)) {
+                        $imagePath = '/eventos/public/uploads/events/' . $newFileName;
+                    }
+                }
+            }
+
             $eventModel = new Event();
-            $eventModel->updateEvent($id, $name, $description, $formattedDate, $formattedEndDate, $locationId, $categoryId, $status, $isPublic);
+            $eventModel->updateEvent($id, $name, $description, $formattedDate, $formattedEndDate, $locationId, $categoryId, $status, $isPublic, $imagePath);
             
             // --- Asset Update Logic ---
             require_once __DIR__ . '/../models/Loan.php';

@@ -7,9 +7,13 @@ ob_start();
     <div class="col-lg-8">
         <div class="card shadow rounded-lg border-0 mb-4">
             <div class="card-header bg-white py-4 border-0 text-center">
-                <div class="d-inline-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle mb-3" style="width: 70px; height: 70px;">
-                    <i class="fas fa-calendar-alt fa-2x"></i>
+                <?php 
+                    $displayImage = !empty($event['image_path']) ? $event['image_path'] : '/eventos/lib/banner.jpeg';
+                ?>
+                <div class="mb-4">
+                    <img src="<?php echo htmlspecialchars($displayImage); ?>" alt="<?php echo htmlspecialchars($event['name']); ?>" class="img-fluid rounded-3 shadow-sm" style="max-height: 400px; width: 100%; object-fit: cover;">
                 </div>
+
                 <?php
                     $isPublic = $event['is_public'] ?? 1;
                     $isAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
@@ -173,6 +177,19 @@ $canViewAssets = isset($_SESSION['user_id']) && (
                 <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                     <a href="/eventos/admin/editEvent?id=<?php echo $event['id']; ?>&return_url=<?php echo urlencode('/eventos/public/detail?id=' . $event['id']); ?>" class="btn btn-primary rounded-pill px-4 ms-2"><i class="fas fa-edit me-2"></i>Editar</a>
                     
+                    <?php if (($event['status'] ?? '') === 'Pendente'): ?>
+                         <form action="/eventos/admin/approve" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                            <input type="hidden" name="event_id" value="<?php echo $event['id']; ?>">
+                             <button type="submit" class="btn btn-success rounded-pill px-4 ms-2"><i class="fas fa-check-circle me-2"></i>Aprovar</button>
+                        </form>
+                        <form action="/eventos/admin/reject" method="POST" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                            <input type="hidden" name="event_id" value="<?php echo $event['id']; ?>">
+                             <button type="submit" class="btn btn-danger rounded-pill px-4 ms-2"><i class="fas fa-times-circle me-2"></i>Rejeitar</button>
+                        </form>
+                    <?php endif; ?>
+
                     <?php if ($event['status'] !== 'Cancelado'): ?>
                         <form action="/eventos/admin/cancelEvent" method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja CANCELAR este evento? Ele continuará visível no mapa/calendário como CANCELADO.');">
                             <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">

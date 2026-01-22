@@ -16,10 +16,22 @@ ob_start();
     </div>
 <?php endif; ?>
 
-<form method="POST" action="/eventos/admin/updateEvent" class="row g-3">
+<form method="POST" action="/eventos/admin/updateEvent" class="row g-3" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
     <input type="hidden" name="id" value="<?php echo htmlspecialchars($event['id']); ?>">
     <input type="hidden" name="return_url" value="<?php echo htmlspecialchars($returnUrl ?? '/eventos/admin/events'); ?>">
+    
+    <div class="col-12">
+        <label for="image" class="form-label fw-bold">Imagem de Capa</label>
+        <?php if (!empty($event['image_path'])): ?>
+            <div class="mb-2">
+                <img src="<?php echo htmlspecialchars($event['image_path']); ?>" alt="Imagem Atual" class="img-thumbnail" style="max-height: 150px;">
+            </div>
+        <?php endif; ?>
+        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+        <div class="form-text">Deixe vazio para manter a imagem atual.</div>
+    </div>
+
     <div class="col-md-6">
         <label for="name" class="form-label">Título</label>
         <input type="text" name="name" id="name" class="form-control" value="<?php echo htmlspecialchars($event['name']); ?>" required>

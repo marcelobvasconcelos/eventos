@@ -112,9 +112,20 @@ class Event {
         }
     }
 
-    public function updateEvent($id, $name, $description, $date, $endDate, $locationId, $categoryId, $status, $isPublic) {
-        $stmt = $this->pdo->prepare("UPDATE events SET name = ?, description = ?, date = ?, end_date = ?, location_id = ?, category_id = ?, status = ?, is_public = ? WHERE id = ?");
-        return $stmt->execute([$name, $description, $date, $endDate ?: null, $locationId ?: null, $categoryId ?: null, $status, $isPublic, $id]);
+    public function updateEvent($id, $name, $description, $date, $endDate, $locationId, $categoryId, $status, $isPublic, $imagePath = null) {
+        $sql = "UPDATE events SET name = ?, description = ?, date = ?, end_date = ?, location_id = ?, category_id = ?, status = ?, is_public = ?";
+        $params = [$name, $description, $date, $endDate ?: null, $locationId ?: null, $categoryId ?: null, $status, $isPublic];
+        
+        if ($imagePath !== null) { 
+            $sql .= ", image_path = ?";
+            $params[] = $imagePath;
+        }
+        
+        $sql .= " WHERE id = ?";
+        $params[] = $id;
+
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute($params);
     }
 
     public function deleteEvent($id) {
@@ -122,9 +133,9 @@ class Event {
         return $stmt->execute([$id]);
     }
 
-    public function createEvent($name, $description, $date, $endDate, $locationId, $categoryId, $createdBy, $isPublic = 1) {
-        $stmt = $this->pdo->prepare("INSERT INTO events (name, description, date, end_date, location_id, category_id, created_by, is_public) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $description, $date, $endDate ?: null, $locationId, $categoryId, $createdBy, $isPublic]);
+    public function createEvent($name, $description, $date, $endDate, $locationId, $categoryId, $createdBy, $isPublic = 1, $imagePath = null) {
+        $stmt = $this->pdo->prepare("INSERT INTO events (name, description, date, end_date, location_id, category_id, created_by, is_public, image_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $description, $date, $endDate ?: null, $locationId, $categoryId, $createdBy, $isPublic, $imagePath]);
         return $this->pdo->lastInsertId();
     }
 

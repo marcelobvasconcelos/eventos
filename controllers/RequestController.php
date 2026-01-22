@@ -131,10 +131,31 @@ class RequestController {
             return;
         }
 
+        $imagePath = null;
+        if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../public/uploads/events/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $fileTmpPath = $_FILES['image']['tmp_name'];
+            $fileName = $_FILES['image']['name'];
+            $fileNameCmps = explode(".", $fileName);
+            $fileExtension = strtolower(end($fileNameCmps));
+            $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
+            
+            if (in_array($fileExtension, $allowedfileExtensions)) {
+                $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
+                $dest_path = $uploadDir . $newFileName;
+                if(move_uploaded_file($fileTmpPath, $dest_path)) {
+                    $imagePath = '/eventos/public/uploads/events/' . $newFileName;
+                }
+            }
+        }
+
         $isPublic = isset($_POST['is_public']) ? (int)$_POST['is_public'] : 1;
 
         $eventModel = new Event();
-        $eventId = $eventModel->createEvent($title, $description, $formattedDate, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic);
+        $eventId = $eventModel->createEvent($title, $description, $formattedDate, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath);
         
         $requestModel = new EventRequest();
         $requestId = $requestModel->createRequest($_SESSION['user_id'], $eventId);

@@ -20,9 +20,15 @@ ob_start();
                     </div>
                 <?php endif; ?>
                 
-                <form method="POST" action="/eventos/request/submit" class="row g-4">
+                <form method="POST" action="/eventos/request/submit" class="row g-4" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     
+                    <div class="col-12">
+                        <label for="image" class="form-label fw-bold text-secondary">Imagem do Evento (Opcional)</label>
+                        <input type="file" class="form-control bg-light" id="image" name="image" accept="image/*">
+                        <div class="form-text">Formatos aceitos: JPG, PNG, GIF, WEBP.</div>
+                    </div>
+
                     <div class="col-12">
                         <label for="title" class="form-label fw-semibold text-secondary">Título do Evento</label>
                         <div class="input-group">

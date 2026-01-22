@@ -6,8 +6,15 @@ ob_start();
 <?php if (isset($errorMessages)): ?>
     <div class="alert alert-danger"><?php echo htmlspecialchars($errorMessages); ?></div>
 <?php endif; ?>
-<form method="POST" action="/eventos/public/create" class="row g-3">
+<form method="POST" action="/eventos/public/create" class="row g-3" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token ?? ''); ?>">
+    
+    <div class="col-12">
+        <label for="image" class="form-label fw-bold">Imagem do Evento (Opcional)</label>
+        <input type="file" class="form-control" id="image" name="image" accept="image/*">
+        <div class="form-text">Formatos aceitos: JPG, PNG, GIF, WEBP.</div>
+    </div>
+
     <div class="col-md-6">
         <label for="name" class="form-label">Título</label>
         <input type="text" name="name" id="name" class="form-control" value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>" required>

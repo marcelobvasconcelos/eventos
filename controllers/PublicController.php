@@ -174,11 +174,38 @@ class PublicController {
             }
 
 
+            $imagePath = null;
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../public/uploads/events/';
+                if (!is_dir($uploadDir)) {
+                    mkdir($uploadDir, 0777, true);
+                }
+                
+                $fileTmpPath = $_FILES['image']['tmp_name'];
+                $fileName = $_FILES['image']['name'];
+                $fileSize = $_FILES['image']['size'];
+                $fileType = $_FILES['image']['type'];
+                $fileNameCmps = explode(".", $fileName);
+                $fileExtension = strtolower(end($fileNameCmps));
+                
+                $allowedfileExtensions = array('jpg', 'gif', 'png', 'jpeg', 'webp');
+                if (in_array($fileExtension, $allowedfileExtensions)) {
+                    $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
+                    $dest_path = $uploadDir . $newFileName;
+                    
+                    if(move_uploaded_file($fileTmpPath, $dest_path)) {
+                        $imagePath = '/eventos/public/uploads/events/' . $newFileName;
+                    } else {
+                         // Non-blocking error for now, just skip image
+                    }
+                }
+            }
+
             $isPublic = isset($_POST['is_public']) ? (int)$_POST['is_public'] : 1;
 
             $eventModel = new Event();
-            // Modified: Pass endDateTime to createEvent
-            $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic);
+            // Modified: Pass endDateTime and imagePath to createEvent
+            $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath);
 
             // Handle asset loans
             $selectedAssets = $_POST['assets'] ?? [];
