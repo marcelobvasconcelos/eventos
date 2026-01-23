@@ -11,12 +11,12 @@ class Asset {
         $this->pdo = $pdo;
     }
 
-    public function addAsset($name, $description, $quantity) {
+    public function addAsset($name, $description, $quantity, $category_id = null, $requires_patrimony = 0) {
         $this->pdo->beginTransaction();
         try {
             // 1. Insert Asset
-            $stmt = $this->pdo->prepare("INSERT INTO assets (name, description, quantity, available_quantity) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$name, $description, $quantity, $quantity]);
+            $stmt = $this->pdo->prepare("INSERT INTO assets (name, description, quantity, available_quantity, category_id, requires_patrimony) VALUES (?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $description, $quantity, $quantity, $category_id, $requires_patrimony]);
             $assetId = $this->pdo->lastInsertId();
 
             // 2. Insert Asset Items
@@ -55,14 +55,15 @@ class Asset {
             // Available = Total Quantity - Count of Active Loans overlapping the requested range
             // If excludeEventId is provided, do NOT count loans from that event.
             
-            $sql = "SELECT a.*, 
+            $sql = "SELECT a.*, c.name as category_name,
                 (a.quantity - (
+
                     SELECT COUNT(*) 
                     FROM loans l 
                     JOIN asset_items ai ON l.item_id = ai.id 
                     WHERE ai.asset_id = a.id 
                     AND l.status = 'Emprestado' 
-                    AND (l.loan_date < ? AND COALESCE(l.return_date, l.loan_date) > ?)";
+                    AND (l.loan_date < ? AND DATE_ADD(COALESCE(l.return_date, l.loan_date), INTERVAL 24 HOUR) > ?)";
             
             $params = [$endDateTime, $startDateTime];
             if ($excludeEventId) {
@@ -72,7 +73,8 @@ class Asset {
             
             $sql .= ")) as available_count
                 FROM assets a
-                ORDER BY a.name ASC";
+                LEFT JOIN asset_categories c ON a.category_id = c.id
+                ORDER BY c.name ASC, a.name ASC";
 
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
@@ -93,19 +95,29 @@ class Asset {
              return $this->getAllAssetsWithAvailability($startDateTime, $endOfDay);
         } else {
             // No date, fallback to physical quantity check
-            $stmt = $this->pdo->prepare("SELECT *, quantity as available_count, (quantity > 0) as is_available FROM assets ORDER BY name ASC");
+            $stmt = $this->pdo->prepare("
+                SELECT a.*, c.name as category_name, a.quantity as available_count, (a.quantity > 0) as is_available 
+                FROM assets a
+                LEFT JOIN asset_categories c ON a.category_id = c.id
+                ORDER BY c.name ASC, a.name ASC
+            ");
             $stmt->execute();
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
     }
 
     public function getAssetById($id) {
-        $stmt = $this->pdo->prepare("SELECT * FROM assets WHERE id = ?");
+        $stmt = $this->pdo->prepare("
+            SELECT a.*, c.name as category_name 
+            FROM assets a 
+            LEFT JOIN asset_categories c ON a.category_id = c.id 
+            WHERE a.id = ?
+        ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
-    public function updateAsset($id, $name, $description, $quantity) {
+    public function updateAsset($id, $name, $description, $quantity, $category_id = null, $requires_patrimony = 0) {
         $this->pdo->beginTransaction();
         try {
             // Get current quantity
@@ -115,8 +127,8 @@ class Asset {
             
             $delta = $quantity - $current;
 
-            $stmt = $this->pdo->prepare("UPDATE assets SET name = ?, description = ?, quantity = ?, available_quantity = available_quantity + ? WHERE id = ?");
-            $stmt->execute([$name, $description, $quantity, $delta, $id]);
+            $stmt = $this->pdo->prepare("UPDATE assets SET name = ?, description = ?, quantity = ?, available_quantity = available_quantity + ?, category_id = ?, requires_patrimony = ? WHERE id = ?");
+            $stmt->execute([$name, $description, $quantity, $delta, $category_id, $requires_patrimony, $id]);
             
             $this->pdo->commit();
             return true;
@@ -159,6 +171,13 @@ class Asset {
         ");
         $stmt->execute([$asset_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function getAssetCount() {
+        // Count total unique asset types defined
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM assets");
+        $stmt->execute();
+        return $stmt->fetchColumn();
     }
 
 }

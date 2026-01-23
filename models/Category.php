@@ -38,6 +38,12 @@ class Category {
         return $stmt->execute([$id]);
     }
 
+    public function getCategoryCount() {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM categories");
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
 }
 
 ?>

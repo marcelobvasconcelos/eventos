@@ -2,7 +2,7 @@
 $title = 'Painel Administrativo';
 ob_start();
 ?>
-<h1 class="text-center mb-5">Painel Administrativo</h1>
+<h1 class="text-center mb-5 text-white fw-bold">Painel Administrativo</h1>
 <div class="row">
     <div class="col-md-4 mb-4">
         <div class="card dashboard-card h-100">
@@ -11,6 +11,11 @@ ob_start();
                 <h5 class="card-title">Gerenciar Eventos</h5>
                 <p class="card-text">Aprovar e editar eventos.</p>
                 <a href="/eventos/admin/events" class="btn btn-outline-primary mt-auto">Acessar</a>
+                <div class="mt-3">
+                    <span class="badge bg-success rounded-pill px-3 py-2">
+                        <?php echo $futureEventsCount; ?> Eventos Disponíveis
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -21,6 +26,11 @@ ob_start();
                 <h5 class="card-title">Gerenciar Usuários</h5>
                 <p class="card-text">Administrar contas.</p>
                 <a href="/eventos/admin/users" class="btn btn-outline-primary mt-auto">Acessar</a>
+                 <div class="mt-3">
+                    <span class="badge bg-info text-dark rounded-pill px-3 py-2">
+                        <?php echo $userCount; ?> Usuários
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -31,6 +41,11 @@ ob_start();
                 <h5 class="card-title">Gerenciar Locais</h5>
                 <p class="card-text">Locais disponíveis.</p>
                 <a href="/eventos/admin/locations" class="btn btn-outline-primary mt-auto">Acessar</a>
+                <div class="mt-3">
+                    <span class="badge bg-warning text-dark rounded-pill px-3 py-2">
+                        <?php echo $locationCount; ?> Locais
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -41,6 +56,11 @@ ob_start();
                 <h5 class="card-title">Gerenciar Categorias</h5>
                 <p class="card-text">Categorias de eventos.</p>
                 <a href="/eventos/admin/categories" class="btn btn-outline-primary mt-auto">Acessar</a>
+                <div class="mt-3">
+                    <span class="badge bg-secondary rounded-pill px-3 py-2">
+                        <?php echo $categoryCount; ?> Categorias
+                    </span>
+                </div>
             </div>
         </div>
     </div>
@@ -51,6 +71,11 @@ ob_start();
                 <h5 class="card-title">Patrimônio</h5>
                 <p class="card-text">Gestão de Equipamentos.</p>
                 <a href="/eventos/asset" class="btn btn-outline-primary mt-auto">Acessar</a>
+                <div class="mt-3">
+                    <span class="badge bg-primary rounded-pill px-3 py-2">
+                        <?php echo $assetCount; ?> Tipos de Itens
+                    </span>
+                </div>
             </div>
         </div>
     </div>

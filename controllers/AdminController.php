@@ -4,6 +4,7 @@ require_once __DIR__ . '/../models/Event.php';
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Location.php';
 require_once __DIR__ . '/../models/Category.php';
+require_once __DIR__ . '/../models/AssetCategory.php';
 require_once __DIR__ . '/../lib/Security.php';
 
 class AdminController {
@@ -17,6 +18,26 @@ class AdminController {
 
     public function dashboard() {
         $this->checkAdminAccess();
+        
+        $eventModel = new Event();
+        $futureEventsCount = $eventModel->getFutureEventsCount();
+        
+        require_once __DIR__ . '/../models/User.php';
+        $userModel = new User();
+        $userCount = $userModel->getUserCount();
+        
+        require_once __DIR__ . '/../models/Location.php';
+        $locationModel = new Location();
+        $locationCount = $locationModel->getLocationCount();
+        
+        require_once __DIR__ . '/../models/Category.php';
+        $categoryModel = new Category();
+        $categoryCount = $categoryModel->getCategoryCount();
+        
+        require_once __DIR__ . '/../models/Asset.php';
+        $assetModel = new Asset();
+        $assetCount = $assetModel->getAssetCount();
+
         include __DIR__ . '/../views/admin/dashboard.php';
     }
 
@@ -604,6 +625,77 @@ class AdminController {
 
     // --- Asset Management ---
 
+    public function assetCategories() {
+        $this->checkAdminAccess();
+        $assetCategoryModel = new AssetCategory();
+        $categories = $assetCategoryModel->getAll();
+        $csrf_token = Security::generateCsrfToken();
+        include __DIR__ . '/../views/admin/asset_categories.php';
+    }
+
+    public function createAssetCategory() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                header('Location: /eventos/admin/assetCategories?error=Invalid CSRF token');
+                exit;
+            }
+            $name = trim($_POST['name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $assetCategoryModel = new AssetCategory();
+            if ($assetCategoryModel->create($name, $description)) {
+                header('Location: /eventos/admin/assetCategories?success=Categoria criada');
+            } else {
+                header('Location: /eventos/admin/assetCategories?error=Erro ao criar categoria');
+            }
+            exit;
+        }
+        header('Location: /eventos/admin/assetCategories');
+        exit;
+    }
+
+    public function updateAssetCategory() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                header('Location: /eventos/admin/assetCategories?error=Invalid CSRF token');
+                exit;
+            }
+            $id = (int)($_POST['id'] ?? 0);
+            $name = trim($_POST['name'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $assetCategoryModel = new AssetCategory();
+            if ($assetCategoryModel->update($id, $name, $description)) {
+                header('Location: /eventos/admin/assetCategories?success=Categoria atualizada');
+            } else {
+                header('Location: /eventos/admin/assetCategories?error=Erro ao atualizar categoria');
+            }
+            exit;
+        }
+        header('Location: /eventos/admin/assetCategories');
+        exit;
+    }
+
+    public function deleteAssetCategory() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                header('Location: /eventos/admin/assetCategories?error=Invalid CSRF token');
+                exit;
+            }
+            $id = (int)($_POST['id'] ?? 0);
+            $assetCategoryModel = new AssetCategory();
+            if ($assetCategoryModel->delete($id)) {
+                 header('Location: /eventos/admin/assetCategories?success=Categoria excluída');
+            } else {
+                 header('Location: /eventos/admin/assetCategories?error=Erro ao excluir categoria');
+            }
+            exit;
+        }
+        header('Location: /eventos/admin/assetCategories');
+        exit;
+    }
+
     public function assets() {
         $this->checkAdminAccess();
         require_once __DIR__ . '/../models/Asset.php';
@@ -616,16 +708,35 @@ class AdminController {
         // getAllAssetsWithAvailability also returns 'available_count'.
         // Let's use getAllAssetsWithAvailability (default) which mimics 'available_quantity' if no date passed.
         $assets = $assetModel->getAllAssetsWithAvailability(); 
+        
+        $assetCategoryModel = new AssetCategory();
+        $categories = $assetCategoryModel->getAll();
+
         $csrf_token = Security::generateCsrfToken();
         include __DIR__ . '/../views/asset/index.php';
     }
 
-    public function createAsset() {
+    public function createAssetAction() {
         $this->checkAdminAccess();
-        // Determine if handling POST or GET
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-             // Handle creation... (omitted for brevity unless requested, but needed for complete CRUD)
-             // Prioritizing Edit/Delete as requested.
+             if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                 header('Location: /eventos/admin/assets?error=Invalid CSRF token');
+                 exit;
+             }
+             $name = trim($_POST['name'] ?? '');
+             $description = trim($_POST['description'] ?? '');
+             $quantity = (int)($_POST['quantity'] ?? 0);
+             $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+             $requires_patrimony = isset($_POST['requires_patrimony']) ? 1 : 0;
+             
+             require_once __DIR__ . '/../models/Asset.php';
+             $assetModel = new Asset();
+             if ($assetModel->addAsset($name, $description, $quantity, $category_id, $requires_patrimony)) {
+                 header('Location: /eventos/admin/assets?success=Equipamento criado');
+             } else {
+                 header('Location: /eventos/admin/assets?error=Erro ao criar');
+             }
+             exit;
         }
     }
 
@@ -639,6 +750,8 @@ class AdminController {
             header('Location: /eventos/admin/assets');
             exit;
         }
+        $assetCategoryModel = new AssetCategory();
+        $categories = $assetCategoryModel->getAll();
         $csrf_token = Security::generateCsrfToken();
         include __DIR__ . '/../views/admin/edit_asset.php';
     }
@@ -654,11 +767,13 @@ class AdminController {
              $name = trim($_POST['name'] ?? '');
              $description = trim($_POST['description'] ?? '');
              $quantity = (int)($_POST['quantity'] ?? 0);
+             $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+             $requires_patrimony = isset($_POST['requires_patrimony']) ? 1 : 0;
              
              require_once __DIR__ . '/../models/Asset.php';
              $assetModel = new Asset();
              // Validation could go here
-             if ($assetModel->updateAsset($id, $name, $description, $quantity)) {
+             if ($assetModel->updateAsset($id, $name, $description, $quantity, $category_id, $requires_patrimony)) {
                  header('Location: /eventos/admin/assets?success=Equipamento atualizado');
              } else {
                  header('Location: /eventos/admin/assets?error=Erro ao atualizar');
@@ -720,10 +835,12 @@ class AdminController {
         require_once __DIR__ . '/../models/Loan.php';
         require_once __DIR__ . '/../models/PendingItem.php';
         require_once __DIR__ . '/../models/User.php';
+        require_once __DIR__ . '/../models/Asset.php';
         
         $loanModel = new Loan();
         $pendingItemModel = new PendingItem();
         $userModel = new User();
+        $assetModel = new Asset();
         
         $loans = $loanModel->getLoansByEvent($id);
         

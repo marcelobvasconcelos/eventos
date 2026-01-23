@@ -2,10 +2,10 @@
 $title = 'Minhas Pendências';
 ob_start();
 ?>
-<div class="row mb-4">
-    <div class="col-md-12">
-        <h2 class="text-primary"><i class="fas fa-clipboard-list me-2"></i>Minhas Pendências de Devolução</h2>
-        <p class="text-muted">Gerencie a devolução de chaves e equipamentos dos seus eventos finalizados.</p>
+<div class="card shadow-sm border-0 rounded-lg mb-4">
+    <div class="card-body py-4">
+        <h2 class="text-primary fw-bold mb-1"><i class="fas fa-clipboard-list me-2"></i>Minhas Pendências de Devolução</h2>
+        <p class="text-muted mb-0">Gerencie a devolução de chaves e equipamentos dos seus eventos finalizados.</p>
     </div>
 </div>
 
@@ -95,7 +95,7 @@ ob_start();
     <div class="row">
         <?php foreach ($historyItems as $item): ?>
             <div class="col-md-6 mb-4">
-                <div class="card shadow-sm h-100 border-0 bg-light opacity-75">
+                <div class="card shadow-sm h-100 border-0 bg-white">
                     <div class="card-body">
                          <div class="d-flex justify-content-between align-items-start mb-3">
                             <h5 class="card-title fw-bold text-muted mb-0">

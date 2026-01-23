@@ -130,7 +130,10 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
                     <div class="col-md-6">
-                        <label for="location" class="form-label fw-semibold text-secondary">Localização</label>
+                        <label for="location" class="form-label fw-semibold text-secondary">
+                            Localização 
+                            <a href="/eventos/public/locations" target="_blank" class="small ms-2 text-decoration-none"><i class="fas fa-external-link-alt me-1"></i>Ver ficha técnica</a>
+                        </label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-map-marker-alt"></i></span>
                             <select name="location" id="location" class="form-select border-start-0 ps-0 bg-light" required>
@@ -141,8 +144,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                         $disabledAttr = $isOccupied ? 'disabled' : '';
                                         $occupiedText = $isOccupied ? ' (Ocupado neste horário)' : '';
                                         $selected = (isset($_POST['location']) && $_POST['location'] == $location['id']) ? 'selected' : '';
+                                        $capacityText = !empty($location['capacity']) ? ' (Cap: ' . $location['capacity'] . ')' : '';
                                     ?>
-                                    <option value="<?php echo $location['id']; ?>" <?php echo $selected; ?> <?php echo $disabledAttr; ?>><?php echo htmlspecialchars($location['name']) . $occupiedText; ?></option>
+                                    <option value="<?php echo $location['id']; ?>" <?php echo $selected; ?> <?php echo $disabledAttr; ?>><?php echo htmlspecialchars($location['name']) . $capacityText . $occupiedText; ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -192,39 +196,73 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="card bg-light border-0 rounded-3">
                             <div class="card-body">
                                 <h6 class="card-title fw-bold text-secondary mb-3"><i class="fas fa-boxes me-2"></i>Equipamentos Necessários</h6>
-                                <div class="row g-3">
-                                    <?php foreach ($assets as $asset): ?>
-                                        <div class="col-md-6">
-                                            <div class="form-check p-3 bg-white rounded border shadow-sm h-100 position-relative <?php echo ($asset['available_count'] <= 0) ? 'opacity-50' : ''; ?>">
-                                                <input class="form-check-input ms-0 me-2" type="checkbox" name="assets[]" value="<?php echo $asset['id']; ?>" id="asset_<?php echo $asset['id']; ?>" 
-                                                <?php 
-                                                $checked = false;
-                                                if (isset($_POST['assets']) && in_array($asset['id'], $_POST['assets'])) {
-                                                    $checked = true;
-                                                } elseif (isset($_GET['asset_id']) && $_GET['asset_id'] == $asset['id']) {
-                                                    $checked = true;
-                                                }
-                                                echo $checked ? 'checked' : '';
-                                                ?>
-                                                <?php echo ($asset['available_count'] <= 0) ? 'disabled' : ''; ?>
-                                                onchange="document.getElementById('qty_<?php echo $asset['id']; ?>').disabled = !this.checked; if(this.checked) document.getElementById('qty_<?php echo $asset['id']; ?>').focus();">
-                                                
-                                                <label class="form-check-label w-100" for="asset_<?php echo $asset['id']; ?>">
-                                                    <span class="fw-medium"><?php echo htmlspecialchars($asset['name']); ?></span>
-                                                    <br>
-                                                    <?php if ($asset['available_count'] > 0): ?>
-                                                        <small class="text-success"><i class="fas fa-check-circle me-1"></i>Disponível: <?php echo $asset['available_count']; ?></small>
-                                                    <?php else: ?>
-                                                        <small class="text-danger"><i class="fas fa-times-circle me-1"></i>Esgotado</small>
-                                                    <?php endif; ?>
-                                                </label>
-                                                <div class="mt-2" style="position: relative; z-index: 2;">
-                                                    <label class="small text-muted">Quantidade:</label>
-                                                    <input type="number" name="quantities[<?php echo $asset['id']; ?>]" id="qty_<?php echo $asset['id']; ?>" class="form-control form-control-sm d-inline-block w-auto ms-1" value="<?php echo htmlspecialchars($_POST['quantities'][$asset['id']] ?? 1); ?>" min="1" max="<?php echo $asset['available_count']; ?>" <?php echo $checked ? '' : 'disabled'; ?> onclick="event.stopPropagation()">
+                                
+                                <?php
+                                $assetsByCategory = [];
+                                foreach ($assets as $asset) {
+                                    $catName = $asset['category_name'] ?? 'Outros';
+                                    if (empty($catName)) $catName = 'Outros';
+                                    $assetsByCategory[$catName][] = $asset;
+                                }
+                                ?>
+
+                                <div class="accordion" id="assetsAccordion">
+                                    <?php 
+                                    $catIndex = 0;
+                                    foreach ($assetsByCategory as $categoryName => $categoryAssets): 
+                                        $collapseId = "collapseCat" . $catIndex;
+                                        $headingId = "headingCat" . $catIndex;
+                                    ?>
+                                        <div class="accordion-item mb-2 border rounded overflow-hidden">
+                                            <h2 class="accordion-header" id="<?php echo $headingId; ?>">
+                                                <button class="accordion-button <?php echo $catIndex > 0 ? 'collapsed' : ''; ?> bg-light text-primary fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#<?php echo $collapseId; ?>" aria-expanded="<?php echo $catIndex === 0 ? 'true' : 'false'; ?>" aria-controls="<?php echo $collapseId; ?>">
+                                                    <?php echo htmlspecialchars($categoryName); ?>
+                                                    <span class="badge bg-primary rounded-pill ms-2"><?php echo count($categoryAssets); ?></span>
+                                                </button>
+                                            </h2>
+                                            <div id="<?php echo $collapseId; ?>" class="accordion-collapse collapse <?php echo $catIndex === 0 ? 'show' : ''; ?>" aria-labelledby="<?php echo $headingId; ?>" data-bs-parent="#assetsAccordion">
+                                                <div class="accordion-body bg-white">
+                                                    <div class="row g-3">
+                                                        <?php foreach ($categoryAssets as $asset): ?>
+                                                            <div class="col-md-6">
+                                                                <div class="form-check p-3 bg-white rounded border shadow-sm h-100 position-relative <?php echo ($asset['available_count'] <= 0) ? 'opacity-50' : ''; ?>">
+                                                                    <input class="form-check-input ms-0 me-2" type="checkbox" name="assets[]" value="<?php echo $asset['id']; ?>" id="asset_<?php echo $asset['id']; ?>" 
+                                                                    <?php 
+                                                                    $checked = false;
+                                                                    if (isset($_POST['assets']) && in_array($asset['id'], $_POST['assets'])) {
+                                                                        $checked = true;
+                                                                    } elseif (isset($_GET['asset_id']) && $_GET['asset_id'] == $asset['id']) {
+                                                                        $checked = true;
+                                                                    }
+                                                                    echo $checked ? 'checked' : '';
+                                                                    ?>
+                                                                    <?php echo ($asset['available_count'] <= 0) ? 'disabled' : ''; ?>
+                                                                    onchange="document.getElementById('qty_<?php echo $asset['id']; ?>').disabled = !this.checked; if(this.checked) document.getElementById('qty_<?php echo $asset['id']; ?>').focus();">
+                                                                    
+                                                                    <label class="form-check-label w-100" for="asset_<?php echo $asset['id']; ?>">
+                                                                        <span class="fw-medium"><?php echo htmlspecialchars($asset['name']); ?></span>
+                                                                        <br>
+                                                                        <?php if ($asset['available_count'] > 0): ?>
+                                                                            <small class="text-success"><i class="fas fa-check-circle me-1"></i>Disponível: <?php echo $asset['available_count']; ?></small>
+                                                                        <?php else: ?>
+                                                                            <small class="text-danger"><i class="fas fa-times-circle me-1"></i>Esgotado</small>
+                                                                        <?php endif; ?>
+                                                                    </label>
+                                                                    <div class="mt-2" style="position: relative; z-index: 2;">
+                                                                        <label class="small text-muted">Quantidade:</label>
+                                                                        <input type="number" name="quantities[<?php echo $asset['id']; ?>]" id="qty_<?php echo $asset['id']; ?>" class="form-control form-control-sm d-inline-block w-auto ms-1" value="<?php echo htmlspecialchars($_POST['quantities'][$asset['id']] ?? 1); ?>" min="1" max="<?php echo $asset['available_count']; ?>" <?php echo $checked ? '' : 'disabled'; ?> onclick="event.stopPropagation()">
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        <?php endforeach; ?>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    <?php endforeach; ?>
+                                    <?php 
+                                    $catIndex++;
+                                    endforeach; 
+                                    ?>
                                 </div>
                             </div>
                         </div>

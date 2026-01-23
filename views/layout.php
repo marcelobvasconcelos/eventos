@@ -9,21 +9,25 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.css">
     <link rel="stylesheet" href="/eventos/public/css/style.css?v=<?php echo time(); ?>">
+    <link rel="icon" href="/eventos/public/img/logo.png" type="image/png">
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
         <div class="container">
-            <a class="navbar-brand" href="/eventos/">
-                <img src="/eventos/public/img/logo.png" alt="UAST Logo" height="50">
+            <a class="navbar-brand py-0 me-2" href="/eventos/">
+                <!-- Logo removida do menu conforme solicitado -->
             </a>
             <!-- Search removed as requested -->
-            <div class="flex-grow-1"></div>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+            <div class="collapse navbar-collapse flex-grow-1" id="navbarNav">
+                <ul class="navbar-nav w-100 justify-content-between">
                     <?php 
+                    require_once __DIR__ . '/../models/Config.php';
+                    $configModel = new Config();
+                    $globalConfigs = $configModel->getAll();
+
                     $uri = $_SERVER['REQUEST_URI'] ?? '/';
                     // Simple helper to check if path contains string
                     function isActive($uri, $path) {
@@ -44,8 +48,24 @@
                         <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/request/my_requests'); ?>" href="/eventos/request/my_requests"><i class="fas fa-list-ul"></i>Minhas Requisições</a></li>
                         <!-- Equipamentos and Locais removed from navbar as per request -->
                         <?php if ($_SESSION['user_role'] == 'admin'): ?>
-                            <li class="nav-item"><a class="nav-link <?php echo ($uri == '/eventos/admin/dashboard' || $uri == '/eventos/admin/') ? 'active' : ''; ?>" href="/eventos/admin/dashboard"><i class="fas fa-tachometer-alt"></i>Painel Admin</a></li>
-                            <!-- Specific Admin links removed from navbar, accessible via Dashboard -->
+                            <?php 
+                                require_once __DIR__ . '/../models/Event.php';
+                                $tempEventModel = new Event();
+                                $pendingEventsCount = $tempEventModel->getPendingEventsCount();
+                            ?>
+                            <li class="nav-item">
+                                <a class="nav-link <?php echo ($uri == '/eventos/admin/dashboard' || $uri == '/eventos/admin/') ? 'active' : ''; ?>" href="/eventos/admin/dashboard">
+                                    <i class="fas fa-tachometer-alt"></i> Painel Admin
+                                    <?php if ($pendingEventsCount > 0): ?>
+                                        <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7em; vertical-align: top;"><?php echo $pendingEventsCount; ?></span>
+                                    <?php endif; ?>
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link <?php echo isActive($uri, '/eventos/settings'); ?>" href="/eventos/settings">
+                                    <i class="fas fa-cogs"></i> Configurações
+                                </a>
+                            </li>
                             
                             <?php 
                                 require_once __DIR__ . '/../models/PendingItem.php';
@@ -83,7 +103,7 @@
             </div>
         </div>
     </nav>
-    <div class="container mt-4">
+    <div class="container mt-4 flex-grow-1">
         <?php if (isset($_GET['message'])): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="fas fa-check-circle me-2"></i> <?php echo htmlspecialchars($_GET['message']); ?>
@@ -119,6 +139,62 @@
 
     <?php echo $content; ?>
     </div>
+
+    <!-- Footer -->
+    <!-- Footer -->
+    <footer class="bg-white py-3 border-top mt-auto shadow-sm">
+        <div class="container">
+            <div class="row align-items-center">
+                <!-- Col 1: UAST Link & Address -->
+                <div class="col-md-5 text-center text-md-start mb-2 mb-md-0">
+                    <a href="http://uast.ufrpe.br" target="_blank" class="fw-bold text-primary text-decoration-none fs-5 d-block mb-1">
+                        UAST <span class="text-secondary small fw-normal">| Unidade Acadêmica de Serra Talhada</span>
+                    </a>
+                    <p class="mb-0 text-muted" style="font-size: 0.75rem; line-height: 1.2;">
+                        Av. Gregório Ferraz Nogueira, S/N - José Tomé de Souza Ramos<br>
+                        CEP: 56909-535 - Serra Talhada/PE
+                    </p>
+                </div>
+
+                <!-- Col 2: Social Media (Brand Colors) -->
+                <div class="col-md-3 text-center mb-2 mb-md-0">
+                    <?php if (!empty($globalConfigs['footer_social_instagram'])): ?>
+                    <a href="<?php echo htmlspecialchars($globalConfigs['footer_social_instagram']); ?>" target="_blank" class="text-decoration-none me-3 hover-scale d-inline-block" title="Instagram">
+                        <i class="fab fa-instagram fa-2x" style="background: -webkit-linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                    </a>
+                    <?php endif; ?>
+
+                    <?php if (!empty($globalConfigs['footer_social_facebook'])): ?>
+                    <a href="<?php echo htmlspecialchars($globalConfigs['footer_social_facebook']); ?>" target="_blank" class="text-decoration-none me-3 hover-scale d-inline-block" title="Facebook">
+                        <i class="fab fa-facebook fa-2x" style="color: #3b5998;"></i>
+                    </a>
+                    <?php endif; ?>
+
+                    <?php if (!empty($globalConfigs['footer_social_youtube'])): ?>
+                    <a href="<?php echo htmlspecialchars($globalConfigs['footer_social_youtube']); ?>" target="_blank" class="text-decoration-none hover-scale d-inline-block" title="YouTube">
+                        <i class="fab fa-youtube fa-2x" style="color: #FF0000;"></i>
+                    </a>
+                    <?php endif; ?>
+                </div>
+
+                <!-- Col 3: Copyright -->
+                <div class="col-md-4 text-center text-md-end">
+                    <small class="text-muted" style="font-size: 0.8rem;">
+                        <?php 
+                            echo !empty($globalConfigs['footer_text']) 
+                                ? $globalConfigs['footer_text'] 
+                                : '&copy; ' . date('Y') . ' UAST/UFRPE<br>Todos os direitos reservados.'; 
+                        ?>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <style>
+    .hover-scale { transition: transform 0.2s; }
+    .hover-scale:hover { transform: scale(1.1); }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- CropperJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>

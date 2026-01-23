@@ -14,6 +14,7 @@ ob_start();
                 </div>
                 <?php if (isset($_SESSION['user_id'])): ?>
                      <div>
+                        <a href="/eventos/admin/assetCategories" class="btn btn-outline-secondary rounded-pill me-2"><i class="fas fa-tags me-2"></i>Gerenciar Categorias</a>
                         <a href="/eventos/asset/create" class="btn btn-primary rounded-pill me-2"><i class="fas fa-plus me-2"></i>Novo Equipamento</a>
                         <a href="/eventos/request/form" class="btn btn-outline-primary rounded-pill"><i class="fas fa-calendar-plus me-2"></i>Novo Evento</a>
                      </div>
@@ -25,6 +26,7 @@ ob_start();
                         <thead class="bg-light">
                             <tr class="text-uppercase small text-muted">
                                 <th class="ps-4">Nome do Equipamento</th>
+                                <th>Categoria</th>
                                 <th>Descrição</th>
                                 <th class="text-center">Disponibilidade</th>
                                 <th class="text-end pe-4">Ações</th>
@@ -40,6 +42,13 @@ ob_start();
                                             </div>
                                             <span class="fw-semibold text-dark"><?php echo htmlspecialchars($asset['name']); ?></span>
                                         </div>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($asset['category_name'])): ?>
+                                            <span class="badge bg-light text-dark border"><i class="fas fa-tag me-1 text-muted"></i><?php echo htmlspecialchars($asset['category_name']); ?></span>
+                                        <?php else: ?>
+                                            <span class="text-muted small">Sem categoria</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td class="text-muted"><?php echo htmlspecialchars($asset['description']); ?></td>
                                     <td class="text-center">

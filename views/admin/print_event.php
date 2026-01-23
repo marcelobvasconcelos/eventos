@@ -106,11 +106,24 @@
                             $aggregated[$id] = [
                                 'name' => $loan['asset_name'],
                                 'qty' => 0,
-                                'statuses' => []
+                                'statuses' => [],
+                                'requires_patrimony' => false // Will resolve below
                             ];
                         }
                         $aggregated[$id]['qty']++;
                         $aggregated[$id]['statuses'][] = $loan['status'];
+                    }
+                    
+                    // Populate requires_patrimony
+                    // We need a way to check. Instantiating model here for simplicity or update controller.
+                    // Doing inline for minimal intrusion if controller not updated yet.
+                    if (isset($assetModel)) { // It is instantiated in controller
+                        foreach ($aggregated as $aid => &$data) {
+                            $a = $assetModel->getAssetById($aid);
+                            if ($a) {
+                                $data['requires_patrimony'] = !empty($a['requires_patrimony']);
+                            }
+                        }
                     }
 
                     foreach ($aggregated as $assetId => $item): 
@@ -126,6 +139,19 @@
                             <td style="text-align: center;"><input type="checkbox"></td>
                             <td>
                                 <strong><?php echo htmlspecialchars($item['name']); ?></strong>
+                                <?php if (!empty($item['requires_patrimony'])): ?>
+                                    <div class="mt-2 text-muted small">
+                                        Identificação Patrimonial:
+                                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;">
+                                            <?php for($i=0; $i<$item['qty']; $i++): ?>
+                                                <div style="flex: 0 0 auto;">
+                                                    <span style="display: block; font-size: 0.8em; margin-bottom: 2px;">Item #<?php echo $i+1; ?></span>
+                                                    <input type="text" style="width: 140px; padding: 4px; border: 1px solid #999; border-radius: 3px;" placeholder="Patrimônio">
+                                                </div>
+                                            <?php endfor; ?>
+                                        </div>
+                                    </div>
+                                <?php endif; ?>
                             </td>
                             <td style="text-align: center; font-weight: bold;"><?php echo $item['qty']; ?></td>
                             <td style="text-align: center; color: #999;">___ / <?php echo $item['qty']; ?></td>

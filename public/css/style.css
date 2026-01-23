@@ -1,8 +1,8 @@
 /* Global Styles */
 body {
     font-family: 'Poppins', sans-serif !important;
-    background-color: #e9ecef !important;
-    /* Soft gray for side background */
+    background-color: #001f3f !important;
+    /* Solid Navy Blue background */
 }
 
 /* Navbar */
@@ -27,18 +27,19 @@ body {
     padding: 0.5rem 1rem !important;
     transition: color 0.3s ease, background-color 0.3s ease !important;
     border-radius: 10px !important;
+    color: #001f3f !important;
 }
 
 .navbar-nav .nav-link i {
     font-size: 1.2rem !important;
     margin-bottom: 4px !important;
     /* Spacing between icon and text */
-    color: #2c3e50 !important;
+    color: #001f3f !important;
 }
 
 .navbar-nav .nav-link:hover {
     background-color: #f0f2f5 !important;
-    color: #2c3e50 !important;
+    color: #001f3f !important;
 }
 
 .navbar-nav .nav-link:hover i {
@@ -60,6 +61,7 @@ body {
     border: none !important;
     border-radius: 15px !important;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+    background-color: #ffffff !important;
 }
 
 /* Dashboard Specific Cards */
@@ -77,7 +79,7 @@ body {
 .dashboard-card .fa,
 .dashboard-card .fas,
 .dashboard-card .far {
-    color: #2c3e50 !important;
+    color: #001f3f !important;
 }
 
 /* Buttons */

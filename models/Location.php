@@ -89,6 +89,12 @@ class Location {
         return $stmt->fetchColumn() == 0;
     }
 
+    public function getLocationCount() {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM locations");
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
 }
 
 ?>

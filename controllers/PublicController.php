@@ -258,6 +258,12 @@ class PublicController {
             include __DIR__ . '/../views/public/create.php';
         }
     }
+
+    public function locations() {
+        $locationModel = new Location();
+        $locations = $locationModel->getAllLocations();
+        include __DIR__ . '/../views/public/locations.php';
+    }
 }
 
 ?>

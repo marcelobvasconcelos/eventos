@@ -139,6 +139,16 @@ class Event {
         return $this->pdo->lastInsertId();
     }
 
-}
+    public function getFutureEventsCount() {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM events WHERE status = 'Aprovado' AND date >= CURDATE()");
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
 
+    public function getPendingEventsCount() {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM events WHERE status = 'Pendente'");
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+}
 ?>

@@ -31,7 +31,7 @@ class Loan {
                     AND id NOT IN (
                         SELECT item_id FROM loans 
                         WHERE status = 'Emprestado' 
-                        AND (loan_date < ? AND COALESCE(return_date, loan_date) > ?)
+                        AND (loan_date < ? AND DATE_ADD(COALESCE(return_date, loan_date), INTERVAL 24 HOUR) > ?)
                     )
                     LIMIT 1
                 ");

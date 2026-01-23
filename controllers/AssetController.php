@@ -9,7 +9,7 @@ class AssetController {
 
     public function index() {
         $assetModel = new Asset();
-        $assets = $assetModel->getAllAssets();
+        $assets = $assetModel->getAllAssetsWithAvailability();
         $csrf_token = Security::generateCsrfToken();
         include __DIR__ . '/../views/asset/index.php';
     }

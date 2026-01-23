@@ -151,6 +151,12 @@ class User {
         return $stats;
     }
 
+    public function getUserCount() {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users");
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
 }
 
 ?>

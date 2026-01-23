@@ -3,14 +3,14 @@ $title = 'Gestão de Pendências';
 ob_start();
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="text-primary fw-bold"><i class="fas fa-tasks me-2"></i>Gestão de Devoluções</h2>
-        <p class="text-muted">Confirme o recebimento de chaves e equipamentos.</p>
+<div class="card shadow-sm border-0 rounded-lg">
+    <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
+        <div>
+            <h2 class="text-primary fw-bold mb-0"><i class="fas fa-tasks me-2"></i>Gestão de Devoluções</h2>
+            <p class="text-muted small mb-0 mt-1">Confirme o recebimento de chaves e equipamentos.</p>
+        </div>
     </div>
-</div>
 
-<div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -110,7 +110,7 @@ ob_start();
 <div class="mt-5 mb-4">
     <h4 class="text-secondary"><i class="fas fa-history me-2"></i>Histórico Completo</h4>
 </div>
-<div class="card border-0 shadow-sm bg-light opacity-75">
+<div class="card border-0 shadow-sm bg-white">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">

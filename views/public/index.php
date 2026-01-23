@@ -2,39 +2,52 @@
 $title = 'Event List';
 ob_start();
 ?>
+<?php 
+require_once __DIR__ . '/../../models/Config.php';
+$configModel = new Config();
+$globalConfigs = $configModel->getAll();
+
+// Helper to get image path or default
+function getImagePath($path, $default) {
+    return !empty($path) ? '/eventos/' . $path : $default;
+}
+
+$bannerImage = getImagePath($globalConfigs['home_banner_image'] ?? '', '/eventos/lib/banner.jpeg');
+$cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '', '/eventos/lib/banner.jpeg');
+?>
 <!-- Banner Image Section -->
 <div class="mb-4 text-center">
-    <img src="/eventos/lib/banner.jpeg" alt="Banner UAST Realiza" class="img-fluid rounded-3 shadow-sm w-100" style="object-fit: cover;">
+    <img src="<?php echo htmlspecialchars($bannerImage); ?>?t=<?php echo time(); ?>" alt="Banner UAST Realiza" class="img-fluid rounded-3 shadow-sm w-100" style="object-fit: cover;">
 </div>
 
 <!-- Welcome and Action Section -->
 <div class="text-center mb-5">
     <?php if (isset($_SESSION['user_name'])): ?>
-        <h5 class="text-primary mb-2 fw-light">Bem-vindo, <?php echo htmlspecialchars($_SESSION['user_name']); ?>! <i class="fas fa-smile-beam"></i></h5>
+        <h5 class="text-white mb-2 fw-light">Bem-vindo, <?php echo htmlspecialchars($_SESSION['user_name']); ?>! <i class="fas fa-smile-beam"></i></h5>
     <?php else: ?>
-        <h5 class="text-primary mb-2 fw-light">Bem-vindo!</h5>
+        <h5 class="text-white mb-2 fw-light">Bem-vindo!</h5>
     <?php endif; ?>
     
     <a href="/eventos/public/calendar" class="btn btn-primary rounded-pill px-4 fw-bold mt-2"><i class="fas fa-calendar-alt me-2"></i>Ver Calendário</a>
 </div>
 
 <div class="card mb-5 border-0 shadow-sm" style="border-radius: 15px;">
-    <div class="card-header border-0 py-4 px-4" style="background-color: #001f3f; border-top-left-radius: 15px; border-top-right-radius: 15px;">
+    <div class="card-header border-0 py-4 px-4" style="background-color: #d1bc96 !important; border-top-left-radius: 15px; border-top-right-radius: 15px;">
         <div class="d-flex align-items-center">
-            <div class="bg-white text-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
-                <i class="fas fa-bolt fa-lg" style="color: #001f3f !important;"></i>
+            <div class="rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px; background-color: #ffffff;">
+                <i class="fas fa-bolt fa-lg" style="color: #001f3f;"></i>
             </div>
             <div>
-                <h3 class="fw-bold text-white mb-0">Acontece agora</h3>
-                <small class="text-white-50">Eventos em andamento neste exato momento</small>
+                <h3 class="fw-bold mb-0" style="color: #001f3f;">Acontece agora</h3>
+                <small style="color: #001f3f;">Eventos em andamento neste exato momento</small>
             </div>
         </div>
     </div>
-    <div class="card-body p-0 bg-white" style="border-bottom-left-radius: 15px; border-bottom-right-radius: 15px;">
+    <div class="card-body p-0" style="background-color: rgba(255, 255, 255, 0.1) !important; border-bottom-left-radius: 15px; border-bottom-right-radius: 15px;">
         
         <?php if (empty($activeEvents)): ?>
             <div class="alert alert-light border border-light-subtle rounded-3 text-center py-3" role="alert">
-                <i class="fas fa-mug-hot text-muted me-2"></i> Nenhum evento ocorrendo agora. Confira a programação abaixo!
+                <i class="fas fa-mug-hot me-2" style="color: #001f3f;"></i> Nenhum evento ocorrendo agora. Confira a programação abaixo!
             </div>
         <?php else: ?>
             <div id="activeEventsCarousel" class="carousel slide" data-bs-ride="carousel">
@@ -52,10 +65,10 @@ ob_start();
                         }
                     ?>
                     <div class="carousel-item <?php echo $first ? 'active' : ''; ?>">
-                        <div class="card border-0 shadow-lg mx-auto overflow-hidden" style="background: linear-gradient(to right, #00c6ff, #0072ff); max-width: 100%; border-radius: 20px; border: 3px solid rgba(255,255,255,0.7);">
+                        <div class="card border-0 shadow-lg mx-auto overflow-hidden" style="background: linear-gradient(to right, #fdfbf7, #e6d5b8); max-width: 100%; border-radius: 20px; border: 3px solid rgba(0, 31, 63, 0.1);">
                             <div class="row g-0 align-items-center">
-                                <div class="col-md-5 position-relative p-2 d-flex align-items-center justify-content-center" style="min-height: 250px; background-color: rgba(0, 198, 255, 0.1);">
-                                    <img src="<?php echo htmlspecialchars($active['image_path'] ?? '/eventos/lib/banner.jpeg'); ?>" 
+                                <div class="col-md-5 position-relative p-2 d-flex align-items-center justify-content-center" style="min-height: 250px; background-color: rgba(0, 0, 0, 0.02);">
+                                    <img src="<?php echo htmlspecialchars(!empty($active['image_path']) ? $active['image_path'] : $cardDefaultImage); ?>" 
                                          class="img-fluid rounded-3 shadow-sm" 
                                          style="object-fit: contain; max-height: 240px; width: auto; max-width: 100%;" 
                                          alt="<?php echo htmlspecialchars($active['name']); ?>">
@@ -66,14 +79,14 @@ ob_start();
                                      </div>
                                 </div>
                                 <div class="col-md-7">
-                                    <div class="card-body p-4 text-white">
-                                        <h5 class="card-title fw-bold mb-3 display-4 text-white" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.3); font-size: 2.5rem; line-height: 1.1;"><?php echo htmlspecialchars($active['name']); ?></h5>
-                                        <div class="d-flex align-items-center mb-4 text-white-50 fs-5">
-                                            <i class="fas fa-map-marker-alt me-2 text-warning"></i>
-                                            <span class="fw-medium text-white"><?php echo htmlspecialchars($active['location_name'] ?? 'Local a definir'); ?></span>
+                                    <div class="card-body p-4 text-dark">
+                                        <h5 class="card-title fw-bold mb-3 display-4" style="color: #001f3f; text-shadow: 1px 1px 2px rgba(255,255,255,0.5); font-size: 2.5rem; line-height: 1.1;"><?php echo htmlspecialchars($active['name']); ?></h5>
+                                        <div class="d-flex align-items-center mb-4 fs-5" style="color: #4a4a4a;">
+                                            <i class="fas fa-map-marker-alt me-2 text-danger"></i>
+                                            <span class="fw-medium"><?php echo htmlspecialchars($active['location_name'] ?? 'Local a definir'); ?></span>
                                         </div>
                                         <div>
-                                             <a href="/eventos/public/detail?id=<?php echo htmlspecialchars($active['id']); ?>" class="btn btn-light text-danger fw-bold rounded-pill px-5 py-3 shadow-sm fs-5 transform-scale">
+                                             <a href="/eventos/public/detail?id=<?php echo htmlspecialchars($active['id']); ?>" class="btn btn-primary fw-bold rounded-pill px-5 py-3 shadow-sm fs-5 transform-scale" style="background-color: #001f3f; border: none;">
                                                 Participar / Ver Detalhes <i class="fas fa-arrow-right ms-2"></i>
                                              </a>
                                         </div>
@@ -133,13 +146,13 @@ ob_start();
     </div>
 </div>
 
-<div class="p-4 rounded-3 mb-5" style="background: url('/eventos/lib/banner2.jpeg') center center / cover no-repeat fixed; box-shadow: inset 0 0 200px rgba(255,255,255,0.9);">
+<div class="p-4 rounded-3 mb-5" style="background: url('/eventos/lib/banner2.jpg') center center / cover no-repeat fixed; box-shadow: inset 0 0 200px rgba(255,255,255,0.9);">
     <h3 class="fw-bold text-primary mb-3 bg-white d-inline-block px-3 py-1 rounded shadow-sm">Eventos Futuros</h3>
 
     <?php if (empty($events)): ?>
         <div class="text-center py-5 bg-white bg-opacity-75 rounded shadow-sm">
-            <i class="far fa-calendar-times fa-4x text-muted mb-3"></i>
-            <h3 class="text-muted">Nenhum evento encontrado.</h3>
+            <i class="far fa-calendar-times fa-4x mb-3" style="color: #001f3f;"></i>
+            <h3 style="color: #001f3f;">Nenhum evento encontrado.</h3>
             <p>Tente ajustar seus filtros de busca.</p>
         </div>
     <?php else: ?>
@@ -179,11 +192,11 @@ ob_start();
                 ?>
                 <div class="col-md-4 mb-4 event-item" data-date="<?php echo $event['date']; ?>">
                     <div class="card h-100 shadow-sm hover-card event-card" 
-                        style="border-radius: 12px; background-color: rgba(255, 255, 255, 0.2); border: 1px solid rgba(255, 255, 255, 0.6); border-top: 5px solid <?php echo $style['border']; ?> !important; overflow: hidden;">
+                        style="border-radius: 12px; background-color: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2); border-top: 5px solid <?php echo $style['border']; ?> !important; overflow: hidden; backdrop-filter: blur(5px);">
                         
                         <!-- Event Image -->
                         <div style="height: 160px; overflow: hidden; position: relative;">
-                            <img src="<?php echo htmlspecialchars($event['image_path'] ?? '/eventos/lib/banner.jpeg'); ?>" 
+                            <img src="<?php echo htmlspecialchars(!empty($event['image_path']) ? $event['image_path'] : $cardDefaultImage); ?>" 
                                  alt="<?php echo htmlspecialchars($event['name']); ?>" 
                                  class="w-100 h-100" 
                                  style="object-fit: cover;">
@@ -211,9 +224,9 @@ ob_start();
                                 <div class="ms-4 small"><?php echo htmlspecialchars($event['location_name'] ?? 'Local a definir'); ?></div>
                             </div>
 
-                            <div class="mt-auto pt-3 border-top actions-footer" style="border-color: rgba(0,0,0,0.1) !important;">
+                            <div class="mt-auto pt-3 border-top actions-footer" style="border-color: rgba(255,255,255,0.1) !important;">
                                 <a href="/eventos/public/detail?id=<?php echo htmlspecialchars($event['id']); ?>" class="btn btn-sm w-100 mb-2 rounded-pill fw-medium" 
-                                style="background-color: white; color: <?php echo $style['border']; ?>; border: 1px solid <?php echo $style['border']; ?>;">Ver Detalhes</a>
+                                style="background-color: transparent; color: white; border: 1px solid white;">Ver Detalhes</a>
                                 
                                 <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                                     <div class="d-flex gap-2">
@@ -236,6 +249,13 @@ ob_start();
                     </div>
                 </div>
             <?php endforeach; ?>
+        </div>
+        
+        <!-- Load More Button -->
+        <div class="text-center mt-4 d-none" id="loadMoreContainer">
+            <button id="loadMoreBtn" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-bold">
+                Ver mais eventos <i class="fas fa-chevron-down ms-2"></i>
+            </button>
         </div>
     <?php endif; ?>
 </div>
@@ -331,58 +351,58 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // View Options Logic
+    // View & Pagination Logic
     const hidePastCheckbox = document.getElementById('hidePastEvents');
     const viewGridBtn = document.getElementById('viewGrid');
     const viewListBtn = document.getElementById('viewList');
     const eventsContainer = document.getElementById('eventsContainer');
     const eventItems = document.querySelectorAll('.event-item');
+    const loadMoreContainer = document.getElementById('loadMoreContainer');
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
 
-    // Load Preferences
-    const savedHidePast = localStorage.getItem('hidePastEvents') !== 'false'; // Default true
-    const savedViewMode = localStorage.getItem('viewMode') || 'grid';
+    // Constants
+    const LIMIT_GRID = 4;
+    const LIMIT_LIST = 6;
 
-    // Apply Preferences
-    hidePastCheckbox.checked = savedHidePast;
-    togglePastEvents(savedHidePast);
-    switchView(savedViewMode);
+    // State
+    let currentView = localStorage.getItem('viewMode') || 'grid';
+    let hidePast = localStorage.getItem('hidePastEvents') !== 'false';
+    let isExpanded = false;
+
+    // Initialize
+    applyViewMode(currentView);
+    hidePastCheckbox.checked = hidePast;
+    updateVisibility();
 
     // Event Listeners
     hidePastCheckbox.addEventListener('change', function() {
-        const isChecked = this.checked;
-        localStorage.setItem('hidePastEvents', isChecked);
-        togglePastEvents(isChecked);
+        hidePast = this.checked;
+        localStorage.setItem('hidePastEvents', hidePast);
+        updateVisibility();
     });
 
     viewGridBtn.addEventListener('click', () => {
+        currentView = 'grid';
         localStorage.setItem('viewMode', 'grid');
-        switchView('grid');
+        applyViewMode('grid');
+        updateVisibility();
     });
 
     viewListBtn.addEventListener('click', () => {
+        currentView = 'list';
         localStorage.setItem('viewMode', 'list');
-        switchView('list');
+        applyViewMode('list');
+        updateVisibility();
     });
 
-    function togglePastEvents(hide) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        eventItems.forEach(item => {
-            const dateStr = item.getAttribute('data-date');
-            const eventDate = new Date(dateStr);
-            
-            if (hide && eventDate < today) {
-                item.classList.add('d-none');
-            } else {
-                item.classList.remove('d-none');
-            }
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', () => {
+            isExpanded = true;
+            updateVisibility();
         });
-        
-        checkEmptyState();
     }
 
-    function switchView(mode) {
+    function applyViewMode(mode) {
         if (mode === 'list') {
             eventsContainer.classList.add('list-view');
             viewListBtn.classList.add('active');
@@ -401,10 +421,52 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+
+    function updateVisibility() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const limit = isExpanded ? Infinity : (currentView === 'grid' ? LIMIT_GRID : LIMIT_LIST);
+        let visibleCount = 0;
+        let totalCandidate = 0;
+
+        eventItems.forEach(item => {
+            const dateStr = item.getAttribute('data-date');
+            const eventDate = new Date(dateStr);
+            const isPast = eventDate < today;
+            
+            // 1. Date Filter
+            if (hidePast && isPast) {
+                item.classList.add('d-none');
+                return; // Skip counting
+            }
+            
+            totalCandidate++;
+
+            // 2. Pagination Limit
+            if (visibleCount < limit) {
+                item.classList.remove('d-none');
+                visibleCount++;
+            } else {
+                item.classList.add('d-none');
+            }
+        });
+        
+        // Show/Hide Load More Button
+        if (loadMoreContainer) {
+            if (totalCandidate > limit) {
+                loadMoreContainer.classList.remove('d-none');
+                // Optional: Update button text if needed, e.g. "Show Less" logic could be added
+            } else {
+                loadMoreContainer.classList.add('d-none');
+            }
+        }
+        
+        checkEmptyState();
+    }
     
     function checkEmptyState() {
-        // Optional: Show "No events" message if all are hidden
-        // keeping it simple for now
+        // Implementation for empty state handling if needed
     }
 });
 </script>
