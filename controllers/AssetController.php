@@ -3,6 +3,10 @@
 require_once __DIR__ . '/../models/Asset.php';
 require_once __DIR__ . '/../models/Loan.php';
 require_once __DIR__ . '/../models/Event.php'; // For events in form
+require_once __DIR__ . '/../models/Asset.php';
+require_once __DIR__ . '/../models/Loan.php';
+require_once __DIR__ . '/../models/Event.php'; // For events in form
+require_once __DIR__ . '/../models/AssetCategory.php'; 
 require_once __DIR__ . '/../lib/Security.php';
 
 class AssetController {
@@ -20,6 +24,10 @@ class AssetController {
             exit;
         }
         $csrf_token = Security::generateCsrfToken();
+        
+        $categoryModel = new AssetCategory();
+        $categories = $categoryModel->getAll();
+
         include __DIR__ . '/../views/asset/create.php';
     }
 
@@ -40,6 +48,7 @@ class AssetController {
             $name = trim($_POST['name'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $quantity = (int)($_POST['quantity'] ?? 0);
+            $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
 
             if (empty($name) || $quantity < 1) {
                 $error = 'Nome e quantidade válida são obrigatórios.';
@@ -49,12 +58,14 @@ class AssetController {
             }
 
             $assetModel = new Asset();
-            if ($assetModel->addAsset($name, $description, $quantity)) {
+            if ($assetModel->addAsset($name, $description, $quantity, $category_id)) {
                 header('Location: /eventos/asset?message=Ativo criado com sucesso');
                 exit;
             } else {
                 $error = 'Erro ao criar ativo.';
                 $csrf_token = Security::generateCsrfToken();
+                $categoryModel = new AssetCategory();
+                $categories = $categoryModel->getAll();
                 include __DIR__ . '/../views/asset/create.php';
             }
         }

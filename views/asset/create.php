@@ -37,6 +37,23 @@ ob_start();
                     </div>
 
                     <div class="col-md-6">
+                        <label for="category_id" class="form-label fw-semibold text-secondary">Categoria</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-tags"></i></span>
+                            <select name="category_id" id="category_id" class="form-select border-start-0 ps-0 bg-light" required>
+                                <option value="">Selecione uma categoria...</option>
+                                <?php if (!empty($categories)): ?>
+                                    <?php foreach ($categories as $category): ?>
+                                        <option value="<?php echo $category['id']; ?>" <?php echo (isset($_POST['category_id']) && $_POST['category_id'] == $category['id']) ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($category['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
                         <label for="quantity" class="form-label fw-semibold text-secondary">Quantidade Total</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-sort-numeric-up"></i></span>

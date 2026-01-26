@@ -21,6 +21,17 @@ ob_start();
                     </div>
                 <?php endif; ?>
 
+                <?php if (!empty($globalConfigs['event_creation_info_text'])): ?>
+                    <div class="alert alert-info border-info shadow-sm rounded-3 mb-4">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle fa-2x me-3 mt-1 text-info"></i>
+                            <div>
+                                <?php echo $globalConfigs['event_creation_info_text']; // Allow HTML ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
                 <form method="POST" action="/eventos/public/create" class="row g-4" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token ?? ''); ?>">
                     
@@ -247,5 +258,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <?php
 $content = ob_get_clean();
-include __DIR__ . '/../layouts/main.php';
+include __DIR__ . '/../layout.php';
 ?>

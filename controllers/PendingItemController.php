@@ -84,12 +84,31 @@ class PendingItemController {
         }
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $id = $_POST['id'];
+            $ids = [];
+            if (isset($_POST['ids']) && is_array($_POST['ids'])) {
+                // Handling bulk connection from JSON or array input
+                // If it came from a form submission with name="ids[]"
+                $ids = $_POST['ids']; 
+            } elseif (isset($_POST['ids']) && is_string($_POST['ids'])) {
+                // Handling comma separated string if passed that way
+                 $ids = explode(',', $_POST['ids']);
+            } elseif (isset($_POST['id'])) {
+                // Single item fallback
+                $ids = [$_POST['id']];
+            }
+
             $status = $_POST['status']; // 'completed', 'contested'
             $observation = $_POST['observation'] ?? null;
             
-            $this->pendingModel->updateStatus($id, $status, $observation);
-            header('Location: /eventos/pending?message=Status atualizado com sucesso');
+            $count = 0;
+            foreach ($ids as $id) {
+                if(!empty($id)) {
+                    $this->pendingModel->updateStatus($id, $status, $observation);
+                    $count++;
+                }
+            }
+            
+            header('Location: /eventos/pending?message=Status atualizado com sucesso para ' . $count . ' item(ns)');
         }
     }
 }

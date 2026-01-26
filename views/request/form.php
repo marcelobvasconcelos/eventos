@@ -19,6 +19,17 @@ ob_start();
                         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                     </div>
                 <?php endif; ?>
+
+                <?php if (!empty($globalConfigs['event_creation_info_text'])): ?>
+                    <div class="alert alert-info border-info shadow-sm rounded-3 mb-4">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle fa-2x me-3 mt-1 text-info"></i>
+                            <div>
+                                <?php echo $globalConfigs['event_creation_info_text']; // Allow HTML ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
                 
                 <form method="POST" action="/eventos/request/submit" class="row g-4" enctype="multipart/form-data">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
@@ -185,6 +196,25 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </label>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- External Link Section -->
+                    <div class="col-md-6">
+                        <label for="link_title" class="form-label fw-semibold text-secondary">Título do Link (Opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-tag"></i></span>
+                            <input type="text" name="link_title" id="link_title" class="form-control border-start-0 ps-0 bg-light" placeholder="Ex: Página do evento, Inscrição, Site Oficial" value="<?php echo htmlspecialchars($_POST['link_title'] ?? ''); ?>">
+                        </div>
+                        <div class="form-text">Nome que aparecerá no botão (Ex: "Inscrições").</div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="external_link" class="form-label fw-semibold text-secondary">Link Externo (Opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-link"></i></span>
+                            <input type="url" name="external_link" id="external_link" class="form-control border-start-0 ps-0 bg-light" placeholder="https://..." value="<?php echo htmlspecialchars($_POST['external_link'] ?? ''); ?>">
+                        </div>
+                        <div class="form-text">URL completa para onde o usuário será direcionado.</div>
                     </div>
 
                     <div class="col-12">

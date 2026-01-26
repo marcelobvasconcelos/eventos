@@ -77,6 +77,15 @@ ob_start();
                              <h6 class="fw-bold mb-2"><i class="fas fa-align-left me-2"></i>Descrição</h6>
                              <p class="text-muted mb-0" style="white-space: pre-line;"><?php echo htmlspecialchars($event['description']); ?></p>
                         </div>
+                        
+                        <?php if (!empty($event['external_link'])): ?>
+                            <div class="mt-4 text-center">
+                                <a href="<?php echo htmlspecialchars($event['external_link']); ?>" target="_blank" class="btn btn-info bg-opacity-10 text-primary border border-info border-opacity-25 fw-bold rounded-pill px-5 py-3 shadow-sm hover-scale d-inline-flex align-items-center fs-5">
+                                    <i class="fas fa-link me-2"></i>
+                                    <?php echo htmlspecialchars(!empty($event['link_title']) ? $event['link_title'] : 'Acessar Link'); ?> 
+                                </a>
+                            </div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="col-12"><hr class="text-muted opacity-25"></div>

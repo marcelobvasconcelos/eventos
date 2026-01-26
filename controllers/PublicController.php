@@ -93,7 +93,13 @@ class PublicController {
                 // Fetch necessary data for re-render
                 $locationModel = new Location();
                 $categoryModel = new Category();
+                $locationModel = new Location();
+                $categoryModel = new Category();
                 $assetModel = new Asset();
+                
+                require_once __DIR__ . '/../models/Config.php';
+                $configModel = new Config();
+                $globalConfigs = $configModel->getAll();
                 
                 // Use current time as default or try to rescue from POST if possible (logic simplified)
                 $startDateTime = date('Y-m-d H:i');
@@ -163,7 +169,12 @@ class PublicController {
                 $locations = $locationModel->getLocationsWithAvailability($startDateTime, $endDateTime);
                 $categoryModel = new Category();
                 $categories = $categoryModel->getAllCategories();
+                $categories = $categoryModel->getAllCategories();
                 $assetModel = new Asset();
+                
+                require_once __DIR__ . '/../models/Config.php';
+                $configModel = new Config();
+                $globalConfigs = $configModel->getAll();
                 // Pass the proposed start and end times for availability check
                 $assets = $assetModel->getAllAssetsWithAvailability($startDateTime, $endDateTime);
                 
@@ -255,6 +266,11 @@ class PublicController {
             $assetModel = new Asset();
             // Modified: Pass start and end times for availability check
             $assets = $assetModel->getAllAssetsWithAvailability($startDateTime, $endDateTime);
+            
+            require_once __DIR__ . '/../models/Config.php';
+            $configModel = new Config();
+            $globalConfigs = $configModel->getAll();
+
             include __DIR__ . '/../views/public/create.php';
         }
     }

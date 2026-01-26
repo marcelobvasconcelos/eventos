@@ -19,6 +19,10 @@ class RequestController {
         $locationModel = new Location();
         $assetModel = new Asset();
         
+        require_once __DIR__ . '/../models/Config.php';
+        $configModel = new Config();
+        $globalConfigs = $configModel->getAll();
+        
         // Handle end_date for availability check
         $checkDate = $_POST['date'] ?? ($_GET['date'] ?? date('Y-m-d'));
         $checkEndDate = $_POST['end_date'] ?? ($_GET['end_date'] ?? $checkDate);
@@ -66,7 +70,12 @@ class RequestController {
             // Fetch necessary data for the view
             $locationModel = new Location();
             $categoryModel = new Category();
+            $categoryModel = new Category();
             $assetModel = new Asset();
+            
+            require_once __DIR__ . '/../models/Config.php';
+            $configModel = new Config();
+            $globalConfigs = $configModel->getAll();
             
             // Re-use posted dates or default to now for availability
             $checkDate = $_POST['date'] ?? date('Y-m-d');
@@ -123,7 +132,12 @@ class RequestController {
             $locations = $locationModel->getLocationsWithAvailability($formattedDate, $endDateTime);
             $categoryModel = new Category();
             $categories = $categoryModel->getAllCategories();
+            $categories = $categoryModel->getAllCategories();
             $assetModel = new Asset();
+            
+            require_once __DIR__ . '/../models/Config.php';
+            $configModel = new Config();
+            $globalConfigs = $configModel->getAll();
             // Pass start and end times to availability check
             $assets = $assetModel->getAllAssetsWithAvailability($formattedDate, $endDateTime);
             $csrf_token = Security::generateCsrfToken();
@@ -153,9 +167,11 @@ class RequestController {
         }
 
         $isPublic = isset($_POST['is_public']) ? (int)$_POST['is_public'] : 1;
+        $externalLink = trim($_POST['external_link'] ?? '');
+        $linkTitle = trim($_POST['link_title'] ?? '');
 
         $eventModel = new Event();
-        $eventId = $eventModel->createEvent($title, $description, $formattedDate, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath);
+        $eventId = $eventModel->createEvent($title, $description, $formattedDate, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath, $externalLink, $linkTitle);
         
         $requestModel = new EventRequest();
         $requestId = $requestModel->createRequest($_SESSION['user_id'], $eventId);

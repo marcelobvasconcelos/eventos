@@ -36,8 +36,8 @@ ob_start();
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="content-tab" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab" aria-controls="content" aria-selected="false">
-                                <i class="fas fa-file-alt me-2"></i>Conteúdo & Rodapé
+                            <button class="nav-link" id="footer-tab" data-bs-toggle="tab" data-bs-target="#footer" type="button" role="tab" aria-controls="footer" aria-selected="false">
+                                <i class="fas fa-shoe-prints me-2"></i>Rodapé
                             </button>
                         </li>
                     </ul>
@@ -95,26 +95,65 @@ ob_start();
                         <div class="tab-pane fade" id="content" role="tabpanel" aria-labelledby="content-tab">
                             
                             <div class="mb-3">
-                                <label for="footer_text" class="form-label fw-bold">Texto do Rodapé</label>
-                                <textarea class="form-control" id="footer_text" name="footer_text" rows="3"><?php echo htmlspecialchars($configs['footer_text']); ?></textarea>
-                                <div class="form-text">Aceita HTML básico (ex: &lt;br&gt;, &copy;).</div>
+                                <label for="event_creation_info_text" class="form-label fw-bold">Mensagem Informativa (Criação de Evento)</label>
+                                <textarea class="form-control" id="event_creation_info_text" name="event_creation_info_text" rows="5"><?php echo htmlspecialchars($configs['event_creation_info_text']); ?></textarea>
+                                <div class="form-text">Exibido no topo das páginas de solicitação de evento. Aceita HTML.</div>
                             </div>
 
-                            <h5 class="mt-4 mb-3 text-secondary">Redes Sociais</h5>
-                            
+                        </div>
+
+                        <!-- Footer Customization Tab -->
+                        <div class="tab-pane fade" id="footer" role="tabpanel" aria-labelledby="footer-tab">
+                            <h5 class="mb-3 text-secondary border-bottom pb-2">Coluna 1: Identidade</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Logo 1</label>
+                                    <input type="file" class="form-control mb-2" name="footer_logo_1" accept="image/*">
+                                    <?php if (!empty($configs['footer_logo_1'])): ?>
+                                        <img src="/eventos/<?php echo htmlspecialchars($configs['footer_logo_1']); ?>" height="40" class="border rounded p-1">
+                                    <?php endif; ?>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Logo 2</label>
+                                    <input type="file" class="form-control mb-2" name="footer_logo_2" accept="image/*">
+                                    <?php if (!empty($configs['footer_logo_2'])): ?>
+                                        <img src="/eventos/<?php echo htmlspecialchars($configs['footer_logo_2']); ?>" height="40" class="border rounded p-1">
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="footer_col1_title" class="form-label fw-semibold">Título</label>
+                                    <input type="text" class="form-control" id="footer_col1_title" name="footer_col1_title" value="<?php echo htmlspecialchars($configs['footer_col1_title'] ?? ''); ?>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="footer_col1_subtitle" class="form-label fw-semibold">Subtítulo</label>
+                                    <input type="text" class="form-control" id="footer_col1_subtitle" name="footer_col1_subtitle" value="<?php echo htmlspecialchars($configs['footer_col1_subtitle'] ?? ''); ?>">
+                                </div>
+                            </div>
+
+                            <h5 class="mt-4 mb-3 text-secondary border-bottom pb-2">Coluna 2: Endereço</h5>
                             <div class="mb-3">
+                                <label for="footer_address" class="form-label fw-semibold">Endereço Completo (HTML Permitido - use &lt;br&gt;)</label>
+                                <textarea class="form-control" id="footer_address" name="footer_address" rows="4"><?php echo htmlspecialchars($configs['footer_address'] ?? ''); ?></textarea>
+                            </div>
+
+                            <h5 class="mt-4 mb-3 text-secondary border-bottom pb-2">Coluna 3: Contatos e Redes</h5>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="footer_email" class="form-label fw-semibold">E-mail de Contato</label>
+                                    <input type="email" class="form-control" id="footer_email" name="footer_email" value="<?php echo htmlspecialchars($configs['footer_email'] ?? ''); ?>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="footer_phone" class="form-label fw-semibold">Telefone / WhatsApp</label>
+                                    <input type="text" class="form-control" id="footer_phone" name="footer_phone" value="<?php echo htmlspecialchars($configs['footer_phone'] ?? ''); ?>">
+                                </div>
+                            </div>
+                             <div class="mb-3">
                                 <label for="footer_social_instagram" class="form-label">Link do Instagram</label>
                                 <div class="input-group">
                                     <span class="input-group-text"><i class="fab fa-instagram"></i></span>
                                     <input type="url" class="form-control" id="footer_social_instagram" name="footer_social_instagram" value="<?php echo htmlspecialchars($configs['footer_social_instagram']); ?>">
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="footer_social_facebook" class="form-label">Link do Facebook</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="fab fa-facebook"></i></span>
-                                    <input type="url" class="form-control" id="footer_social_facebook" name="footer_social_facebook" value="<?php echo htmlspecialchars($configs['footer_social_facebook']); ?>">
                                 </div>
                             </div>
 
@@ -126,6 +165,12 @@ ob_start();
                                 </div>
                             </div>
 
+                            <h5 class="mt-4 mb-3 text-secondary border-bottom pb-2">Rodapé Inferior (Socket)</h5>
+                             <div class="mb-3">
+                                <label for="footer_text" class="form-label fw-bold">Texto de Crédito (HTML)</label>
+                                <textarea class="form-control" id="footer_text" name="footer_text" rows="2"><?php echo htmlspecialchars($configs['footer_text']); ?></textarea>
+                                <div class="form-text">Ex: Desenvolvido pelo &lt;a href="..."&gt;STI&lt;/a&gt;</div>
+                            </div>
                         </div>
                     </div>
 

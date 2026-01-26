@@ -81,7 +81,10 @@ class PendingManager {
                 if ($loan['status'] == 'Emprestado') {
                      // Create pending item for this asset
                      $description = 'Devolução de ' . $loan['asset_name'];
-                     $this->pendingItemModel->create($eventId, $userId, 'asset', $description);
+                     // Use category_name as item_type, default to 'Equipamento' if null or empty
+                     $itemType = (!empty($loan['category_name'])) ? $loan['category_name'] : 'Equipamento';
+                     
+                     $this->pendingItemModel->create($eventId, $userId, $itemType, $description);
                      $itemsGenerated[] = $loan['asset_name'];
                 }
             }

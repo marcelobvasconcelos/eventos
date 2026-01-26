@@ -19,7 +19,7 @@ class EventRequest {
 
     public function getRequestsByUserId($userId) {
         $stmt = $this->pdo->prepare("
-            SELECT er.*, e.name as event_name, e.date as event_date, e.status as event_status 
+            SELECT er.*, e.name as event_name, e.date as event_date, e.status as event_status, e.status as status 
             FROM event_requests er 
             JOIN events e ON er.event_id = e.id 
             WHERE er.user_id = ? 

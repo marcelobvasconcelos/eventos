@@ -96,12 +96,13 @@ class Loan {
 
     public function getLoansByEvent($event_id) {
         $stmt = $this->pdo->prepare("
-            SELECT l.*, a.name as asset_name, ai.asset_id 
+            SELECT l.*, a.name as asset_name, ai.asset_id, c.name as category_name 
             FROM loans l 
             JOIN asset_items ai ON l.item_id = ai.id 
             JOIN assets a ON ai.asset_id = a.id 
+            LEFT JOIN asset_categories c ON a.category_id = c.id
             WHERE l.event_id = ? 
-            ORDER BY a.name ASC
+            ORDER BY c.name ASC, a.name ASC
         ");
         $stmt->execute([$event_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

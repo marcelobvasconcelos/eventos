@@ -93,6 +93,18 @@ ob_start();
             <option value="0" <?php echo (isset($event['is_public']) && $event['is_public'] == 0) ? 'selected' : ''; ?>>Privado</option>
         </select>
     </div>
+    
+    <div class="col-md-6">
+        <label for="link_title" class="form-label">Título do Link (Opcional)</label>
+        <input type="text" name="link_title" id="link_title" class="form-control" value="<?php echo htmlspecialchars($event['link_title'] ?? ''); ?>" placeholder="Ex: Inscrições">
+    </div>
+    <div class="col-md-6">
+        <label for="external_link" class="form-label">Link Externo (Opcional)</label>
+        <div class="input-group">
+            <span class="input-group-text"><i class="fas fa-link"></i></span>
+            <input type="url" name="external_link" id="external_link" class="form-control" value="<?php echo htmlspecialchars($event['external_link'] ?? ''); ?>" placeholder="https://...">
+        </div>
+    </div>
     <div class="col-12">
         <label for="description" class="form-label">Descrição</label>
         <textarea name="description" id="description" class="form-control" rows="4" required><?php echo htmlspecialchars($event['description']); ?></textarea>
@@ -106,34 +118,83 @@ ob_start();
                 <?php if (empty($allAssets)): ?>
                     <p class="text-muted mb-0">Nenhum equipamento cadastrado no sistema.</p>
                 <?php else: ?>
-                    <div class="row g-3">
-                        <?php foreach ($allAssets as $asset): ?>
-                            <?php 
-                                $currentQty = $currentAssets[$asset['id']] ?? 0;
-                                $available = $asset['available_count'] ?? 0;
-                                // Since we excluded this event's loans in the controller, 
-                                // $available represents the TOTAL items we can have (inclusive of what we already have).
-                                $maxQty = $available;
-                                $isAvailable = $maxQty > 0;
-                            ?>
-                            <div class="col-md-4 col-sm-6">
-                                <div class="d-flex align-items-center justify-content-between p-2 bg-white rounded shadow-sm border <?php echo (!$isAvailable && $currentQty == 0) ? 'opacity-50' : ''; ?>">
-                                    <div class="flex-grow-1">
-                                        <div class="fw-bold"><?php echo htmlspecialchars($asset['name']); ?></div>
-                                        <div class="small text-muted">Disponível Total: <?php echo $maxQty; ?></div>
-                                    </div>
-                                    <div style="width: 80px;">
-                                        <input type="number" 
-                                               name="assets[<?php echo $asset['id']; ?>]" 
-                                               class="form-control form-control-sm text-center" 
-                                               value="<?php echo $currentQty; ?>" 
-                                               min="0" 
-                                               max="<?php echo $maxQty; ?>"
-                                               <?php echo (!$isAvailable && $currentQty == 0) ? 'disabled' : ''; ?>>
+                    <?php
+                    // Group assets by category
+                    $assetsByCategory = [];
+                    foreach ($allAssets as $asset) {
+                        $catName = $asset['category_name'] ?? 'Outros';
+                        if (empty($catName)) $catName = 'Outros';
+                        $assetsByCategory[$catName][] = $asset;
+                    }
+                    ?>
+                    
+                    <div class="accordion" id="assetsAccordion">
+                        <?php 
+                        $catIndex = 0;
+                        foreach ($assetsByCategory as $categoryName => $categoryAssets): 
+                            $collapseId = "collapseCat" . $catIndex;
+                            $headingId = "headingCat" . $catIndex;
+                            // Check if any asset in this category has selected qty > 0 to expand automatically (optional)
+                            $hasSelection = false;
+                            foreach($categoryAssets as $a) {
+                                if (($currentAssets[$a['id']] ?? 0) > 0) $hasSelection = true;
+                            }
+                        ?>
+                            <div class="accordion-item mb-2 border rounded overflow-hidden">
+                                <h2 class="accordion-header" id="<?= $headingId; ?>">
+                                    <button class="accordion-button <?= !$hasSelection ? 'collapsed' : ''; ?> bg-white text-dark fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#<?= $collapseId; ?>" aria-expanded="<?= $hasSelection ? 'true' : 'false'; ?>" aria-controls="<?= $collapseId; ?>">
+                                        <?= htmlspecialchars($categoryName); ?>
+                                        <span class="badge bg-secondary rounded-pill ms-2"><?= count($categoryAssets); ?></span>
+                                    </button>
+                                </h2>
+                                <div id="<?= $collapseId; ?>" class="accordion-collapse collapse <?= $hasSelection ? 'show' : ''; ?>" aria-labelledby="<?= $headingId; ?>" data-bs-parent="#assetsAccordion">
+                                    <div class="accordion-body bg-light">
+                                        <div class="row g-3">
+                                            <?php foreach ($categoryAssets as $asset): ?>
+                                                <?php 
+                                                    $currentQty = $currentAssets[$asset['id']] ?? 0;
+                                                    $available = $asset['available_count'] ?? 0;
+                                                    $maxQty = $available;
+                                                    $isAvailable = $maxQty > 0;
+                                                    $isSelected = $currentQty > 0;
+                                                ?>
+                                                <div class="col-md-6">
+                                                    <div class="d-flex align-items-center justify-content-between p-2 rounded border bg-white <?php echo (!$isAvailable && $currentQty == 0) ? 'opacity-50' : ''; ?>">
+                                                        <div class="form-check mb-0 flex-grow-1">
+                                                            <input class="form-check-input asset-checkbox" type="checkbox" 
+                                                                   id="asset_check_<?php echo $asset['id']; ?>" 
+                                                                   data-target="#asset_qty_<?php echo $asset['id']; ?>"
+                                                                   <?php echo $isSelected ? 'checked' : ''; ?>
+                                                                   <?php echo (!$isAvailable && $currentQty == 0) ? 'disabled' : ''; ?>>
+                                                            <label class="form-check-label d-block user-select-none" for="asset_check_<?php echo $asset['id']; ?>">
+                                                                <?php echo htmlspecialchars($asset['name']); ?>
+                                                                <div class="small text-muted" style="font-size: 0.8em;">Disp: <?php echo $maxQty; ?></div>
+                                                            </label>
+                                                        </div>
+                                                        <div style="width: 80px;">
+                                                            <!-- Note: We must send 0 if unchecked so AdminController removes loans. 
+                                                                 We use readonly instead of disabled so value is sent. 
+                                                                 JS will toggle readonly and value. -->
+                                                            <input type="number" 
+                                                                   name="assets[<?php echo $asset['id']; ?>]" 
+                                                                   id="asset_qty_<?php echo $asset['id']; ?>"
+                                                                   class="form-control form-control-sm text-center asset-quantity" 
+                                                                   value="<?php echo $currentQty; ?>" 
+                                                                   min="0" 
+                                                                   max="<?php echo $maxQty; ?>"
+                                                                   <?php echo $isSelected ? '' : 'readonly tabIndex="-1" style="background-color: #e9ecef;"'; ?>>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
+                        <?php 
+                        $catIndex++;
+                        endforeach; 
+                        ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -155,6 +216,62 @@ ob_start();
                 alert('Atenção: O local selecionado está marcado como OCUPADO para o horário atual do evento. Se você não alterar o horário para um período livre, a gravação será bloqueada.');
             }
         });
+    }
+
+    // Asset Selection Logic
+    document.addEventListener('change', function(e) {
+        if (e.target && e.target.classList.contains('asset-checkbox')) {
+            const checkbox = e.target;
+            const targetId = checkbox.getAttribute('data-target');
+            const input = document.querySelector(targetId);
+            
+            if (checkbox.checked) {
+                input.readOnly = false;
+                input.tabIndex = 0;
+                input.style.backgroundColor = '#fff';
+                if (input.value == 0) input.value = 1;
+                input.focus();
+            } else {
+                input.value = 0;
+                input.readOnly = true;
+                input.tabIndex = -1;
+                input.style.backgroundColor = '#e9ecef';
+            }
+        }
+    });
+
+    // Validations (Start vs End Date)
+    const form = document.querySelector('form');
+    // ... existing validation if any ...
+    const startInput = document.getElementById('date');
+    const startTimeInput = document.getElementById('time');
+    const endInput = document.getElementById('end_date');
+    const endTimeInput = document.getElementById('end_time');
+
+    if (form && startInput && startTimeInput) {
+         form.addEventListener('submit', function(e) {
+            const startDate = startInput.value;
+            const startTime = startTimeInput.value;
+            if (!startDate || !startTime) return;
+
+            const start = new Date(startDate + 'T' + startTime);
+            
+            let endDateVal = endInput && endInput.value ? endInput.value : startDate;
+            let endTimeVal = endTimeInput && endTimeInput.value ? endTimeInput.value : '23:59';
+            
+            // If end time is empty, maybe don't validate or assume valid?
+            if (endTimeInput && !endTimeInput.value) {
+                // If end date is set but no time? 
+                return; 
+            }
+            
+            const end = new Date(endDateVal + 'T' + endTimeVal);
+            
+            if (end <= start) {
+                e.preventDefault();
+                alert('A data e hora de término devem ser posteriores ao início.');
+            }
+         });
     }
 </script>
 <?php

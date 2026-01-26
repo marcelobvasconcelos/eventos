@@ -24,7 +24,15 @@ class SettingsController {
             'footer_social_instagram', 
             'footer_social_facebook', 
             'footer_social_youtube', 
-            'footer_text'
+            'footer_text',
+            'event_creation_info_text',
+            'footer_logo_1',
+            'footer_logo_2',
+            'footer_col1_title',
+            'footer_col1_subtitle',
+            'footer_address',
+            'footer_email',
+            'footer_phone'
         ];
         
         foreach ($defaultKeys as $key) {
@@ -51,7 +59,13 @@ class SettingsController {
                 'footer_social_instagram', 
                 'footer_social_facebook', 
                 'footer_social_youtube', 
-                'footer_text'
+                'footer_text',
+                'event_creation_info_text',
+                'footer_col1_title',
+                'footer_col1_subtitle',
+                'footer_address',
+                'footer_email',
+                'footer_phone'
             ];
 
             // Update text fields
@@ -67,7 +81,7 @@ class SettingsController {
                 mkdir($uploadDir, 0777, true);
             }
 
-            $imageFields = ['home_banner_image', 'event_card_default_image'];
+            $imageFields = ['home_banner_image', 'event_card_default_image', 'footer_logo_1', 'footer_logo_2'];
             
             foreach ($imageFields as $field) {
                 if (isset($_FILES[$field]) && $_FILES[$field]['error'] === UPLOAD_ERR_OK) {

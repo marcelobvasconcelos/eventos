@@ -1,8 +1,11 @@
-<?php include __DIR__ . '/../../views/layout.php'; ?>
+<?php
+$title = 'Gerenciar Categorias de Patrimônio';
+ob_start();
+?>
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Gerenciar Categorias de Patrimônio</h1>
+        <h1 class="text-white fw-bold">Gerenciar Categorias de Patrimônio</h1>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCategoryModal">
             <i class="fas fa-plus"></i> Nova Categoria
         </button>
@@ -15,7 +18,7 @@
         <div class="alert alert-danger"><?php echo htmlspecialchars($_GET['error']); ?></div>
     <?php endif; ?>
 
-    <div class="card shadow-sm">
+    <div class="card shadow-sm border-0">
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -137,3 +140,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<?php
+$content = ob_get_clean();
+include __DIR__ . '/../../views/layout.php';
+?>

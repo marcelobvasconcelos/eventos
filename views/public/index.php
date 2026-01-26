@@ -79,16 +79,22 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
                                      </div>
                                 </div>
                                 <div class="col-md-7">
-                                    <div class="card-body p-4 text-dark">
+                                    <div class="card-body p-4 text-dark text-center text-md-start">
                                         <h5 class="card-title fw-bold mb-3 display-4" style="color: #001f3f; text-shadow: 1px 1px 2px rgba(255,255,255,0.5); font-size: 2.5rem; line-height: 1.1;"><?php echo htmlspecialchars($active['name']); ?></h5>
-                                        <div class="d-flex align-items-center mb-4 fs-5" style="color: #4a4a4a;">
+                                        <div class="d-flex align-items-center justify-content-center justify-content-md-start mb-4 fs-5" style="color: #4a4a4a;">
                                             <i class="fas fa-map-marker-alt me-2 text-danger"></i>
                                             <span class="fw-medium"><?php echo htmlspecialchars($active['location_name'] ?? 'Local a definir'); ?></span>
                                         </div>
-                                        <div>
-                                             <a href="/eventos/public/detail?id=<?php echo htmlspecialchars($active['id']); ?>" class="btn btn-primary fw-bold rounded-pill px-5 py-3 shadow-sm fs-5 transform-scale" style="background-color: #001f3f; border: none;">
+                                        <div class="d-flex flex-column flex-md-row justify-content-center justify-content-md-start align-items-center gap-3">
+                                             <a href="/eventos/public/detail?id=<?php echo htmlspecialchars($active['id']); ?>" class="btn btn-primary fw-bold rounded-pill px-5 py-3 shadow-sm fs-5 transform-scale w-100 w-md-auto" style="background-color: #001f3f; border: none;">
                                                 Participar / Ver Detalhes <i class="fas fa-arrow-right ms-2"></i>
                                              </a>
+                                             <?php if (!empty($active['external_link'])): ?>
+                                                <a href="<?php echo htmlspecialchars($active['external_link']); ?>" target="_blank" class="btn btn-warning fw-bold rounded-pill px-4 py-3 shadow-sm fs-5 transform-scale text-dark d-inline-flex align-items-center justify-content-center w-100 w-md-auto">
+                                                    <i class="fas fa-link me-2"></i>
+                                                    <?php echo htmlspecialchars(!empty($active['link_title']) ? $active['link_title'] : 'Acessar Link'); ?> 
+                                                </a>
+                                             <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -133,7 +139,7 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div class="form-check form-switch custom-switch">
         <input class="form-check-input" type="checkbox" role="switch" id="hidePastEvents" checked>
-        <label class="form-check-label fw-semibold text-muted" for="hidePastEvents">Ocultar Eventos Passados</label>
+        <label class="form-check-label fw-semibold text-white" for="hidePastEvents">Ocultar Eventos Passados</label>
     </div>
     
     <div class="btn-group" role="group" aria-label="View Mode">
@@ -146,7 +152,7 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
     </div>
 </div>
 
-<div class="p-4 rounded-3 mb-5" style="background: url('/eventos/lib/banner2.jpg') center center / cover no-repeat fixed; box-shadow: inset 0 0 200px rgba(255,255,255,0.9);">
+<div id="upcomingEventsWrapper" class="p-4 rounded-3 mb-5" style="background: url('/eventos/lib/banner2.jpg') center center / cover no-repeat fixed; box-shadow: inset 0 0 200px rgba(255,255,255,0.9);">
     <h3 class="fw-bold text-primary mb-3 bg-white d-inline-block px-3 py-1 rounded shadow-sm">Eventos Futuros</h3>
 
     <?php if (empty($events)): ?>
@@ -190,12 +196,12 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
                         $style = ['border' => '#6c757d', 'soft' => '#f8f9fa']; // Gray default
                     }
                 ?>
-                <div class="col-md-4 mb-4 event-item" data-date="<?php echo $event['date']; ?>">
+                <div id="event-card-<?php echo $event['id']; ?>" class="col-md-4 mb-4 event-item" data-date="<?php echo $event['date']; ?>">
                     <div class="card h-100 shadow-sm hover-card event-card" 
-                        style="border-radius: 12px; background-color: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2); border-top: 5px solid <?php echo $style['border']; ?> !important; overflow: hidden; backdrop-filter: blur(5px);">
+                        style="border-radius: 12px; background-color: rgba(255, 255, 255, 0.1) !important; border: 1px solid rgba(255, 255, 255, 0.2); border-top: 5px solid <?php echo $style['border']; ?> !important; backdrop-filter: blur(5px);">
                         
                         <!-- Event Image -->
-                        <div style="height: 160px; overflow: hidden; position: relative;">
+                        <div style="height: 160px; overflow: hidden; position: relative; border-top-left-radius: 12px; border-top-right-radius: 12px;">
                             <img src="<?php echo htmlspecialchars(!empty($event['image_path']) ? $event['image_path'] : $cardDefaultImage); ?>" 
                                  alt="<?php echo htmlspecialchars($event['name']); ?>" 
                                  class="w-100 h-100" 
@@ -224,9 +230,18 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
                                 <div class="ms-4 small"><?php echo htmlspecialchars($event['location_name'] ?? 'Local a definir'); ?></div>
                             </div>
 
+                            <?php if (!empty($event['external_link'])): ?>
+                                <div class="mb-3 px-2 text-center">
+                                    <a href="<?php echo htmlspecialchars($event['external_link']); ?>" target="_blank" class="btn btn-sm btn-info bg-opacity-10 text-primary border border-info border-opacity-25 fw-bold rounded-pill px-4 shadow-sm hover-scale d-inline-flex align-items-center justify-content-center" style="white-space: normal; max-width: 100%;">
+                                        <i class="fas fa-link me-2 flex-shrink-0"></i>
+                                        <?php echo htmlspecialchars(!empty($event['link_title']) ? $event['link_title'] : 'Acessar Link'); ?> 
+                                    </a>
+                                </div>
+                            <?php endif; ?>
+
                             <div class="mt-auto pt-3 border-top actions-footer" style="border-color: rgba(255,255,255,0.1) !important;">
-                                <a href="/eventos/public/detail?id=<?php echo htmlspecialchars($event['id']); ?>" class="btn btn-sm w-100 mb-2 rounded-pill fw-medium" 
-                                style="background-color: transparent; color: white; border: 1px solid white;">Ver Detalhes</a>
+                                <a href="/eventos/public/detail?id=<?php echo htmlspecialchars($event['id']); ?>" class="btn btn-sm w-100 mb-2 rounded-pill fw-medium shadow-sm hover-scale" 
+                                style="background-color: rgba(0, 31, 63, 0.75); color: white; border: 1px solid rgba(255,255,255,0.2); backdrop-filter: blur(2px);">Ver Detalhes</a>
                                 
                                 <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                                     <div class="d-flex gap-2">
@@ -261,6 +276,77 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
 </div>
 
 <style>
+@media (max-width: 768px) {
+    /* Remove padding from parent wrapper on mobile to allow full width */
+    #upcomingEventsWrapper {
+        padding: 0.5rem !important; /* Minimal padding */
+        border-radius: 0 !important; /* Square corners for full bleed feel or keep slightly rounded? Let's keep 0 for width */
+    }
+
+    /* Mobile Reels Container */
+    #eventsContainer {
+        display: flex;
+        flex-wrap: nowrap !important; /* Force single line */
+        overflow-x: auto;
+        scroll-snap-type: x mandatory;
+        padding-bottom: 1rem;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling iOS */
+        scrollbar-width: none; /* Firefox */
+        margin-right: -0.5rem; /* Counteract wrapper padding */
+        margin-left: -0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem; /* Add right padding for last item visibility */
+    }
+    
+    #eventsContainer::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+    }
+
+    /* Mobile Reels Card Wrapper */
+    .event-item {
+        flex: 0 0 92% !important; /* 92% width - consumes almost full screen */
+        width: 92% !important;
+        max-width: 92% !important;
+        scroll-snap-align: center;
+        margin-right: 15px;
+        margin-bottom: 0 !important; /* Remove bottom margin in reel mode */
+    }
+    
+    /* Ensure the last item has spacing */
+    .event-item:last-child {
+        margin-right: 0;
+    }
+    
+    /* Enhance Card Visuals for Mobile */
+    .event-card {
+        height: 100%;
+        width: 100%; /* Ensure card fills wrapper */
+        border-radius: 20px !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Adjust image height for reel feel */
+    .event-card > div:first-child { 
+        height: 200px !important;
+        background-color: rgba(0,0,0,0.05); /* Light background for letterboxing */
+    }
+    
+    /* Ensure image is not cropped but resized to fit */
+    .event-card > div:first-child img {
+        object-fit: contain !important;
+    }
+    
+    /* Hide view toggle buttons on mobile as Reels is the forced view */
+    .btn-group[aria-label="View Mode"] {
+        display: none !important;
+    }
+    
+    /* Adjust Load More button container */
+    #loadMoreContainer {
+        margin-top: 1rem !important;
+    }
+}
+
 .hover-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important;
@@ -361,7 +447,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const loadMoreBtn = document.getElementById('loadMoreBtn');
 
     // Constants
-    const LIMIT_GRID = 4;
+    const LIMIT_GRID = 6;
     const LIMIT_LIST = 6;
 
     // State
@@ -426,7 +512,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         
-        const limit = isExpanded ? Infinity : (currentView === 'grid' ? LIMIT_GRID : LIMIT_LIST);
+        const isMobile = window.innerWidth < 768;
+        // On mobile, show all events (limit = Infinity) to allow reel scrolling
+        const limit = (isExpanded || isMobile) ? Infinity : (currentView === 'grid' ? LIMIT_GRID : LIMIT_LIST);
+        
         let visibleCount = 0;
         let totalCandidate = 0;
 
@@ -454,9 +543,9 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Show/Hide Load More Button
         if (loadMoreContainer) {
-            if (totalCandidate > limit) {
+            // Hide button on mobile or if all items are shown
+            if (totalCandidate > limit && !isMobile) {
                 loadMoreContainer.classList.remove('d-none');
-                // Optional: Update button text if needed, e.g. "Show Less" logic could be added
             } else {
                 loadMoreContainer.classList.add('d-none');
             }
@@ -465,11 +554,49 @@ document.addEventListener('DOMContentLoaded', function() {
         checkEmptyState();
     }
     
+
     function checkEmptyState() {
         // Implementation for empty state handling if needed
     }
+
+    // Highlight Event Logic (Mobile Redirect)
+    const urlParams = new URLSearchParams(window.location.search);
+    const highlightId = urlParams.get('highlight_event_id');
+    
+    if (highlightId) {
+        const targetCard = document.getElementById('event-card-' + highlightId);
+        if (targetCard) {
+            // Remove d-none if it was hidden by pagination/filters
+            targetCard.classList.remove('d-none');
+            
+            // Scroll into view
+            setTimeout(() => {
+                targetCard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                
+                // Add highlight animation
+                targetCard.querySelector('.event-card').classList.add('highlight-pulse');
+                
+                // Remove param from URL without reload
+                const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                window.history.replaceState({path: newUrl}, '', newUrl);
+            }, 500); // Small delay to ensure layout is ready
+        }
+    }
 });
 </script>
+
+<style>
+@keyframes highlightPulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0.7); }
+    50% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(13, 110, 253, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(13, 110, 253, 0); }
+}
+.highlight-pulse {
+    animation: highlightPulse 1.5s ease-out;
+    border: 2px solid #0d6efd !important; /* Blue border to indicate selection */
+    z-index: 10;
+}
+</style>
 
 <?php
 $content = ob_get_clean();

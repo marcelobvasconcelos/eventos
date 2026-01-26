@@ -29,14 +29,14 @@ ob_start();
                         <a href="/eventos/request/form" class="btn btn-primary mt-3">Nova Solicitação</a>
                     </div>
                 <?php else: ?>
-                    <div class="table-responsive">
+                    <!-- Desktop Table -->
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-hover align-middle">
                             <thead class="table-light">
                                 <tr>
                                     <th>Data Evento</th>
                                     <th>Evento</th>
-                                    <th>Status Solicitação</th>
-                                    <th>Status Evento</th>
+                                    <th>Status</th>
                                     <th>Data Solicitação</th>
                                 </tr>
                             </thead>
@@ -55,12 +55,57 @@ ob_start();
                                             ?>
                                             <span class="badge <?php echo $badgeClass; ?>"><?php echo htmlspecialchars($status); ?></span>
                                         </td>
-                                        <td><?php echo htmlspecialchars($request['event_status']); ?></td>
                                         <td class="text-muted small"><?php echo date('d/m/Y H:i', strtotime($request['request_date'] ?? 'now')); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
+                    </div>
+
+                    <!-- Mobile Collapsible List -->
+                    <div class="d-md-none">
+                        <?php foreach ($requests as $index => $request): ?>
+                            <div class="card mb-3 shadow-sm border-0">
+                                <div class="card-header bg-white border-0 py-3 text-center" 
+                                     data-bs-toggle="collapse" 
+                                     data-bs-target="#requestCollapse<?php echo $index; ?>" 
+                                     aria-expanded="false" 
+                                     style="cursor: pointer;">
+                                    
+                                    <h5 class="fw-bold text-primary mb-0">
+                                        <?php echo htmlspecialchars($request['event_name']); ?>
+                                        <i class="fas fa-chevron-down ms-2 small text-muted"></i>
+                                    </h5>
+                                </div>
+                                <div id="requestCollapse<?php echo $index; ?>" class="collapse">
+                                    <div class="card-body pt-0 text-center">
+                                        <hr class="mt-0 mb-3 opacity-25">
+                                        
+                                        <div class="mb-3">
+                                            <small class="text-muted text-uppercase fw-bold">Status</small><br>
+                                            <?php
+                                                $status = $request['status'];
+                                                $badgeClass = 'bg-secondary';
+                                                if ($status == 'Aprovado') $badgeClass = 'bg-success';
+                                                elseif ($status == 'Rejeitado') $badgeClass = 'bg-danger';
+                                                elseif ($status == 'Pendente') $badgeClass = 'bg-warning text-dark';
+                                            ?>
+                                            <span class="badge <?php echo $badgeClass; ?> rounded-pill px-3 py-2 mt-1"><?php echo htmlspecialchars($status); ?></span>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <small class="text-muted text-uppercase fw-bold">Data do Evento</small><br>
+                                            <span class="fw-medium text-dark"><?php echo date('d/m/Y H:i', strtotime($request['event_date'])); ?></span>
+                                        </div>
+
+                                        <div>
+                                            <small class="text-muted text-uppercase fw-bold">Solicitado em</small><br>
+                                            <span class="text-secondary small"><?php echo date('d/m/Y H:i', strtotime($request['request_date'] ?? 'now')); ?></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
             </div>

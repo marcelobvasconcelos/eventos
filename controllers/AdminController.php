@@ -464,8 +464,10 @@ class AdminController {
             $categoryId = (int)($_POST['category'] ?? 0);
             $status = $_POST['status'] ?? 'Pendente';
             $isPublic = (int)($_POST['is_public'] ?? 1);
+        $externalLink = trim($_POST['external_link'] ?? '');
+        $linkTitle = trim($_POST['link_title'] ?? '');
 
-            // 1. Validate Location Availability (excluding current event)
+        // 1. Validate Location Availability (excluding current event)
             require_once __DIR__ . '/../models/Location.php';
             $locationModel = new Location();
             $checkEnd = $formattedEndDate ?: date('Y-m-d H:i:s', strtotime($formattedDate . ' +1 hour'));
@@ -522,7 +524,7 @@ class AdminController {
             }
 
             $eventModel = new Event();
-            $eventModel->updateEvent($id, $name, $description, $formattedDate, $formattedEndDate, $locationId, $categoryId, $status, $isPublic, $imagePath);
+        $eventModel->updateEvent($id, $name, $description, $formattedDate, $formattedEndDate, $locationId, $categoryId, $status, $isPublic, $imagePath, $externalLink, $linkTitle);
             
             // --- Asset Update Logic ---
             require_once __DIR__ . '/../models/Loan.php';

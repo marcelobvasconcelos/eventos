@@ -1,12 +1,12 @@
 <?php
 $title = 'Ficha Técnica dos Locais';
-include __DIR__ . '/../layout.php';
+ob_start();
 ?>
 
 <div class="container mt-4">
     <div class="text-center mb-5">
-        <h1 class="display-4 fw-bold text-primary">Nossos Espaços</h1>
-        <p class="lead text-muted">Conheça os detalhes técnicos de cada ambiente disponível para seus eventos</p>
+        <h1 class="display-4 fw-bold text-white">Nossos Espaços</h1>
+        <p class="lead text-white-50">Conheça os detalhes técnicos de cada ambiente disponível para seus eventos</p>
     </div>
 
     <div class="row g-4">
@@ -60,3 +60,8 @@ include __DIR__ . '/../layout.php';
         transition: all 0.3s ease;
     }
 </style>
+
+<?php
+$content = ob_get_clean();
+include __DIR__ . '/../layout.php';
+?>
