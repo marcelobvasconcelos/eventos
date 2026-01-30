@@ -2,12 +2,67 @@
 $title = 'Editar Evento';
 ob_start();
 ?>
-<h1>
-    Editar Evento
-    <a href="/eventos/admin/printEvent?id=<?php echo $event['id']; ?>" target="_blank" class="btn btn-outline-dark float-end btn-sm no-print">
+<style>
+    @media (max-width: 768px) {
+        /* Force white text on mobile for better visibility against dark backgrounds */
+        h1, h2, h3, h4, h5, h6, 
+        .form-label, 
+        .form-text, 
+        .text-muted,
+        .accordion-button {
+            color: #ffffff !important;
+        }
+        
+        /* Ensure inputs adhere to scheme or remain readable */
+        .accordion-button:not(.collapsed) {
+            color: #ffffff !important;
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .accordion-button {
+            background-color: rgba(255, 255, 255, 0.05); 
+            color: #ffffff !important;
+        }
+        
+        .accordion-item {
+             background-color: transparent !important;
+             border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        /* FIX: Asset Section has its own light styling, so we must revert text to dark there */
+        #assetsAccordion .accordion-button {
+            color: #212529 !important;
+            background-color: #ffffff !important;
+        }
+        
+        #assetsAccordion .accordion-button:not(.collapsed) {
+            color: #0c63e4 !important;
+            background-color: #e7f1ff !important;
+        }
+        
+        #assetsAccordion .accordion-item {
+            background-color: #fff !important;
+            border: 1px solid rgba(0,0,0,0.125) !important;
+        }
+
+        #assetsAccordion .form-check-label,
+        #assetsAccordion .text-muted,
+        #assetsAccordion .small,
+        #assetsAccordion div {
+            color: #212529 !important;
+        }
+         
+        /* If the user wants white text, we should probably ensure the background is dark 
+           or assume the layout handles it. Given the request, I'll stick to text color 
+           but also ensure key text elements are covered. */
+    }
+</style>
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-4">
+    <h1 class="mb-3 mb-md-0 text-white">Editar Evento</h1>
+    <a href="/eventos/admin/printEvent?id=<?php echo $event['id']; ?>" target="_blank" class="btn btn-outline-light btn-sm no-print">
         <i class="fas fa-print me-2"></i>Imprimir Relatório
     </a>
-</h1>
+</div>
 
 <?php if (isset($_GET['error'])): ?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -22,7 +77,7 @@ ob_start();
     <input type="hidden" name="return_url" value="<?php echo htmlspecialchars($returnUrl ?? '/eventos/admin/events'); ?>">
     
     <div class="col-12">
-        <label for="image" class="form-label fw-bold">Imagem de Capa</label>
+        <label for="image" class="form-label fw-bold text-white">Imagem de Capa</label>
         <?php if (!empty($event['image_path'])): ?>
             <div class="mb-2">
                 <img src="<?php echo htmlspecialchars($event['image_path']); ?>" alt="Imagem Atual" class="img-thumbnail" style="max-height: 150px;">
@@ -33,28 +88,28 @@ ob_start();
     </div>
 
     <div class="col-md-6">
-        <label for="name" class="form-label">Título</label>
+        <label for="name" class="form-label text-white">Título</label>
         <input type="text" name="name" id="name" class="form-control" value="<?php echo htmlspecialchars($event['name']); ?>" required>
     </div>
     <div class="col-md-3">
-        <label for="date" class="form-label">Data de Início</label>
+        <label for="date" class="form-label text-white">Data de Início</label>
         <input type="date" name="date" id="date" class="form-control" value="<?php echo htmlspecialchars(date('Y-m-d', strtotime($event['date']))); ?>" required>
     </div>
     <div class="col-md-3">
-        <label for="time" class="form-label">Hora de Início</label>
+        <label for="time" class="form-label text-white">Hora de Início</label>
         <input type="time" name="time" id="time" class="form-control" value="<?php echo htmlspecialchars(date('H:i', strtotime($event['date']))); ?>" required>
     </div>
     
     <div class="col-md-3">
-        <label for="end_date" class="form-label">Data de Término</label>
+        <label for="end_date" class="form-label text-white">Data de Término</label>
         <input type="date" name="end_date" id="end_date" class="form-control" value="<?php echo !empty($event['end_date']) ? htmlspecialchars(date('Y-m-d', strtotime($event['end_date']))) : ''; ?>">
     </div>
     <div class="col-md-3">
-        <label for="end_time" class="form-label">Hora de Término</label>
+        <label for="end_time" class="form-label text-white">Hora de Término</label>
         <input type="time" name="end_time" id="end_time" class="form-control" value="<?php echo !empty($event['end_date']) ? htmlspecialchars(date('H:i', strtotime($event['end_date']))) : ''; ?>">
     </div>
     <div class="col-md-6">
-        <label for="location" class="form-label">Localização</label>
+        <label for="location" class="form-label text-white">Localização</label>
         <select name="location" id="location" class="form-control">
             <option value="">Selecione um local</option>
             <?php foreach ($locations as $location): ?>
@@ -69,7 +124,7 @@ ob_start();
         </select>
     </div>
     <div class="col-md-6">
-        <label for="category" class="form-label">Categoria</label>
+        <label for="category" class="form-label text-white">Categoria</label>
         <select name="category" id="category" class="form-control">
             <option value="">Selecione uma categoria</option>
             <?php foreach ($categories as $category): ?>
@@ -78,7 +133,7 @@ ob_start();
         </select>
     </div>
     <div class="col-md-3">
-        <label for="status" class="form-label">Status</label>
+        <label for="status" class="form-label text-white">Status</label>
         <select name="status" id="status" class="form-select" required>
             <option value="Pendente" <?php echo ($event['status'] == 'Pendente') ? 'selected' : ''; ?>>Pendente</option>
             <option value="Aprovado" <?php echo ($event['status'] == 'Aprovado') ? 'selected' : ''; ?>>Aprovado</option>
@@ -87,32 +142,41 @@ ob_start();
         </select>
     </div>
     <div class="col-md-3">
-        <label for="is_public" class="form-label">Visibilidade</label>
+        <label for="is_public" class="form-label text-white">Visibilidade</label>
         <select name="is_public" id="is_public" class="form-select" required>
             <option value="1" <?php echo (isset($event['is_public']) && $event['is_public'] == 1) ? 'selected' : ''; ?>>Público</option>
             <option value="0" <?php echo (isset($event['is_public']) && $event['is_public'] == 0) ? 'selected' : ''; ?>>Privado</option>
         </select>
     </div>
+    <div class="col-md-6">
+        <label for="public_estimation" class="form-label text-white">Estimativa de Público</label>
+        <input type="number" name="public_estimation" id="public_estimation" class="form-control" value="<?php echo htmlspecialchars($event['public_estimation'] ?? ''); ?>" min="0">
+    </div>
     
     <div class="col-md-6">
-        <label for="link_title" class="form-label">Título do Link (Opcional)</label>
+        <label for="link_title" class="form-label text-white">Título do Link (Opcional)</label>
         <input type="text" name="link_title" id="link_title" class="form-control" value="<?php echo htmlspecialchars($event['link_title'] ?? ''); ?>" placeholder="Ex: Inscrições">
     </div>
     <div class="col-md-6">
-        <label for="external_link" class="form-label">Link Externo (Opcional)</label>
+        <label for="external_link" class="form-label text-white">Link Externo (Opcional)</label>
         <div class="input-group">
             <span class="input-group-text"><i class="fas fa-link"></i></span>
             <input type="url" name="external_link" id="external_link" class="form-control" value="<?php echo htmlspecialchars($event['external_link'] ?? ''); ?>" placeholder="https://...">
         </div>
     </div>
     <div class="col-12">
-        <label for="description" class="form-label">Descrição</label>
+        <label for="schedule_file" class="form-label text-white">Programação do Evento (Opcional)</label>
+        <input type="file" class="form-control" id="schedule_file" name="schedule_file" accept=".pdf, .doc, .docx, .odt, .jpg, .jpeg, .png">
+        <div class="form-text text-white-50">Arquivo atual: <?php echo !empty($event['schedule_file_path']) ? basename($event['schedule_file_path']) : 'Nenhum'; ?></div>
+    </div>
+    <div class="col-12">
+        <label for="description" class="form-label text-white">Descrição</label>
         <textarea name="description" id="description" class="form-control" rows="4" required><?php echo htmlspecialchars($event['description']); ?></textarea>
     </div>
 
     <!-- Asset Selection Section -->
     <div class="col-12 mt-4">
-        <h5 class="mb-3">Equipamentos Solicitados</h5>
+        <h5 class="mb-3 text-white">Equipamentos Solicitados</h5>
         <div class="card bg-light border-0">
             <div class="card-body">
                 <?php if (empty($allAssets)): ?>

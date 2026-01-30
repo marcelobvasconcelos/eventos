@@ -70,7 +70,6 @@ class RequestController {
             // Fetch necessary data for the view
             $locationModel = new Location();
             $categoryModel = new Category();
-            $categoryModel = new Category();
             $assetModel = new Asset();
             
             require_once __DIR__ . '/../models/Config.php';
@@ -96,7 +95,6 @@ class RequestController {
         $time = $_POST['time'] ?? '';
         $endTime = $_POST['end_time'] ?? '';
         $endDateInput = !empty($_POST['end_date']) ? $_POST['end_date'] : $date;
-        $locationId = (int)($_POST['location'] ?? 0);
         $categoryId = (int)($_POST['category'] ?? 0);
         $description = trim($_POST['description'] ?? '');
         $assets = $_POST['assets'] ?? [];
@@ -107,7 +105,21 @@ class RequestController {
         if (empty($title)) $errors[] = 'Título é obrigatório.';
         if (empty($date)) $errors[] = 'Data é obrigatória.';
         if (empty($time)) $errors[] = 'Hora de início é obrigatória.';
-        if (empty($locationId)) $errors[] = 'Localização é obrigatória.';
+
+        $locationPost = $_POST['location'] ?? '';
+        $customLocation = null;
+        $locationId = null;
+
+        if ($locationPost === 'other') {
+            $customLocation = trim($_POST['custom_location'] ?? '');
+            if (empty($customLocation)) {
+                $errors[] = 'Nome do local é obrigatório para "Outros".';
+            }
+        } else {
+            $locationId = (int)$locationPost;
+            if (empty($locationId)) $errors[] = 'Localização é obrigatória.';
+        }
+
         if (empty($categoryId)) $errors[] = 'Categoria é obrigatória.';
         if (empty($description)) $errors[] = 'Descrição é obrigatória.';
 
@@ -166,12 +178,34 @@ class RequestController {
             }
         }
 
+        $scheduleFilePath = null;
+        if (isset($_FILES['schedule_file']) && $_FILES['schedule_file']['error'] === UPLOAD_ERR_OK) {
+            $uploadDir = __DIR__ . '/../public/uploads/schedules/';
+            if (!is_dir($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            $fileTmpPath = $_FILES['schedule_file']['tmp_name'];
+            $fileName = $_FILES['schedule_file']['name'];
+            $fileNameCmps = explode(".", $fileName);
+            $fileExtension = strtolower(end($fileNameCmps));
+            $allowedfileExtensions = array('pdf', 'doc', 'docx', 'odt', 'jpg', 'jpeg', 'png');
+            
+            if (in_array($fileExtension, $allowedfileExtensions)) {
+                $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
+                $dest_path = $uploadDir . $newFileName;
+                if(move_uploaded_file($fileTmpPath, $dest_path)) {
+                    $scheduleFilePath = '/eventos/public/uploads/schedules/' . $newFileName;
+                }
+            }
+        }
+
         $isPublic = isset($_POST['is_public']) ? (int)$_POST['is_public'] : 1;
         $externalLink = trim($_POST['external_link'] ?? '');
         $linkTitle = trim($_POST['link_title'] ?? '');
+        $publicEstimation = (int)($_POST['public_estimation'] ?? 0);
 
         $eventModel = new Event();
-        $eventId = $eventModel->createEvent($title, $description, $formattedDate, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath, $externalLink, $linkTitle);
+        $eventId = $eventModel->createEvent($title, $description, $formattedDate, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation);
         
         $requestModel = new EventRequest();
         $requestId = $requestModel->createRequest($_SESSION['user_id'], $eventId);
@@ -199,6 +233,19 @@ class RequestController {
             }
         }
 
+        // Capacity Check Logic
+        $warningMsg = '';
+        $locationModel = new Location();
+        $location = $locationModel->getLocationById($locationId);
+        
+        if ($location) {
+            $capacity = (int)$location['capacity'];
+            // Check if estimation is LESS than 80% of capacity
+            if ($capacity > 0 && $publicEstimation > 0 && $publicEstimation < ($capacity * 0.8)) {
+                $warningMsg = ' ATENÇÃO: Poderá haver mudanças de local do seu evento em decorrência da estimativa de público ser inferior ao local solicitado.';
+            }
+        }
+
         if (!empty($failedAssets)) {
             // Fetch asset names for better error message
             $assetModel = new Asset();
@@ -207,10 +254,11 @@ class RequestController {
                 $a = $assetModel->getAssetById($fid);
                 if ($a) $failedNames[] = $a['name'];
             }
-            $msg = 'Solicitação criada, MAS alguns equipamentos não puderam ser reservados (estoque insuficiente ou erro): ' . implode(', ', $failedNames);
+            $msg = 'Solicitação criada, MAS alguns equipamentos não puderam ser reservados (estoque insuficiente ou erro): ' . implode(', ', $failedNames) . $warningMsg;
             header('Location: /eventos/request/my_requests?error=' . urlencode($msg));
         } else {
-            header('Location: /eventos/request/my_requests?message=Solicitação enviada com sucesso');
+             $msg = 'Solicitação enviada com sucesso' . $warningMsg;
+             header('Location: /eventos/request/my_requests?message=' . urlencode($msg));
         }
         exit;
     }

@@ -20,7 +20,7 @@ ob_start();
                     $isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == ($event['created_by'] ?? 0);
                     
                     if (!$isPublic && !$isAdmin && !$isOwner) {
-                        $event['name'] = "Agendamento Privado";
+                        // $event['name'] remains visible as per request
                         $event['description'] = "Detalhes restritos ao responsável.";
                     }
                 ?>
@@ -66,10 +66,33 @@ ob_start();
                             </div>
                             <div>
                                 <h6 class="fw-bold mb-1">Localização</h6>
-                                <p class="mb-0 text-muted"><?php echo htmlspecialchars($event['location_name'] ?? 'Local não definido'); ?></p>
+                                <p class="mb-0 text-muted">
+                                    <?php if (!empty($locationImages)): ?>
+                                        <a href="#" onclick="event.preventDefault(); openLightbox(0);" class="text-decoration-none text-primary fw-semibold">
+                                            <i class="fas fa-images me-1"></i><?php echo htmlspecialchars($event['location_name'] ?? 'Local não definido'); ?>
+                                        </a>
+                                    <?php else: ?>
+                                        <?php echo htmlspecialchars($event['location_name'] ?? 'Local não definido'); ?>
+                                    <?php endif; ?>
+                                </p>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- Public Estimation -->
+                    <?php if (!empty($event['public_estimation']) && $event['public_estimation'] > 0): ?>
+                    <div class="col-md-6">
+                        <div class="d-flex align-items-start">
+                             <div class="bg-light text-secondary rounded-circle p-3 me-3">
+                                <i class="fas fa-users fa-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1">Estimativa de Público</h6>
+                                <p class="mb-0 text-muted"><?php echo htmlspecialchars($event['public_estimation']); ?> pessoas</p>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
 
                     <!-- Description -->
                     <div class="col-12">
@@ -83,6 +106,15 @@ ob_start();
                                 <a href="<?php echo htmlspecialchars($event['external_link']); ?>" target="_blank" class="btn btn-info bg-opacity-10 text-primary border border-info border-opacity-25 fw-bold rounded-pill px-5 py-3 shadow-sm hover-scale d-inline-flex align-items-center fs-5">
                                     <i class="fas fa-link me-2"></i>
                                     <?php echo htmlspecialchars(!empty($event['link_title']) ? $event['link_title'] : 'Acessar Link'); ?> 
+                                </a>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (!empty($event['schedule_file_path'])): ?>
+                            <div class="mt-3 text-center">
+                                <a href="<?php echo htmlspecialchars($event['schedule_file_path']); ?>" download target="_blank" class="btn btn-outline-primary rounded-pill px-4 py-2 hover-scale d-inline-flex align-items-center">
+                                    <i class="fas fa-file-download me-2"></i>
+                                    Baixar Programação
                                 </a>
                             </div>
                         <?php endif; ?>
@@ -217,6 +249,62 @@ $canViewAssets = isset($_SESSION['user_id']) && (
         </div>
     </div>
 </div>
+
+<!-- Lightbox Modal -->
+<?php if (!empty($locationImages)): ?>
+<div class="modal fade" id="lightboxModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-xl">
+    <div class="modal-content bg-transparent border-0 shadow-none">
+      <div class="modal-body p-0 text-center position-relative">
+          <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 z-3 bg-white" data-bs-dismiss="modal" aria-label="Close" style="opacity: 0.8;"></button>
+          
+          <div class="position-relative d-inline-block">
+              <img id="lightboxImage" src="" class="img-fluid rounded shadow-lg" style="max-height: 90vh;" alt="Zoom">
+              
+              <!-- Navigation Buttons -->
+              <?php if (count($locationImages) > 1): ?>
+              <button class="btn btn-dark position-absolute top-50 start-0 translate-middle-y ms-2 rounded-circle shadow nav-btn" onclick="changeImage(-1)" style="width: 40px; height: 40px; opacity: 0.7;">
+                  <i class="fas fa-chevron-left"></i>
+              </button>
+              <button class="btn btn-dark position-absolute top-50 end-0 translate-middle-y me-2 rounded-circle shadow nav-btn" onclick="changeImage(1)" style="width: 40px; height: 40px; opacity: 0.7;">
+                  <i class="fas fa-chevron-right"></i>
+              </button>
+              <?php endif; ?>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const locationImages = <?php 
+    $imgPaths = array_map(function($img) { return $img['image_path']; }, $locationImages);
+    echo json_encode(array_values($imgPaths)); 
+?>;
+let currentImgIndex = 0;
+
+function openLightbox(index) {
+    currentImgIndex = index;
+    updateLightboxImage();
+    new bootstrap.Modal(document.getElementById('lightboxModal')).show();
+}
+
+function changeImage(direction) {
+    currentImgIndex += direction;
+    if (currentImgIndex < 0) {
+        currentImgIndex = locationImages.length - 1;
+    } else if (currentImgIndex >= locationImages.length) {
+        currentImgIndex = 0;
+    }
+    updateLightboxImage();
+}
+
+function updateLightboxImage() {
+    if (locationImages.length === 0) return;
+    document.getElementById('lightboxImage').src = locationImages[currentImgIndex];
+}
+</script>
+<?php endif; ?>
 
 <?php
 $content = ob_get_clean();

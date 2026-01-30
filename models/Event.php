@@ -18,7 +18,7 @@ class Event {
     }
 
     public function getEventsByDateRange($startDate, $endDate) {
-        $stmt = $this->pdo->prepare("SELECT e.*, l.name as location_name, u.name as creator_name FROM events e LEFT JOIN locations l ON e.location_id = l.id LEFT JOIN users u ON e.created_by = u.id WHERE e.status IN ('Aprovado', 'Cancelado') AND e.date BETWEEN ? AND ? ORDER BY e.date ASC");
+        $stmt = $this->pdo->prepare("SELECT e.*, l.name as location_name, c.name as category_name, u.name as creator_name FROM events e LEFT JOIN locations l ON e.location_id = l.id LEFT JOIN categories c ON e.category_id = c.id LEFT JOIN users u ON e.created_by = u.id WHERE e.status IN ('Aprovado', 'Cancelado') AND e.date BETWEEN ? AND ? ORDER BY e.date ASC");
         $stmt->execute([$startDate, $endDate]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
@@ -31,9 +31,10 @@ class Event {
         // Overlap Condition: (Start <= DayEnd) AND (End >= DayStart)
         // Handling NULL end_date: Treat as same as start date (point event or short duration)
         $stmt = $this->pdo->prepare("
-            SELECT e.*, l.name as location_name, u.name as creator_name 
+            SELECT e.*, COALESCE(l.name, e.custom_location) as location_name, c.name as category_name, u.name as creator_name 
             FROM events e 
             LEFT JOIN locations l ON e.location_id = l.id 
+            LEFT JOIN categories c ON e.category_id = c.id
             LEFT JOIN users u ON e.created_by = u.id 
             WHERE e.status IN ('Aprovado', 'Cancelado') 
             AND e.date <= ? 
@@ -46,7 +47,7 @@ class Event {
 
     public function getActiveEvents() {
         $stmt = $this->pdo->prepare("
-            SELECT e.*, l.name as location_name, u.name as creator_name
+            SELECT e.*, COALESCE(l.name, e.custom_location) as location_name, u.name as creator_name
             FROM events e 
             LEFT JOIN locations l ON e.location_id = l.id 
             LEFT JOIN users u ON e.created_by = u.id
@@ -73,7 +74,7 @@ class Event {
         $stmt = $this->pdo->prepare("
             SELECT 
                 e.*, 
-                l.name as location_name, 
+                COALESCE(l.name, e.custom_location) as location_name, 
                 c.name as category_name,
                 creator.name as creator_name,
                 approver.name as approver_name
@@ -92,7 +93,7 @@ class Event {
 
     public function getPendingEvents() {
         $stmt = $this->pdo->prepare("
-            SELECT e.*, l.name as location_name 
+            SELECT e.*, COALESCE(l.name, e.custom_location) as location_name 
             FROM events e 
             LEFT JOIN locations l ON e.location_id = l.id 
             WHERE e.status = 'Pendente' 
@@ -112,13 +113,18 @@ class Event {
         }
     }
 
-    public function updateEvent($id, $name, $description, $date, $endDate, $locationId, $categoryId, $status, $isPublic, $imagePath = null, $externalLink = null, $linkTitle = null) {
-        $sql = "UPDATE events SET name = ?, description = ?, date = ?, end_date = ?, location_id = ?, category_id = ?, status = ?, is_public = ?, external_link = ?, link_title = ?";
-        $params = [$name, $description, $date, $endDate ?: null, $locationId ?: null, $categoryId ?: null, $status, $isPublic, $externalLink, $linkTitle];
+    public function updateEvent($id, $name, $description, $date, $endDate, $locationId, $categoryId, $status, $isPublic, $imagePath = null, $externalLink = null, $linkTitle = null, $publicEstimation = 0, $scheduleFilePath = null, $customLocation = null) {
+        $sql = "UPDATE events SET name = ?, description = ?, date = ?, end_date = ?, location_id = ?, category_id = ?, status = ?, is_public = ?, external_link = ?, link_title = ?, public_estimation = ?, custom_location = ?";
+        $params = [$name, $description, $date, $endDate ?: null, $locationId ?: null, $categoryId ?: null, $status, $isPublic, $externalLink, $linkTitle, $publicEstimation, $customLocation];
         
         if ($imagePath !== null) { 
             $sql .= ", image_path = ?";
             $params[] = $imagePath;
+        }
+
+        if ($scheduleFilePath !== null) {
+            $sql .= ", schedule_file_path = ?";
+            $params[] = $scheduleFilePath;
         }
         
         $sql .= " WHERE id = ?";
@@ -133,9 +139,9 @@ class Event {
         return $stmt->execute([$id]);
     }
 
-    public function createEvent($name, $description, $date, $endDate, $locationId, $categoryId, $createdBy, $isPublic = 1, $imagePath = null, $externalLink = null, $linkTitle = null) {
-        $stmt = $this->pdo->prepare("INSERT INTO events (name, description, date, end_date, location_id, category_id, created_by, is_public, image_path, external_link, link_title) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$name, $description, $date, $endDate ?: null, $locationId, $categoryId, $createdBy, $isPublic, $imagePath, $externalLink, $linkTitle]);
+    public function createEvent($name, $description, $date, $endDate, $locationId, $categoryId, $createdBy, $isPublic = 1, $imagePath = null, $externalLink = null, $linkTitle = null, $publicEstimation = 0, $scheduleFilePath = null, $customLocation = null) {
+        $stmt = $this->pdo->prepare("INSERT INTO events (name, description, date, end_date, location_id, category_id, created_by, is_public, image_path, external_link, link_title, public_estimation, schedule_file_path, custom_location) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $description, $date, $endDate ?: null, $locationId, $categoryId, $createdBy, $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation]);
         return $this->pdo->lastInsertId();
     }
 

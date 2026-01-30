@@ -62,6 +62,16 @@ ob_start();
                         <div class="form-text">O sistema criará itens individuais automaticamente.</div>
                     </div>
 
+                    <div class="col-12">
+                        <div class="form-check form-switch p-3 bg-light border rounded">
+                            <input class="form-check-input ms-0 me-3" type="checkbox" role="switch" id="requires_patrimony" name="requires_patrimony" value="1" <?php echo (isset($_POST['requires_patrimony']) && $_POST['requires_patrimony']) ? 'checked' : ''; ?>>
+                            <label class="form-check-label fw-semibold text-secondary" for="requires_patrimony">
+                                Requer identificação de patrimônio?
+                                <div class="small text-muted fw-normal">Se marcado, será necessário informar o número de tombamento individual para cada item.</div>
+                            </label>
+                        </div>
+                    </div>
+
                     <div class="col-12 mt-5">
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <a href="/eventos/asset" class="btn btn-outline-secondary px-4 rounded-pill">Cancelar</a>

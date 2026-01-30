@@ -25,7 +25,8 @@ class Location {
 
     public function createLocation($name, $description, $capacity) {
         $stmt = $this->pdo->prepare("INSERT INTO locations (name, description, capacity) VALUES (?, ?, ?)");
-        return $stmt->execute([$name, $description, $capacity]);
+        $stmt->execute([$name, $description, $capacity]);
+        return $this->pdo->lastInsertId();
     }
 
     public function updateLocation($id, $name, $description, $capacity) {
@@ -48,24 +49,42 @@ class Location {
                     AND (? > e.date)";
         
         $params = [$startDateTime, $endDateTime];
+        
         if ($excludeEventId) {
             $sql .= " AND e.id != ?";
             $params[] = $excludeEventId;
         }
 
-        $sql .= " ) THEN 1 ELSE 0 END as is_occupied
-                FROM locations l 
-                ORDER BY l.name ASC";
-        
+        $sql .= "
+                ) THEN 1 ELSE 0 END as is_occupied
+            FROM locations l
+            ORDER BY l.name ASC";
+            
         $stmt = $this->pdo->prepare($sql);
-        
-        if (!$startDateTime || !$endDateTime) {
-             return $this->getAllLocations();
-        }
-
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    public function addImages($locationId, $imagePaths) {
+        $sql = "INSERT INTO location_images (location_id, image_path) VALUES (?, ?)";
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($imagePaths as $path) {
+            $stmt->execute([$locationId, $path]);
+        }
+        return true;
+    }
+
+    public function getImages($locationId) {
+        $stmt = $this->pdo->prepare("SELECT * FROM location_images WHERE location_id = ?");
+        $stmt->execute([$locationId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public function deleteImage($id) {
+        $stmt = $this->pdo->prepare("DELETE FROM location_images WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+
 
     public function isAvailable($locationId, $startDateTime, $endDateTime, $excludeEventId = null) {
         $sql = "SELECT COUNT(*) FROM events 

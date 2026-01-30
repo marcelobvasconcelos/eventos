@@ -163,7 +163,7 @@ $currentDate = $date; // Mapping for consistency with new logic
                              $isCreator = ($event['created_by'] == $userId);
                              $canViewDetails = $isPublic || $isAdmin || $isCreator;
 
-                             $eventName = $canViewDetails ? $event['name'] : 'Agendamento Privado';
+                             $eventName = $event['name']; // Always visible as per request
                              $eventLocation = $canViewDetails ? ($event['location_name'] ?? 'Local não definido') : 'Local Reservado';
                              $eventResponsible = $canViewDetails ? ($event['creator_name'] ?? 'N/A') : 'N/A';
                              

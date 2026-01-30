@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Initialize Bootstrap Modal
     const modal = new bootstrap.Modal(modalElement);
 
-    // Find all image inputs
-    const inputs = document.querySelectorAll('input[type="file"][accept*="image"]');
+    // Find all image inputs (exclude multiple inputs like gallery uploads)
+    const inputs = document.querySelectorAll('input[type="file"][accept*="image"]:not([multiple])');
 
     inputs.forEach(input => {
         input.addEventListener('change', function (e) {
@@ -34,8 +34,14 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     modalElement.addEventListener('shown.bs.modal', function () {
+        let ratio = 16 / 9; // Default
+        if (currentInput && currentInput.dataset.aspectRatio) {
+            ratio = parseFloat(currentInput.dataset.aspectRatio);
+            if (isNaN(ratio)) ratio = NaN; // Allow free crop if "NaN" or specific string passed
+        }
+
         cropper = new Cropper(imageElement, {
-            aspectRatio: 16 / 9, // Format for Carousel
+            aspectRatio: ratio,
             viewMode: 2, // Restrict crop box to not exceed image
             autoCropArea: 1, // Start with full image if possible
             movable: true,

@@ -126,7 +126,7 @@ ob_start();
                                     $evIsAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
                                     $evIsOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == ($ev['created_by'] ?? 0);
                                     if (!$evIsPublic && !$evIsAdmin && !$evIsOwner) {
-                                        $evName = "Agendamento Privado";
+                                        // $evName remains visible
                                     }
                                     $dayContent .= "<li><strong>{$evTime}</strong> - {$evName}</li>";
                                     $count++;
@@ -157,7 +157,7 @@ ob_start();
                                     $isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == ($event['created_by'] ?? 0);
 
                                     if (!$isPublic && !$isAdmin && !$isOwner) {
-                                        $eventName = "Agendamento Privado";
+                                        // $eventName remains visible
                                     }
                                     
                                      // Popover content for event
@@ -353,11 +353,13 @@ ob_start();
                                     <div class="me-3 text-center" style="min-width: 50px;">
                                         <div class="fw-bold text-primary fs-5">${time}</div>
                                     </div>
-                                    <div class="border-start ps-3 border-2 border-primary">
-                                        <h6 class="fw-bold mb-1 text-dark">${name}</h6>
+                                    <div class="border-start ps-3 border-2 border-primary" style="min-width: 0;">
+                                        <h6 class="fw-bold mb-1 text-dark text-truncate">${name}</h6>
                                         <div class="small text-muted"><i class="fas fa-map-marker-alt me-1"></i>${ev.location_name || 'Local não definido'}</div>
+                                        <div class="small text-muted"><i class="fas fa-tag me-1"></i>${ev.category_name || 'Sem Categoria'}</div>
+                                        <div class="small text-muted mt-1 text-truncate"><i class="fas fa-align-left me-1"></i>${ev.description || 'Sem descrição'}</div>
                                     </div>
-                                    <div class="ms-auto text-primary">
+                                    <div class="ms-auto text-primary ps-2">
                                         <i class="fas fa-chevron-right"></i>
                                     </div>
                                 </div>

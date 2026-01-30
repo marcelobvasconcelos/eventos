@@ -51,7 +51,7 @@ ob_start();
                                     <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
                                     <td class="text-end pe-4">
                                         <button class="btn btn-sm btn-outline-primary rounded-pill px-2 me-1" 
-                                                onclick="editLocation(<?php echo $location['id']; ?>, '<?php echo addslashes($location['name']); ?>', '<?php echo addslashes($location['description']); ?>', <?php echo $location['capacity']; ?>)">
+                                                onclick="editLocation(<?php echo $location['id']; ?>, '<?php echo addslashes($location['name']); ?>', '<?php echo addslashes($location['description']); ?>', <?php echo $location['capacity']; ?>, <?php echo htmlspecialchars(json_encode($location['images'])); ?>)">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                         <form method="POST" action="/eventos/admin/deleteLocation" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este local?');">
@@ -82,7 +82,7 @@ ob_start();
                 <h5 class="modal-title">Adicionar Local</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="/eventos/admin/createLocation">
+            <form method="POST" action="/eventos/admin/createLocation" enctype="multipart/form-data">
                 <div class="modal-body">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     <div class="mb-3">
@@ -94,8 +94,12 @@ ob_start();
                         <textarea name="description" id="description" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="capacity" class="form-label">Capacidade</label>
                         <input type="number" name="capacity" id="capacity" class="form-control" min="1">
+                    </div>
+                     <div class="mb-3">
+                        <label for="images" class="form-label">Imagens do Local</label>
+                        <input type="file" name="images[]" id="images" class="form-control" multiple accept="image/*">
+                        <div class="form-text">Selecione múltiplas imagens (Ctrl + Clique)</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -115,7 +119,7 @@ ob_start();
                 <h5 class="modal-title">Editar Local</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="POST" action="/eventos/admin/updateLocation">
+            <form method="POST" action="/eventos/admin/updateLocation" enctype="multipart/form-data">
                 <div class="modal-body">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     <input type="hidden" name="id" id="editId">
@@ -128,8 +132,16 @@ ob_start();
                         <textarea name="description" id="editDescription" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
-                        <label for="editCapacity" class="form-label">Capacidade</label>
                         <input type="number" name="capacity" id="editCapacity" class="form-control" min="1">
+                    </div>
+                    <div class="mb-3">
+                        <label for="editImages" class="form-label">Adicionar Imagens</label>
+                        <input type="file" name="images[]" id="editImages" class="form-control" multiple accept="image/*">
+                        <div class="form-text">Novas imagens serão adicionadas às existentes.</div>
+                    </div>
+                    <div class="mb-3">
+                         <label class="form-label">Imagens Atuais</label>
+                         <div id="existingImagesList" class="d-flex flex-wrap gap-2"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -142,12 +154,67 @@ ob_start();
 </div>
 
 <script>
-function editLocation(id, name, description, capacity) {
+function editLocation(id, name, description, capacity, images) {
     document.getElementById('editId').value = id;
     document.getElementById('editName').value = name;
     document.getElementById('editDescription').value = description;
     document.getElementById('editCapacity').value = capacity;
+    
+    // Render existing images
+    const container = document.getElementById('existingImagesList');
+    container.innerHTML = '';
+    if (images && images.length > 0) {
+        images.forEach(img => {
+            const div = document.createElement('div');
+            div.className = 'position-relative';
+            div.style.width = '100px';
+            div.style.height = '100px';
+            
+            const imgEl = document.createElement('img');
+            imgEl.src = img.image_path;
+            imgEl.className = 'img-thumbnail w-100 h-100 object-fit-cover';
+            
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-danger btn-sm position-absolute top-0 end-0 p-0 rounded-circle';
+            btn.style.width = '20px';
+            btn.style.height = '20px';
+            btn.style.lineHeight = '1';
+            btn.innerHTML = '&times;';
+            btn.onclick = function(e) { e.preventDefault(); deleteLocationImage(img.id, div); };
+            
+            div.appendChild(imgEl);
+            div.appendChild(btn);
+            container.appendChild(div);
+        });
+    } else {
+        container.innerHTML = '<span class="text-muted small">Nenhuma imagem cadastrada.</span>';
+    }
+
     new bootstrap.Modal(document.getElementById('editModal')).show();
+}
+
+function deleteLocationImage(id, element) {
+    if (!confirm('Excluir esta imagem?')) return;
+    
+    fetch('/eventos/admin/deleteLocationImage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({id: id})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            element.remove();
+        } else {
+            alert('Erro ao excluir imagem.');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert('Erro de conexão.');
+    });
 }
 </script>
 <?php endif; ?>

@@ -26,6 +26,8 @@ class SettingsController {
             'footer_social_youtube', 
             'footer_text',
             'event_creation_info_text',
+            'request_info_text',
+            'normative_pdf',
             'footer_logo_1',
             'footer_logo_2',
             'footer_col1_title',
@@ -61,6 +63,7 @@ class SettingsController {
                 'footer_social_youtube', 
                 'footer_text',
                 'event_creation_info_text',
+                'request_info_text',
                 'footer_col1_title',
                 'footer_col1_subtitle',
                 'footer_address',
@@ -81,6 +84,7 @@ class SettingsController {
                 mkdir($uploadDir, 0777, true);
             }
 
+            // 1. Handle Images
             $imageFields = ['home_banner_image', 'event_card_default_image', 'footer_logo_1', 'footer_logo_2'];
             
             foreach ($imageFields as $field) {
@@ -103,6 +107,25 @@ class SettingsController {
                             $dbPath = 'public/uploads/config/' . $newFileName;
                             $configModel->update($field, $dbPath);
                         }
+                    }
+                }
+            }
+
+            // 2. Handle Normative PDF
+            if (isset($_FILES['normative_pdf']) && $_FILES['normative_pdf']['error'] === UPLOAD_ERR_OK) {
+                $field = 'normative_pdf';
+                $fileTmpPath = $_FILES[$field]['tmp_name'];
+                $fileName = $_FILES[$field]['name'];
+                $fileNameCmps = explode(".", $fileName);
+                $fileExtension = strtolower(end($fileNameCmps));
+
+                if ($fileExtension === 'pdf') {
+                    $newFileName = 'normative_orientation.pdf'; // Fixed name or timestamped
+                    $dest_path = $uploadDir . $newFileName;
+                    
+                    if(move_uploaded_file($fileTmpPath, $dest_path)) {
+                        $dbPath = 'public/uploads/config/' . $newFileName;
+                        $configModel->update($field, $dbPath);
                     }
                 }
             }

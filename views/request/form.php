@@ -20,12 +20,12 @@ ob_start();
                     </div>
                 <?php endif; ?>
 
-                <?php if (!empty($globalConfigs['event_creation_info_text'])): ?>
+                <?php if (!empty($globalConfigs['request_info_text'])): ?>
                     <div class="alert alert-info border-info shadow-sm rounded-3 mb-4">
                         <div class="d-flex">
                             <i class="fas fa-info-circle fa-2x me-3 mt-1 text-info"></i>
                             <div>
-                                <?php echo $globalConfigs['event_creation_info_text']; // Allow HTML ?>
+                                <?php echo $globalConfigs['request_info_text']; // Allow HTML ?>
                             </div>
                         </div>
                     </div>
@@ -37,7 +37,11 @@ ob_start();
                     <div class="col-12">
                         <label for="image" class="form-label fw-bold text-secondary">Imagem do Evento (Opcional)</label>
                         <input type="file" class="form-control bg-light" id="image" name="image" accept="image/*">
-                        <div class="form-text">Formatos aceitos: JPG, PNG, GIF, WEBP.</div>
+                        <div class="form-text">
+                            <i class="fas fa-info-circle me-1 text-primary"></i> 
+                            Recomendado: <strong>Formato Horizontal (ex: 1200x600px ou 16:9)</strong> para melhor visualização nos cards.
+                            <br>Formatos aceitos: JPG, PNG, GIF, WEBP.
+                        </div>
                     </div>
 
                     <div class="col-12">
@@ -81,7 +85,6 @@ ob_start();
                         </div>
                     </div>
 
-<!-- ... skipped ... -->
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -157,10 +160,45 @@ document.addEventListener('DOMContentLoaded', function() {
                                         $selected = (isset($_POST['location']) && $_POST['location'] == $location['id']) ? 'selected' : '';
                                         $capacityText = !empty($location['capacity']) ? ' (Cap: ' . $location['capacity'] . ')' : '';
                                     ?>
-                                    <option value="<?php echo $location['id']; ?>" <?php echo $selected; ?> <?php echo $disabledAttr; ?>><?php echo htmlspecialchars($location['name']) . $capacityText . $occupiedText; ?></option>
+                                    <option value="<?php echo $location['id']; ?>" <?php echo $selected; ?> <?php echo $disabledAttr; ?>>
+                                        <?php echo htmlspecialchars($location['name']) . $occupiedText; ?>
+                                    </option>
                                 <?php endforeach; ?>
+                                <option value="other" <?php echo (isset($_POST['location']) && $_POST['location'] == 'other') ? 'selected' : ''; ?>>Outros (Especifique)</option>
                             </select>
                         </div>
+                        <div id="custom_location_div" class="mt-2 <?php echo (isset($_POST['location']) && $_POST['location'] == 'other') ? '' : 'd-none'; ?>">
+                            <label for="custom_location" class="form-label small text-secondary">Nome do Local <span class="text-danger">*</span></label>
+                            <input type="text" name="custom_location" id="custom_location" class="form-control bg-light" placeholder="Digite o nome do local..." value="<?php echo htmlspecialchars($_POST['custom_location'] ?? ''); ?>">
+                        </div>
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const locSelect = document.getElementById('location');
+                            const customDiv = document.getElementById('custom_location_div');
+                            const customInput = document.getElementById('custom_location');
+
+                            function toggleCustom() {
+                                if (locSelect.value === 'other') {
+                                    customDiv.classList.remove('d-none');
+                                    customInput.required = true;
+                                } else {
+                                    customDiv.classList.add('d-none');
+                                    customInput.required = false;
+                                }
+                            }
+                            locSelect.addEventListener('change', toggleCustom);
+                            // Initial check handled by PHP class output but robust JS init good too
+                            toggleCustom();
+                        });
+                        </script>
+                    </div>
+
+                    <div class="col-md-6">
+                         <label for="public_estimation" class="form-label fw-semibold text-secondary">Estimativa de Público</label>
+                         <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-users"></i></span>
+                            <input type="number" name="public_estimation" id="public_estimation" class="form-control border-start-0 ps-0 bg-light" placeholder="Ex: 50" min="1" value="<?php echo htmlspecialchars($_POST['public_estimation'] ?? ''); ?>" required>
+                         </div>
                     </div>
 
                     <div class="col-md-6">
@@ -217,10 +255,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="form-text">URL completa para onde o usuário será direcionado.</div>
                     </div>
 
-                    <div class="col-12">
-                        <label for="description" class="form-label fw-semibold text-secondary">Descrição Detalhada</label>
-                        <textarea name="description" id="description" class="form-control bg-light" rows="4" placeholder="Descreva os detalhes do evento..." required><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
-                    </div>
+    <div class="col-12">
+        <label for="schedule_file" class="form-label fw-semibold text-secondary">Programação do Evento (Opcional)</label>
+        <div class="input-group">
+            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-file-alt"></i></span>
+            <input type="file" class="form-control bg-light" id="schedule_file" name="schedule_file" accept=".pdf, .doc, .docx, .odt, .jpg, .jpeg, .png">
+        </div>
+        <div class="form-text">
+            Formatos aceitos: PDF, DOCX, ODT, JPG, PNG. Anexe o cronograma ou programação detalhada.
+        </div>
+    </div>
+    
+    <div class="col-12">
+        <label for="description" class="form-label fw-bold text-dark">Descrição Detalhada <span class="text-danger">*</span></label>
+        <textarea name="description" id="description" class="form-control" rows="5" placeholder="Descreva os detalhes do evento, como pauta, objetivos ou necessidades especiais..." required style="background-color: #fff; color: #000;"><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
+    </div>
 
                     <div class="col-12">
                         <div class="card bg-light border-0 rounded-3">
@@ -293,6 +342,50 @@ document.addEventListener('DOMContentLoaded', function() {
                                     $catIndex++;
                                     endforeach; 
                                     ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Terms Agreement Section -->
+                    <div class="col-12 mt-4">
+                        <div class="form-check p-3 bg-light border rounded">
+                            <input class="form-check-input mt-1" type="checkbox" name="terms_agreement" id="terms_agreement" value="1" required>
+                            <label class="form-check-label text-secondary" for="terms_agreement">
+                                Li e concordo com a 
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="text-primary text-decoration-underline fw-bold">
+                                    ORIENTAÇÃO NORMATIVA SOBRE A REALIZAÇÃO DE EVENTOS DA UNIDADE ACADÊMICA DE SERRA TALHADA DA UNIVERSIDADE FEDERAL RURAL DE PERNAMBUCO E DÁ OUTRAS PROVIDÊNCIAS
+                                </a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Terms Modal -->
+                    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold" id="termsModalLabel">Orientação Normativa</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-0">
+                                    <?php if (!empty($globalConfigs['normative_pdf'])): ?>
+                                        <div class="ratio ratio-1x1" style="height: 70vh;">
+                                            <iframe src="/eventos/<?php echo htmlspecialchars($globalConfigs['normative_pdf']); ?>#toolbar=0" title="Orientação Normativa" allowfullscreen></iframe>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="p-4">
+                                            <h6 class="fw-bold mb-3 text-center">ORIENTAÇÃO NORMATIVA SOBRE A REALIZAÇÃO DE EVENTOS DA UNIDADE ACADÊMICA DE SERRA TALHADA DA UNIVERSIDADE FEDERAL RURAL DE PERNAMBUCO E DÁ OUTRAS PROVIDÊNCIAS</h6>
+                                            
+                                            <div class="text-muted text-center py-5">
+                                                <i class="fas fa-file-pdf fa-3x mb-3 text-secondary opacity-50"></i>
+                                                <p>O documento PDF ainda não foi configurado pelo administrador.</p>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendi</button>
                                 </div>
                             </div>
                         </div>

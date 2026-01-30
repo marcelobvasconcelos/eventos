@@ -49,6 +49,7 @@ class AssetController {
             $description = trim($_POST['description'] ?? '');
             $quantity = (int)($_POST['quantity'] ?? 0);
             $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
+            $requires_patrimony = isset($_POST['requires_patrimony']) ? 1 : 0;
 
             if (empty($name) || $quantity < 1) {
                 $error = 'Nome e quantidade válida são obrigatórios.';
@@ -58,7 +59,7 @@ class AssetController {
             }
 
             $assetModel = new Asset();
-            if ($assetModel->addAsset($name, $description, $quantity, $category_id)) {
+            if ($assetModel->addAsset($name, $description, $quantity, $category_id, $requires_patrimony)) {
                 header('Location: /eventos/asset?message=Ativo criado com sucesso');
                 exit;
             } else {

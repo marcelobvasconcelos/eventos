@@ -73,6 +73,12 @@ class PublicController {
         $loanModel = new Loan();
         $loans = $loanModel->getLoansByEvent($id);
 
+        $locationImages = [];
+        if (!empty($event['location_id'])) {
+            $locationModel = new Location();
+            $locationImages = $locationModel->getImages($event['location_id']);
+        }
+
         $csrf_token = Security::generateCsrfToken();
 
         include __DIR__ . '/../views/public/detail.php';
@@ -119,8 +125,14 @@ class PublicController {
             $time = $_POST['time'] ?? '';
             $endTime = $_POST['end_time'] ?? '';
             $endDateInput = !empty($_POST['end_date']) ? $_POST['end_date'] : $date;
-            $locationId = (int)($_POST['location'] ?? 0);
+            $locationPost = $_POST['location'] ?? '';
+            $customLocation = null;
+            $locationId = null;
+
             $categoryId = (int)($_POST['category'] ?? 0);
+            $linkTitle = trim($_POST['link_title'] ?? ''); // New
+            $externalLink = trim($_POST['external_link'] ?? ''); // New
+            $publicEstimation = (int)($_POST['public_estimation'] ?? 0); // New
 
             $errors = [];
 
@@ -140,8 +152,14 @@ class PublicController {
                 $errors[] = 'Hora válida é obrigatória (HH:MM).';
             }
 
-            if (empty($locationId)) {
-                $errors[] = 'Localização é obrigatória.';
+            if ($locationPost === 'other') {
+                $customLocation = trim($_POST['custom_location'] ?? '');
+                if (empty($customLocation)) {
+                     $errors[] = 'Nome do local é obrigatório para "Outros".';
+                }
+            } else {
+                $locationId = (int)$locationPost;
+                if (empty($locationId)) $errors[] = 'Localização é obrigatória.';
             }
 
             if (empty($categoryId)) {
@@ -211,12 +229,48 @@ class PublicController {
                     }
                 }
             }
+            
+            $scheduleFilePath = null;
+            if (isset($_FILES['schedule_file']) && $_FILES['schedule_file']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../public/uploads/schedules/';
+                if (!is_dir($uploadDir)) {
+                     mkdir($uploadDir, 0777, true);
+                }
+                $fileTmpPath = $_FILES['schedule_file']['tmp_name'];
+                $fileName = $_FILES['schedule_file']['name'];
+                $fileNameCmps = explode(".", $fileName);
+                $fileExtension = strtolower(end($fileNameCmps));
+                $allowedfileExtensions = array('pdf', 'doc', 'docx', 'odt', 'jpg', 'jpeg', 'png');
+                
+                if (in_array($fileExtension, $allowedfileExtensions)) {
+                    $newFileName = md5(time() . $fileName) . '.' . $fileExtension;
+                    $dest_path = $uploadDir . $newFileName;
+                    if(move_uploaded_file($fileTmpPath, $dest_path)) {
+                        $scheduleFilePath = '/eventos/public/uploads/schedules/' . $newFileName;
+                    }
+                }
+            }
 
             $isPublic = isset($_POST['is_public']) ? (int)$_POST['is_public'] : 1;
-
+            
+            // Use $title captured earlier
+            // Use $title captured earlier ... wait, $name is used here. $title logic mismatch?
+            // In request controller it was $title. Here it is $name (line 116).
+            // But createEvent expects $name first arg.
+            // Snippet says: `$eventId = $eventModel->createEvent($title, ...`
+            // Line 116 says: `$name = trim(...)`
+            // There is no `$title` defined in this method scope in my snippet!
+            // Wait, previous code (line 243 in snippet) said `$title`.
+            // Let me check snippet 241: `// Use $title captured earlier`.
+            // But I don't see `$title` defined. I see `$name`.
+            // If the code was running before, `$title` must be defined or global?
+            // Or maybe I missed it.
+            // But line 130 checks `$errors[] = 'Título...` if `empty($name)`.
+            // So `$name` is the variable.
+            // Using `$name` is safer. Original code might have had a bug or `$title` was alias.
+            // I'll use `$name` instead of `$title`.
             $eventModel = new Event();
-            // Modified: Pass endDateTime and imagePath to createEvent
-            $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath);
+            $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation);
 
             // Handle asset loans
             $selectedAssets = $_POST['assets'] ?? [];
@@ -278,6 +332,9 @@ class PublicController {
     public function locations() {
         $locationModel = new Location();
         $locations = $locationModel->getAllLocations();
+        foreach ($locations as &$loc) {
+            $loc['images'] = $locationModel->getImages($loc['id']);
+        }
         include __DIR__ . '/../views/public/locations.php';
     }
 }

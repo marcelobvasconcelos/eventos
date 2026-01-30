@@ -52,7 +52,7 @@
     </button>
 
     <!-- Mobile Fullscreen Menu Overlay -->
-    <div id="mobileMenuOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex flex-column" style="z-index: 1060; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); overflow-y: auto;">
+    <div id="mobileMenuOverlay" class="d-none position-fixed top-0 start-0 w-100 h-100 d-flex flex-column" style="z-index: 1060; background: linear-gradient(135deg, rgba(30, 60, 114, 0.50) 0%, rgba(42, 82, 152, 0.50) 100%), url('/eventos/public/img/audi.png'); background-size: cover; background-position: center; overflow-y: auto;">
         <!-- Close Button -->
         <button class="btn btn-link text-white position-absolute top-0 end-0 m-3 p-2" style="font-size: 2rem; z-index: 1070;" onclick="toggleMobileMenu()">
             <i class="fas fa-times"></i>
@@ -355,7 +355,7 @@
 
         <!-- Rodapé Inferior -->
         <div class="py-2 bg-secondary bg-opacity-10 border-top border-secondary border-opacity-10">
-            <div class="container text-center">
+            <div class="container text-center d-flex align-items-center justify-content-center gap-2">
                 <small style="font-size: 0.75rem;">
                      <?php 
                         if (!empty($globalConfigs['footer_text'])) {
@@ -365,6 +365,7 @@
                         }
                     ?>
                 </small>
+                <img src="/eventos/public/img/devops.png" alt="DevOps Logo" style="height: 35px; width: auto; opacity: 0.8;">
             </div>
         </div>
     </footer>
@@ -498,11 +499,12 @@
             }
             /* Lower Footer */
             footer .bg-secondary.bg-opacity-10 {
-                background-color: rgba(0, 0, 0, 0.2) !important;
-                border-top-color: rgba(255, 255, 255, 0.1) !important;
+                background-color: #f8f9fa !important; /* Light Gray/White */
+                border-top: none !important;
             }
-            footer a {
-                color: rgba(255, 255, 255, 0.9) !important;
+            footer .bg-secondary.bg-opacity-10 small,
+            footer .bg-secondary.bg-opacity-10 a {
+                color: #212529 !important; /* Dark text */
             }
         }
     </style>

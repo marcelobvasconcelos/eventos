@@ -36,6 +36,11 @@ ob_start();
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="content-tab" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab" aria-controls="content" aria-selected="false">
+                                <i class="fas fa-file-alt me-2"></i>Conteúdo
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <button class="nav-link" id="footer-tab" data-bs-toggle="tab" data-bs-target="#footer" type="button" role="tab" aria-controls="footer" aria-selected="false">
                                 <i class="fas fa-shoe-prints me-2"></i>Rodapé
                             </button>
@@ -95,9 +100,27 @@ ob_start();
                         <div class="tab-pane fade" id="content" role="tabpanel" aria-labelledby="content-tab">
                             
                             <div class="mb-3">
-                                <label for="event_creation_info_text" class="form-label fw-bold">Mensagem Informativa (Criação de Evento)</label>
+                                <label for="event_creation_info_text" class="form-label fw-bold">Mensagem Informativa (Criação de Evento - Admin)</label>
                                 <textarea class="form-control" id="event_creation_info_text" name="event_creation_info_text" rows="5"><?php echo htmlspecialchars($configs['event_creation_info_text']); ?></textarea>
-                                <div class="form-text">Exibido no topo das páginas de solicitação de evento. Aceita HTML.</div>
+                                <div class="form-text">Exibido no topo da página de criação de evento (Acesso Admin/Interno). Aceita HTML.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="request_info_text" class="form-label fw-bold">Mensagem Informativa (Solicitação de Evento - Público)</label>
+                                <textarea class="form-control" id="request_info_text" name="request_info_text" rows="5"><?php echo htmlspecialchars($configs['request_info_text'] ?? ''); ?></textarea>
+                                <div class="form-text">Exibido no topo da página de solicitação pública. Aceita HTML.</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="normative_pdf" class="form-label fw-bold">Arquivo da Orientação Normativa (PDF)</label>
+                                <input type="file" class="form-control" id="normative_pdf" name="normative_pdf" accept=".pdf">
+                                <div class="form-text">Faça upload do PDF contendo a orientação normativa. Será exibido no modal de concordância.</div>
+                                <?php if (!empty($configs['normative_pdf'])): ?>
+                                    <div class="mt-2 text-success">
+                                        <i class="fas fa-check-circle me-1"></i> Arquivo atual: 
+                                        <a href="/eventos/<?php echo htmlspecialchars($configs['normative_pdf']); ?>" target="_blank" class="text-decoration-none fw-bold">Ver PDF Atual</a>
+                                    </div>
+                                <?php endif; ?>
                             </div>
 
                         </div>
@@ -114,8 +137,8 @@ ob_start();
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label fw-semibold">Logo 2</label>
-                                    <input type="file" class="form-control mb-2" name="footer_logo_2" accept="image/*">
+                                    <label class="form-label fw-semibold">Logo 2 (Quadrada)</label>
+                                    <input type="file" class="form-control mb-2" name="footer_logo_2" accept="image/*" data-aspect-ratio="1">
                                     <?php if (!empty($configs['footer_logo_2'])): ?>
                                         <img src="/eventos/<?php echo htmlspecialchars($configs['footer_logo_2']); ?>" height="40" class="border rounded p-1">
                                     <?php endif; ?>

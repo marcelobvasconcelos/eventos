@@ -53,6 +53,18 @@ ob_start();
                         <input type="text" name="name" id="name" class="form-control" value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>" placeholder="Digite o nome do evento" required>
                     </div>
 
+                    <div class="col-md-12">
+                        <label for="category" class="form-label fw-semibold text-secondary">Categoria</label>
+                        <select name="category" id="category" class="form-select" required>
+                            <option value="">Selecione uma categoria</option>
+                            <?php foreach ($categories as $category): ?>
+                                <option value="<?php echo $category['id']; ?>" <?php echo (isset($_POST['category']) && $_POST['category'] == $category['id']) ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($category['name']); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
                     <div class="col-md-6">
                         <label for="date" class="form-label fw-semibold text-secondary">Data Início</label>
                         <input type="date" name="date" id="date" class="form-control" value="<?php echo htmlspecialchars($_POST['date'] ?? ''); ?>" required>
@@ -101,12 +113,54 @@ ob_start();
                                     
                                     $selected = (isset($_POST['location']) && $_POST['location'] == $location['id']) ? 'selected' : '';
                                 ?>
-                                <option value="<?php echo $location['id']; ?>" <?php echo $selected; ?> <?php echo $disabledAttr; ?>>
-                                    <?php echo htmlspecialchars($location['name']) . $capacityText . $occupiedText; ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
-                        <div id="availability-message" class="form-text mt-2"></div>
+                                    <option value="<?php echo $location['id']; ?>" <?php echo $selected; ?> <?php echo $disabledAttr; ?>>
+                                        <?php echo htmlspecialchars($location['name']) . $capacityText . $occupiedText; ?>
+                                    </option>
+                                <?php endforeach; ?>
+                                <option value="other" <?php echo (isset($_POST['location']) && $_POST['location'] == 'other') ? 'selected' : ''; ?>>Outros (Especifique)</option>
+                            </select>
+                            
+                            <div id="custom_location_div" class="mt-2 <?php echo (isset($_POST['location']) && $_POST['location'] == 'other') ? '' : 'd-none'; ?>">
+                                <label for="custom_location" class="form-label small text-secondary">Nome do Local <span class="text-danger">*</span></label>
+                                <input type="text" name="custom_location" id="custom_location" class="form-control" placeholder="Digite o nome do local..." value="<?php echo htmlspecialchars($_POST['custom_location'] ?? ''); ?>">
+                            </div>
+                            
+                            <script>
+                            document.addEventListener('DOMContentLoaded', function() {
+                                const locSelect = document.getElementById('location');
+                                const customDiv = document.getElementById('custom_location_div');
+                                const customInput = document.getElementById('custom_location');
+
+                                function toggleCustom() {
+                                    if (locSelect.value === 'other') {
+                                        customDiv.classList.remove('d-none');
+                                        customInput.required = true;
+                                    } else {
+                                        customDiv.classList.add('d-none');
+                                        customInput.required = false;
+                                    }
+                                }
+                                locSelect.addEventListener('change', toggleCustom);
+                                toggleCustom();
+                            });
+                            </script>
+                            <div id="availability-message" class="form-text mt-2"></div>
+                    </div>
+
+                    <div class="col-md-12">
+                         <label for="public_estimation" class="form-label fw-semibold text-secondary">Estimativa de Público</label>
+                         <input type="number" name="public_estimation" id="public_estimation" class="form-control" placeholder="Ex: 50" min="1" value="<?php echo htmlspecialchars($_POST['public_estimation'] ?? ''); ?>" required>
+                    </div>
+
+                    <div class="col-md-12">
+                         <label for="schedule_file" class="form-label fw-semibold text-secondary">Programação do Evento (Opcional)</label>
+                         <input type="file" class="form-control" id="schedule_file" name="schedule_file" accept=".pdf, .doc, .docx, .odt, .jpg, .jpeg, .png">
+                         <div class="form-text">Anexe o arquivo de programação (PDF, DOCX, Imagem).</div>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="description" class="form-label fw-semibold text-secondary">Descrição</label>
+                        <textarea name="description" id="description" class="form-control" rows="4" required placeholder="Descreva os detalhes do evento..."><?php echo htmlspecialchars($_POST['description'] ?? ''); ?></textarea>
                     </div>
 
                     <!-- Section: Assets -->
@@ -183,6 +237,50 @@ ob_start();
                             $catIndex++;
                             endforeach; 
                             ?>
+                        </div>
+                    </div>
+
+                    <!-- Terms Agreement Section -->
+                    <div class="col-12 mt-4">
+                        <div class="form-check p-3 bg-light border rounded">
+                            <input class="form-check-input mt-1" type="checkbox" name="terms_agreement" id="terms_agreement" value="1" required>
+                            <label class="form-check-label text-secondary" for="terms_agreement">
+                                Li e concordo com a 
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="text-primary text-decoration-underline fw-bold">
+                                    ORIENTAÇÃO NORMATIVA SOBRE A REALIZAÇÃO DE EVENTOS DA UNIDADE ACADÊMICA DE SERRA TALHADA DA UNIVERSIDADE FEDERAL RURAL DE PERNAMBUCO E DÁ OUTRAS PROVIDÊNCIAS
+                                </a>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Terms Modal -->
+                    <div class="modal fade" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title fw-bold" id="termsModalLabel">Orientação Normativa</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body p-0">
+                                    <?php if (!empty($globalConfigs['normative_pdf'])): ?>
+                                        <div class="ratio ratio-1x1" style="height: 70vh;">
+                                            <iframe src="/eventos/<?php echo htmlspecialchars($globalConfigs['normative_pdf']); ?>#toolbar=0" title="Orientação Normativa" allowfullscreen></iframe>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="p-4">
+                                            <h6 class="fw-bold mb-3 text-center">ORIENTAÇÃO NORMATIVA SOBRE A REALIZAÇÃO DE EVENTOS DA UNIDADE ACADÊMICA DE SERRA TALHADA DA UNIVERSIDADE FEDERAL RURAL DE PERNAMBUCO E DÁ OUTRAS PROVIDÊNCIAS</h6>
+                                            
+                                            <div class="text-muted text-center py-5">
+                                                <i class="fas fa-file-pdf fa-3x mb-3 text-secondary opacity-50"></i>
+                                                <p>O documento PDF ainda não foi configurado pelo administrador.</p>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Entendi</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
