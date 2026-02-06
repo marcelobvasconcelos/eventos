@@ -3,11 +3,11 @@ $title = 'Painel Administrativo';
 ob_start();
 ?>
 <h1 class="text-center mb-5 text-white fw-bold">Painel Administrativo</h1>
-<div class="row justify-content-center">
+<div class="row">
     <!-- Featured Card (Always Visible) -->
-    <div class="col-md-4 mb-4">
+    <div class="col-12 col-sm-6 col-lg-4 mb-4">
         <div class="card dashboard-card h-100 shadow-sm border-0">
-            <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+            <div class="card-body text-center d-flex flex-column align-items-center">
                 <i class="fas fa-calendar-days fa-3x mb-3 text-primary"></i>
                 <h5 class="card-title fw-bold">Gerenciar Eventos</h5>
                 <p class="card-text text-muted">Aprovar e editar eventos.</p>
@@ -23,18 +23,15 @@ ob_start();
 
     <!-- Mobile Toggle Button -->
     <div class="col-12 d-md-none text-center mb-4">
-        <button class="btn btn-light rounded-circle shadow-sm animate-bounce" type="button" data-bs-toggle="collapse" data-bs-target="#extraDashboardCards" aria-expanded="false" aria-controls="extraDashboardCards" style="width: 50px; height: 50px;">
+        <button class="btn btn-light rounded-circle shadow-sm animate-bounce" type="button" data-bs-toggle="collapse" data-bs-target=".extra-card" aria-expanded="false" aria-controls="extraDashboardCards" style="width: 50px; height: 50px;">
             <i class="fas fa-chevron-down text-primary"></i>
         </button>
         <div class="small text-muted mt-1">Ver mais opções</div>
     </div>
 
-    <!-- Collapsible Cards (Hidden on Mobile by default) -->
-    <div class="col-12 p-0 d-md-contents collapse" id="extraDashboardCards">
-        
-            <div class="col-md-4 mb-4">
+            <div class="col-12 col-sm-6 col-lg-4 mb-4 extra-card collapse d-md-block">
                 <div class="card dashboard-card h-100 shadow-sm border-0">
-                    <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                    <div class="card-body text-center d-flex flex-column align-items-center">
                         <i class="fas fa-users fa-3x mb-3 text-info"></i>
                         <h5 class="card-title fw-bold">Gerenciar Usuários</h5>
                         <p class="card-text text-muted">Administrar contas.</p>
@@ -47,9 +44,9 @@ ob_start();
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-4">
+            <div class="col-12 col-sm-6 col-lg-4 mb-4 extra-card collapse d-md-block">
                 <div class="card dashboard-card h-100 shadow-sm border-0">
-                    <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                    <div class="card-body text-center d-flex flex-column align-items-center">
                         <i class="fas fa-map-marker-alt fa-3x mb-3 text-warning"></i>
                         <h5 class="card-title fw-bold">Gerenciar Locais</h5>
                         <p class="card-text text-muted">Locais disponíveis.</p>
@@ -62,9 +59,9 @@ ob_start();
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-4">
+            <div class="col-12 col-sm-6 col-lg-4 mb-4 extra-card collapse d-md-block">
                 <div class="card dashboard-card h-100 shadow-sm border-0">
-                    <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                    <div class="card-body text-center d-flex flex-column align-items-center">
                         <i class="fas fa-tags fa-3x mb-3 text-secondary"></i>
                         <h5 class="card-title fw-bold">Gerenciar Categorias</h5>
                         <p class="card-text text-muted">Categorias de eventos.</p>
@@ -77,9 +74,9 @@ ob_start();
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-4">
+            <div class="col-12 col-sm-6 col-lg-4 mb-4 extra-card collapse d-md-block">
                 <div class="card dashboard-card h-100 shadow-sm border-0">
-                    <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                    <div class="card-body text-center d-flex flex-column align-items-center">
                         <i class="fas fa-boxes-stacked fa-3x mb-3 text-primary"></i>
                         <h5 class="card-title fw-bold">Patrimônio</h5>
                         <p class="card-text text-muted">Gestão de Equipamentos.</p>
@@ -92,18 +89,19 @@ ob_start();
                     </div>
                 </div>
             </div>
-            <div class="col-md-4 mb-4">
+            <div class="col-12 col-sm-6 col-lg-4 mb-4 extra-card collapse d-md-block">
                 <div class="card dashboard-card h-100 shadow-sm border-0">
-                    <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                    <div class="card-body text-center d-flex flex-column align-items-center">
                         <i class="fas fa-cogs fa-3x mb-3 text-dark"></i>
                         <h5 class="card-title fw-bold">Configurações</h5>
                         <p class="card-text text-muted">Configurações globais do site.</p>
                         <a href="/eventos/settings" class="btn btn-outline-dark rounded-pill px-5 mt-auto">Acessar</a>
+                        <div class="mt-3 invisible">
+                            <span class="badge px-3 py-2 border">Placeholder</span>
+                        </div>
                     </div>
                 </div>
             </div>
-        
-    </div>
 </div>
 
 <style>

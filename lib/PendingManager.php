@@ -68,6 +68,10 @@ class PendingManager {
             // Double check loan items too? No, if key exists, we assume we processed.
 
             $userId = $event['created_by'];
+
+            if (empty($userId)) {
+                continue; 
+            }
             $itemsGenerated = [];
 
             // 1. Generate Key Return Pending Item

@@ -135,8 +135,35 @@ class Event {
     }
 
     public function deleteEvent($id) {
-        $stmt = $this->pdo->prepare("DELETE FROM events WHERE id = ?");
-        return $stmt->execute([$id]);
+        try {
+            $this->pdo->beginTransaction();
+
+            // 1. Delete associated loans
+            $stmt = $this->pdo->prepare("DELETE FROM loans WHERE event_id = ?");
+            $stmt->execute([$id]);
+
+            // 2. Delete pending items
+            $stmt = $this->pdo->prepare("DELETE FROM pending_items WHERE event_id = ?");
+            $stmt->execute([$id]);
+
+            // 3. Delete event requests reference (if table setup allows deletion or requires update)
+            // Assuming event_requests table might link to event_id. 
+            // Based on earlier view, event_requests links user to event? Let's check model structure implications.
+            // If event_requests.event_id is FK, we should delete.
+            $stmt = $this->pdo->prepare("DELETE FROM event_requests WHERE event_id = ?");
+            $stmt->execute([$id]);
+
+            // 4. Delete the event
+            $stmt = $this->pdo->prepare("DELETE FROM events WHERE id = ?");
+            $result = $stmt->execute([$id]);
+
+            $this->pdo->commit();
+            return $result;
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            // Log error if possible
+            return false;
+        }
     }
 
     public function createEvent($name, $description, $date, $endDate, $locationId, $categoryId, $createdBy, $isPublic = 1, $imagePath = null, $externalLink = null, $linkTitle = null, $publicEstimation = 0, $scheduleFilePath = null, $customLocation = null) {

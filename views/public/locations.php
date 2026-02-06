@@ -159,9 +159,6 @@ function updateLightboxImage() {
     }
 }
 </script>
-    document.getElementById('lightboxImage').src = src;
-    new bootstrap.Modal(document.getElementById('lightboxModal')).show();
-}
 </script>
 
 <?php

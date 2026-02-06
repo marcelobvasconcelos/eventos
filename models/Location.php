@@ -34,7 +34,17 @@ class Location {
         return $stmt->execute([$name, $description, $capacity, $id]);
     }
 
+    public function hasEvents($id) {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM events WHERE location_id = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetchColumn() > 0;
+    }
+
     public function deleteLocation($id) {
+        if ($this->hasEvents($id)) {
+            // Cannot delete location with associated events
+            return false; 
+        }
         $stmt = $this->pdo->prepare("DELETE FROM locations WHERE id = ?");
         return $stmt->execute([$id]);
     }

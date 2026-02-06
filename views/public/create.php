@@ -244,7 +244,7 @@ ob_start();
                     <div class="col-12 mt-4">
                         <div class="form-check p-3 bg-light border rounded">
                             <input class="form-check-input mt-1" type="checkbox" name="terms_agreement" id="terms_agreement" value="1" required>
-                            <label class="form-check-label text-secondary" for="terms_agreement">
+                            <label class="form-check-label text-secondary" for="terms_agreement" style="text-align: justify; display: block;">
                                 Li e concordo com a 
                                 <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal" class="text-primary text-decoration-underline fw-bold">
                                     ORIENTAÇÃO NORMATIVA SOBRE A REALIZAÇÃO DE EVENTOS DA UNIDADE ACADÊMICA DE SERRA TALHADA DA UNIVERSIDADE FEDERAL RURAL DE PERNAMBUCO E DÁ OUTRAS PROVIDÊNCIAS
