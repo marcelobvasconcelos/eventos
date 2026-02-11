@@ -54,13 +54,9 @@ ob_start();
                                                 onclick="editLocation(<?php echo $location['id']; ?>, '<?php echo addslashes($location['name']); ?>', '<?php echo addslashes($location['description']); ?>', <?php echo $location['capacity']; ?>, <?php echo htmlspecialchars(json_encode($location['images'])); ?>)">
                                             <i class="fas fa-edit"></i>
                                         </button>
-                                        <form method="POST" action="/eventos/admin/deleteLocation" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir este local?');">
-                                            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
-                                            <input type="hidden" name="id" value="<?php echo $location['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-2">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </form>
+                                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2" onclick="confirmDeleteLocation(<?php echo $location['id']; ?>)">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </td>
                                     <?php endif; ?>
                                 </tr>
@@ -94,6 +90,7 @@ ob_start();
                         <textarea name="description" id="description" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
+                        <label for="capacity" class="form-label">Capacidade (Pessoas)</label>
                         <input type="number" name="capacity" id="capacity" class="form-control" min="1">
                     </div>
                      <div class="mb-3">
@@ -132,6 +129,7 @@ ob_start();
                         <textarea name="description" id="editDescription" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="mb-3">
+                        <label for="editCapacity" class="form-label">Capacidade (Pessoas)</label>
                         <input type="number" name="capacity" id="editCapacity" class="form-control" min="1">
                     </div>
                     <div class="mb-3">
@@ -214,6 +212,52 @@ function deleteLocationImage(id, element) {
     .catch(err => {
         console.error(err);
         alert('Erro de conexão.');
+    });
+}
+</script>
+
+<!-- Hidden Delete Form -->
+<form id="deleteLocationForm" method="POST" action="/eventos/admin/deleteLocation" style="display: none;">
+    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+    <input type="hidden" name="id" id="deleteLocationId">
+    <input type="hidden" name="confirmed" id="deleteLocationConfirmed" value="0">
+</form>
+
+<script>
+function confirmDeleteLocation(id) {
+    // 1. Check if location has events
+    fetch('/eventos/admin/checkLocationDeletion', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({id: id})
+    })
+    .then(response => response.json())
+    .then(data => {
+        const count = data.count || 0;
+        const form = document.getElementById('deleteLocationForm');
+        document.getElementById('deleteLocationId').value = id;
+        
+        if (count > 0) {
+            const message = `Este local possui ${count} evento(s) associado(s).\n\n` + 
+                            `Se você excluir este local, os eventos serão atualizados para "Local a definir".\n\n` +
+                            `Deseja confirmar a exclusão?`;
+            
+            if (confirm(message)) {
+                document.getElementById('deleteLocationConfirmed').value = '1';
+                form.submit();
+            }
+        } else {
+            if (confirm('Tem certeza que deseja excluir este local?')) {
+                document.getElementById('deleteLocationConfirmed').value = '0';
+                form.submit();
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Erro ao verificar dependências do local.');
     });
 }
 </script>

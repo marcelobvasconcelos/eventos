@@ -2,11 +2,12 @@
 $title = 'Gerenciar Usuários';
 ob_start();
 ?>
+<h1 class="text-white mb-4">Gerenciar Usuários</h1>
+
 <div class="card shadow rounded-lg border-0">
     <div class="card-header bg-white py-4 border-0 d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="fw-bold text-primary mb-0"><i class="fas fa-users me-2"></i>Gerenciar Usuários</h2>
-            <p class="text-muted small mb-0 mt-1">Administração de contas e permissões do sistema</p>
+            <h5 class="fw-bold text-primary mb-0"><i class="fas fa-users me-2"></i>Lista de Usuários</h5>
         </div>
         <a href="/eventos/admin/dashboard" class="btn btn-outline-secondary rounded-pill"><i class="fas fa-arrow-left me-2"></i>Voltar</a>
     </div>

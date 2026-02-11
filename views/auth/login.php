@@ -29,6 +29,13 @@ ob_start();
                     </div>
                 <?php endif; ?>
                 
+                <?php if (isset($success)): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i><?php echo htmlspecialchars($success); ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+                
                 <form method="POST" action="/eventos/auth/login">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     <input type="hidden" name="return_to" value="<?php echo htmlspecialchars($returnTo ?? ''); ?>">
@@ -43,10 +50,14 @@ ob_start();
                         <label for="password"><i class="fas fa-lock me-2 text-muted"></i>Senha</label>
                     </div>
                     
-                    <div class="d-grid gap-2">
+                    <div class="d-grid gap-2 mb-3">
                         <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow-sm">
                             Entrar <i class="fas fa-arrow-right ms-2"></i>
                         </button>
+                    </div>
+                    
+                    <div class="text-center">
+                        <a href="/eventos/auth/forgot_password" class="small text-decoration-none text-muted">Esqueceu sua senha?</a>
                     </div>
                 </form>
             </div>

@@ -4,6 +4,7 @@ require_once __DIR__ . '/../models/EventRequest.php';
 require_once __DIR__ . '/../models/Event.php';
 require_once __DIR__ . '/../models/Location.php';
 require_once __DIR__ . '/../models/Category.php';
+require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../models/Asset.php';
 require_once __DIR__ . '/../models/Loan.php';
 require_once __DIR__ . '/../lib/Security.php';
@@ -257,8 +258,14 @@ class RequestController {
             $msg = 'Solicitação criada, MAS alguns equipamentos não puderam ser reservados (estoque insuficiente ou erro): ' . implode(', ', $failedNames) . $warningMsg;
             header('Location: /eventos/request/my_requests?error=' . urlencode($msg));
         } else {
-             $msg = 'Solicitação enviada com sucesso' . $warningMsg;
-             header('Location: /eventos/request/my_requests?message=' . urlencode($msg));
+             // Send Emails
+             require_once __DIR__ . '/../lib/Notification.php';
+             global $pdo;
+             $notification = new Notification($pdo);
+             $notification->sendConfirmation($_SESSION['user_id'], $eventId);
+             $notification->sendAdminAlert($eventId);
+             
+             $msg = 'Solicitação enviada com sucesso! Um e-mail de confirmação foi enviado para você.' . $warningMsg;
         }
         exit;
     }

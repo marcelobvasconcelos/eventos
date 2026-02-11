@@ -14,36 +14,67 @@ class User {
 
     }
 
-    public function register($name, $email, $password, $role = 'user') {
-
-        $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-        // Default status is 'Pendente' as per DB default, but explicit here for clarity
-        // If it's the very first user, maybe make them admin/active? ignoring for now as directed.
-        $stmt = $this->pdo->prepare("INSERT INTO users (name, email, password, role, status) VALUES (?, ?, ?, ?, 'Pendente')");
-
-        return $stmt->execute([$name, $email, $hashedPassword, $role]);
-
+    public function register($name, $email, $role = 'user') {
+        $stmt = $this->pdo->prepare("INSERT INTO users (name, email, password, role, status) VALUES (?, ?, NULL, ?, 'Pendente')");
+        if ($stmt->execute([$name, $email, $role])) {
+            return $this->pdo->lastInsertId();
+        }
+        return false;
     }
 
     public function login($email, $password) {
-
         $stmt = $this->pdo->prepare("SELECT * FROM users WHERE email = ?");
-
         $stmt->execute([$email]);
-
         $user = $stmt->fetch();
 
-        if ($user && password_verify($password, $user['password'])) {
+        // Validates if user has a password set and verifies it
+        if ($user && $user['password'] !== null && password_verify($password, $user['password'])) {
             // Check status
             if ($user['status'] !== 'Ativo') {
-                return 'pending_approval';
+                return 'pending_approval'; // Should ideally be handled by checking activation token status too? No, status checks admin approval usually.
+                // If it's pure email validation flow, maybe we auto-activate after password set?
+                // For now, respect existing logic but add null check.
             }
             return $user;
-
         }
-
         return false;
+    }
 
+    public function findByEmail($email) {
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function createToken($userId, $type) {
+        $token = bin2hex(random_bytes(32));
+        $expires = date('Y-m-d H:i:s', strtotime('+1 hour'));
+        
+        // Invalidate old tokens of same type
+        $stmt = $this->pdo->prepare("DELETE FROM user_tokens WHERE user_id = ? AND type = ?");
+        $stmt->execute([$userId, $type]);
+
+        $stmt = $this->pdo->prepare("INSERT INTO user_tokens (user_id, token, type, expires_at) VALUES (?, ?, ?, ?)");
+        if ($stmt->execute([$userId, $token, $type, $expires])) {
+            return $token;
+        }
+        return false;
+    }
+
+    public function verifyToken($token, $type) {
+        $stmt = $this->pdo->prepare("SELECT user_id, expires_at FROM user_tokens WHERE token = ? AND type = ?");
+        $stmt->execute([$token, $type]);
+        $data = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($data && strtotime($data['expires_at']) > time()) {
+            return $data['user_id'];
+        }
+        return false;
+    }
+
+    public function invalidateToken($token) {
+        $stmt = $this->pdo->prepare("DELETE FROM user_tokens WHERE token = ?");
+        return $stmt->execute([$token]);
     }
 
     public function checkRole($userId) {

@@ -3,12 +3,12 @@ $title = 'Gestão de Pendências';
 ob_start();
 ?>
 
+<h1 class="text-white mb-4">Gestão de Pendências</h1>
+
 <div class="card shadow-sm border-0 rounded-lg">
     <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center">
         <div>
-            <h2 class="text-primary fw-bold mb-0"><i class="fas fa-tasks me-2"></i>Gestão de Devoluções</h2>
-            <p class="text-muted small mb-0 mt-1">Confirme o recebimento de chaves e equipamentos.</p>
-        </div>
+            <h5 class="text-primary fw-bold mb-0"><i class="fas fa-tasks me-2"></i>Itens para Devolução</h5>
         
         <!-- Bulk Actions Toolbar (Hidden by default) -->
         <div id="bulkActions" class="d-none animate__animated animate__fadeIn">

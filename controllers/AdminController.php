@@ -390,11 +390,44 @@ class AdminController {
                 exit;
             }
             $id = (int)($_POST['id'] ?? 0);
+            $confirmed = isset($_POST['confirmed']) && $_POST['confirmed'] === '1';
+            
             $locationModel = new Location();
-            $locationModel->deleteLocation($id);
+            
+            if ($confirmed) {
+                if ($locationModel->reassignEventsAndDelete($id)) {
+                     header('Location: /eventos/admin/locations?success=Local excluído e eventos atualizados com sucesso.');
+                } else {
+                     header('Location: /eventos/admin/locations?error=Erro ao excluir local.');
+                }
+            } else {
+                if ($locationModel->getEventCount($id) > 0) {
+                     header('Location: /eventos/admin/locations?error=Este local possui eventos associados. Confirme a exclusão para redefinir os eventos.');
+                } else {
+                    if ($locationModel->deleteLocation($id)) {
+                        header('Location: /eventos/admin/locations?success=Local excluído com sucesso.');
+                    } else {
+                        header('Location: /eventos/admin/locations?error=Erro ao excluir local.');
+                    }
+                }
+            }
         }
-        header('Location: /eventos/admin/locations');
         exit;
+    }
+
+    public function checkLocationDeletion() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = json_decode(file_get_contents('php://input'), true);
+            $id = (int)($data['id'] ?? 0);
+            
+            $locationModel = new Location();
+            $count = $locationModel->getEventCount($id);
+            
+            header('Content-Type: application/json');
+            echo json_encode(['count' => $count]);
+            exit;
+        }
     }
 
     public function deleteLocationImage() {

@@ -214,7 +214,7 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
                         <div class="card-img-wrapper position-relative">
                             <img src="<?php echo htmlspecialchars(!empty($event['image_path']) ? $event['image_path'] : $cardDefaultImage); ?>" 
                                  alt="<?php echo htmlspecialchars($event['name']); ?>" 
-                                 class="w-100 h-100" 
+                                 class="w-100 h-100 event-card-img" 
                                  style="object-fit: cover;">
                         </div>
 
@@ -281,12 +281,34 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
 @media (max-width: 768px) {
     /* ... existing mobile styles ... */
     #upcomingEventsWrapper { padding: 0.5rem !important; border-radius: 0 !important; }
-    #eventsContainer { display: flex; flex-wrap: nowrap !important; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 1rem; -webkit-overflow-scrolling: touch; scrollbar-width: none; margin-right: -0.5rem; margin-left: -0.5rem; padding-left: 0.5rem; padding-right: 0.5rem; }
+    #eventsContainer { 
+        display: flex; 
+        flex-wrap: nowrap !important; 
+        overflow-x: auto; 
+        scroll-snap-type: x mandatory; 
+        padding-bottom: 1rem; 
+        -webkit-overflow-scrolling: touch; 
+        scrollbar-width: none; 
+        margin-right: -0.5rem; 
+        margin-left: -0.5rem; 
+        padding-left: 0.5rem; 
+        padding-right: 0.5rem; 
+    }
     #eventsContainer::-webkit-scrollbar { display: none; }
-    .event-item { flex: 0 0 92% !important; width: 92% !important; max-width: 92% !important; scroll-snap-align: center; margin-right: 15px; margin-bottom: 0 !important; }
-    .event-item:last-child { margin-right: 0; }
+    .event-item { 
+        flex: 0 0 85% !important; 
+        width: 85% !important; 
+        max-width: 85% !important; 
+        scroll-snap-align: center; 
+        margin-right: 15px; 
+        margin-bottom: 0 !important; 
+        padding-left: 0;
+        padding-right: 0;
+    }
+    .event-item:last-child { margin-right: 20px; }
     .event-card { height: 100%; width: 100%; border-radius: 20px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; }
-    .card-img-wrapper { height: 200px !important; }
+    .card-img-wrapper { height: 200px !important; background-color: #f8f9fa; /* Light gray background for contain mode */ }
+    .event-card-img { object-fit: contain !important; /* Ensure full image is visible */ }
     .btn-group[aria-label="View Mode"] { display: none !important; }
     #loadMoreContainer { margin-top: 1rem !important; }
 }

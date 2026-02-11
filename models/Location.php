@@ -35,18 +35,46 @@ class Location {
     }
 
     public function hasEvents($id) {
+        return $this->getEventCount($id) > 0;
+    }
+
+    public function getEventCount($id) {
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM events WHERE location_id = ?");
         $stmt->execute([$id]);
-        return $stmt->fetchColumn() > 0;
+        return $stmt->fetchColumn();
     }
 
     public function deleteLocation($id) {
         if ($this->hasEvents($id)) {
-            // Cannot delete location with associated events
+            // Cannot delete location with associated events without reassignment
             return false; 
         }
         $stmt = $this->pdo->prepare("DELETE FROM locations WHERE id = ?");
         return $stmt->execute([$id]);
+    }
+
+    public function reassignEventsAndDelete($id) {
+        try {
+            $this->pdo->beginTransaction();
+
+            // 1. Reassign events to 'Local a definir' (custom_location) and NULL location_id
+            $stmt = $this->pdo->prepare("UPDATE events SET location_id = NULL, custom_location = 'Local a definir' WHERE location_id = ?");
+            $stmt->execute([$id]);
+
+            // 2. Delete associated images
+            $stmt = $this->pdo->prepare("DELETE FROM location_images WHERE location_id = ?");
+            $stmt->execute([$id]);
+
+            // 3. Delete the location
+            $stmt = $this->pdo->prepare("DELETE FROM locations WHERE id = ?");
+            $stmt->execute([$id]);
+
+            $this->pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            return false;
+        }
     }
 
     public function getLocationsWithAvailability($startDateTime = null, $endDateTime = null, $excludeEventId = null) {

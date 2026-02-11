@@ -1,10 +1,10 @@
 <?php
 
 return [
-    'host' => 'smtp.example.com',
+    'host' => 'smtp.gmail.com',
     'port' => 587,
-    'username' => 'your_email@example.com',
-    'password' => 'your_password',
-    'from_email' => 'noreply@example.com',
-    'from_name' => 'Eventos System'
+    'username' => 'adm.ti.uast@ufrpe.br',
+    'password' => 'ugzb zbzg bibj esqq',
+    'from_email' => 'adm.ti.uast@ufrpe.br',
+    'from_name' => 'Acontece na UAST'
 ];

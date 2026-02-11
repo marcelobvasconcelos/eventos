@@ -8,6 +8,7 @@ ob_start();
 ?>
 <div class="row justify-content-center">
     <div class="col-md-8">
+        <h1 class="text-white mb-4 text-center">Confirmar Exclusão</h1>
         <div class="card border-warning mb-3">
             <div class="card-header bg-warning text-dark fw-bold">
                 <i class="fas fa-exclamation-triangle me-2"></i> Atenção: Conflito de Agendamento

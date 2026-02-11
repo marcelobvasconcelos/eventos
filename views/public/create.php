@@ -25,7 +25,7 @@ ob_start();
                     <div class="alert alert-info border-info shadow-sm rounded-3 mb-4">
                         <div class="d-flex">
                             <i class="fas fa-info-circle fa-2x me-3 mt-1 text-info"></i>
-                            <div>
+                            <div style="text-align: justify;">
                                 <?php echo $globalConfigs['event_creation_info_text']; // Allow HTML ?>
                             </div>
                         </div>

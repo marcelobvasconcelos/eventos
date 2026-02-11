@@ -66,10 +66,18 @@ class PendingItemController {
                 if ($item && $item['user_id'] == $_SESSION['user_id']) {
                     $this->pendingModel->updateStatus($id, 'user_informed', null, $userNote);
                     $count++;
+                    $itemsNames[] = $item['item_name'] . ' (Qtd: ' . $item['quantity'] . ')';
                 }
             }
             
             if ($count > 0) {
+                // Notify Admin
+                require_once __DIR__ . '/../lib/Notification.php';
+                global $pdo;
+                $notification = new Notification($pdo);
+                $deliveredTo = $userNote ?: 'Setor de Eventos'; // Default location if note empty
+                $notification->sendReturnConfirmationToAdmin($_SESSION['user_id'], $itemsNames, $deliveredTo);
+
                 header('Location: /eventos/pending/myPending?message=Devolução informada com sucesso para ' . $count . ' item(ns)');
             } else {
                 echo "Unauthorized or No items selected";

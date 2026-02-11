@@ -2,7 +2,7 @@
 $title = 'Gerenciar Categorias';
 ob_start();
 ?>
-<h1>Categorias</h1>
+<h1 class="text-white">Categorias</h1>
 <div class="mb-3">
     <a href="/eventos/admin/dashboard" class="btn btn-secondary">Voltar ao Painel</a>
 </div>
@@ -61,15 +61,15 @@ ob_start();
     </div>
 </div>
 
-<h2>Adicionar Categoria</h2>
+<h2 class="text-white">Adicionar Categoria</h2>
 <form method="POST" action="/eventos/admin/createCategory">
     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
     <div class="mb-3">
-        <label for="name" class="form-label">Nome</label>
+        <label for="name" class="form-label text-white">Nome</label>
         <input type="text" name="name" id="name" class="form-control" required>
     </div>
     <div class="mb-3">
-        <label for="description" class="form-label">Descrição</label>
+        <label for="description" class="form-label text-white">Descrição</label>
         <textarea name="description" id="description" class="form-control" rows="3"></textarea>
     </div>
     <button type="submit" class="btn btn-primary">Adicionar Categoria</button>

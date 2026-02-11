@@ -2,7 +2,7 @@
 $title = 'Gerenciar Eventos';
 ob_start();
 ?>
-<h1>Eventos Pendentes</h1>
+<h1 class="text-white">Eventos Pendentes</h1>
 <div class="mb-3">
     <a href="/eventos/admin/dashboard" class="btn btn-secondary">Voltar ao Painel</a>
 </div>
@@ -29,13 +29,13 @@ ob_start();
                                 <?php echo htmlspecialchars($event['name']); ?>
                              </span>
                         </h5>
-                         <p class="card-text text-muted mb-2" style="font-size: 1rem; font-weight: 500;">
+                         <p class="card-text text-white mb-2" style="font-size: 1rem; font-weight: 500;">
                             <i class="far fa-calendar me-1"></i> <?php echo date('d/m/Y H:i', strtotime($event['date'])); ?>
                         </p>
-                        <p class="card-text text-muted small text-truncate">
+                        <p class="card-text text-white small text-truncate">
                             <i class="fas fa-map-marker-alt me-1"></i> <?php echo htmlspecialchars($event['location_name'] ?? 'N/A'); ?>
                         </p>
-                         <p class="card-text small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                         <p class="card-text text-white small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                             <?php echo htmlspecialchars($event['description']); ?>
                         </p>
                     </div>

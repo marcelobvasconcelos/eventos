@@ -4,6 +4,7 @@ ob_start();
 ?>
 <div class="row justify-content-center">
     <div class="col-md-10">
+        <h1 class="text-white mb-4">Editar Equipamento</h1>
         <div class="card shadow-sm border-0 rounded-lg">
             <div class="card-header bg-white border-0 py-3">
                 <h4 class="fw-bold text-primary mb-0"><i class="fas fa-edit me-2"></i>Editar Equipamento</h4>
