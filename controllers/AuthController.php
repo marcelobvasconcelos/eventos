@@ -54,7 +54,8 @@ class AuthController {
     public function register() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
-                $error = 'Invalid CSRF token';
+                $error = 'Invalid CSRF token. Tente novamente.';
+                unset($_SESSION['csrf_token']); // Force regeneration
                 $csrf_token = Security::generateCsrfToken();
                 include __DIR__ . '/../views/auth/register.php';
                 return;

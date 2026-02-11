@@ -800,6 +800,8 @@ class AdminController {
         exit;
     }
 
+
+
     public function updateAssetCategory() {
         $this->checkAdminAccess();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -1006,6 +1008,38 @@ class AdminController {
         }
         
         include __DIR__ . '/../views/admin/print_event.php';
+    }
+
+    // --- Reports Module ---
+
+    public function reports() {
+        $this->checkAdminAccess();
+        include __DIR__ . '/../views/admin/reports.php';
+    }
+
+    public function apiReports() {
+        $this->checkAdminAccess();
+        
+        $filters = [
+            'search' => $_GET['search'] ?? '',
+            'startDate' => $_GET['startDate'] ?? '',
+            'endDate' => $_GET['endDate'] ?? '',
+            'orderBy' => $_GET['orderBy'] ?? 'date',
+            'orderDir' => $_GET['orderDir'] ?? 'ASC'
+        ];
+
+        $eventModel = new Event();
+        $data = $eventModel->getEventsReport($filters);
+
+        // Format Date for Display
+        foreach ($data as &$row) {
+            $row['formatted_date'] = date('d/m/Y H:i', strtotime($row['date']));
+            $row['detail_url'] = '/eventos/admin/editEvent?id=' . $row['id']; 
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($data);
+        exit;
     }
 
 }

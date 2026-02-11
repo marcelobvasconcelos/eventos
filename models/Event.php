@@ -183,5 +183,59 @@ class Event {
         $stmt->execute();
         return $stmt->fetchColumn();
     }
+    public function getEventsReport($filters = []) {
+        $sql = "SELECT e.id, e.name, e.date, COALESCE(l.name, e.custom_location) as location_name 
+                FROM events e 
+                LEFT JOIN locations l ON e.location_id = l.id 
+                WHERE 1=1";
+        
+        $params = [];
+
+        // Search Filter (Name or Location)
+        if (!empty($filters['search']) && strlen($filters['search']) >= 3) {
+            $sql .= " AND (e.name LIKE ? OR l.name LIKE ? OR e.custom_location LIKE ?)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+            $params[] = $searchTerm;
+        }
+
+        // Date Range Filter
+        if (!empty($filters['startDate'])) {
+            $sql .= " AND e.date >= ?";
+            $params[] = $filters['startDate'] . ' 00:00:00';
+        }
+        if (!empty($filters['endDate'])) {
+            $sql .= " AND e.date <= ?";
+            $params[] = $filters['endDate'] . ' 23:59:59';
+        }
+
+        // Status Filter (Optional, strict to approved/active usually for reports, or all?)
+        // Requirement implies "Relatórios de Eventos". Usually valid events.
+        // Let's include all non-deleted if not specified, or maybe just Approved/Concluded?
+        // Let's assume all for now or filter by Approved/Concluded/Pending?
+        // User didn't specify status. Let's show all except maybe deleted (but deletes are hard delete).
+        // Let's show distinct statuses in UI? Or just mix.
+        // I'll add status to select to show it maybe? Specification: "Nome, Data, Local". 
+        // I will stick to specs. Filters might be broad.
+
+        // Ordering
+        $allowedSorts = ['name' => 'e.name', 'date' => 'e.date', 'location' => 'location_name'];
+        $orderBy = $filters['orderBy'] ?? 'date';
+        $orderDir = strtoupper($filters['orderDir'] ?? 'ASC');
+        
+        if (!array_key_exists($orderBy, $allowedSorts)) {
+            $orderBy = 'date';
+        }
+        if (!in_array($orderDir, ['ASC', 'DESC'])) {
+            $orderDir = 'ASC';
+        }
+        
+        $sql .= " ORDER BY " . $allowedSorts[$orderBy] . " " . $orderDir;
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
 ?>

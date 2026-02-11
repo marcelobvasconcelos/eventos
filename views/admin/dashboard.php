@@ -92,6 +92,19 @@ ob_start();
             <div class="col-12 col-sm-6 col-lg-4 mb-4 extra-card collapse d-md-block">
                 <div class="card dashboard-card h-100 shadow-sm border-0">
                     <div class="card-body text-center d-flex flex-column align-items-center">
+                        <i class="fas fa-chart-line fa-3x mb-3 text-success"></i>
+                        <h5 class="card-title fw-bold">Relatórios</h5>
+                        <p class="card-text text-muted">Gerar relatórios de eventos.</p>
+                        <a href="/eventos/admin/reports" class="btn btn-outline-success rounded-pill px-5 mt-auto">Acessar</a>
+                        <div class="mt-3 invisible">
+                            <span class="badge px-3 py-2 border">Placeholder</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4 mb-4 extra-card collapse d-md-block">
+                <div class="card dashboard-card h-100 shadow-sm border-0">
+                    <div class="card-body text-center d-flex flex-column align-items-center">
                         <i class="fas fa-cogs fa-3x mb-3 text-dark"></i>
                         <h5 class="card-title fw-bold">Configurações</h5>
                         <p class="card-text text-muted">Configurações globais do site.</p>
