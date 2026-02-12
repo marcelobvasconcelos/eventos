@@ -115,6 +115,21 @@ ob_start();
                     </div>
                 </div>
             </div>
+            <div class="col-12 col-sm-6 col-lg-4 mb-4 extra-card collapse d-md-block">
+                <div class="card dashboard-card h-100 shadow-sm border-0">
+                    <div class="card-body text-center d-flex flex-column align-items-center">
+                        <i class="fas fa-chart-pie fa-3x mb-3 text-info"></i>
+                        <h5 class="card-title fw-bold">Analytics</h5>
+                        <p class="card-text text-muted">Estatísticas e gráficos.</p>
+                        <a href="/eventos/admin/analytics" class="btn btn-outline-info rounded-pill px-5 mt-auto">Visualizar</a>
+                        <div class="mt-3">
+                             <span class="badge bg-warning text-dark border border-dark rounded-pill px-3 py-2" style="font-size: 0.9rem;">
+                                <?php echo htmlspecialchars($realizedHours ?? 0); ?>h Realizadas
+                             </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
 </div>
 
 <style>

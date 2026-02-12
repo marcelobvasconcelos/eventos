@@ -177,13 +177,24 @@
                         <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/request/my_requests'); ?>" href="/eventos/request/my_requests"><i class="fas fa-list-ul"></i>Minhas Requisições</a></li>
                         <!-- Equipamentos and Locais removed from navbar as per request -->
                         <?php if ($_SESSION['user_role'] == 'admin'): ?>
-                            <li class="nav-item">
-                                <a class="nav-link <?php echo ($uri == '/eventos/admin/dashboard' || $uri == '/eventos/admin/') ? 'active' : ''; ?>" href="/eventos/admin/dashboard">
-                                    <i class="fas fa-tachometer-alt"></i> Painel Admin
-                                    <?php if ($pendingEventsCount > 0): ?>
-                                        <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7em; vertical-align: top;"><?php echo $pendingEventsCount; ?></span>
-                                    <?php endif; ?>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle <?php echo (strpos($uri, '/eventos/admin') === 0) ? 'active' : ''; ?>" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-tachometer-alt"></i> Dashboard
                                 </a>
+                                <ul class="dropdown-menu" aria-labelledby="adminDropdown">
+                                    <li>
+                                        <a class="dropdown-item" href="/eventos/admin/dashboard">
+                                            <i class="fas fa-home me-2"></i>Visão Geral
+                                            <?php if ($pendingEventsCount > 0): ?>
+                                                <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7em;"><?php echo $pendingEventsCount; ?></span>
+                                            <?php endif; ?>
+                                        </a>
+                                    </li>
+                                    <li><a class="dropdown-item" href="/eventos/admin/analytics"><i class="fas fa-chart-pie me-2"></i>Analytics</a></li>
+                                    <li><a class="dropdown-item" href="/eventos/admin/reports"><i class="fas fa-chart-line me-2"></i>Relatórios</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/eventos/admin/events"><i class="fas fa-calendar-check me-2"></i>Eventos</a></li>
+                                </ul>
                             </li>
                             <!-- Settings Link removed from navbar, moved to Admin Dashboard -->
                             

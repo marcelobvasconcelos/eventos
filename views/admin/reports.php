@@ -4,8 +4,8 @@ ob_start();
 ?>
 <div class="row mb-4 animate-slide-down">
     <div class="col-12">
-        <h2 class="fw-bold text-primary"><i class="fas fa-chart-line me-2"></i>Relatórios de Eventos</h2>
-        <p class="text-muted">Visualize e filtre eventos para geração de relatórios.</p>
+        <h2 class="fw-bold text-white"><i class="fas fa-chart-line me-2"></i>Relatórios de Eventos</h2>
+        <p class="text-white-50">Visualize e filtre eventos para geração de relatórios.</p>
     </div>
 </div>
 

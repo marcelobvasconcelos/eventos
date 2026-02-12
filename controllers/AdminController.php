@@ -38,6 +38,8 @@ class AdminController {
         $assetModel = new Asset();
         $assetCount = $assetModel->getAssetCount();
 
+        $realizedHours = $eventModel->getRealizedHours();
+
         include __DIR__ . '/../views/admin/dashboard.php';
     }
 
@@ -1040,6 +1042,19 @@ class AdminController {
         header('Content-Type: application/json');
         echo json_encode($data);
         exit;
+    }
+
+    // --- Analytics Module ---
+
+    public function analytics() {
+        $this->checkAdminAccess();
+        $year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
+        
+        require_once __DIR__ . '/../models/Event.php';
+        $eventModel = new Event();
+        $analyticsData = $eventModel->getAnalyticsData($year);
+        
+        include __DIR__ . '/../views/admin/analytics.php';
     }
 
 }

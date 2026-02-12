@@ -237,5 +237,103 @@ class Event {
         $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+    public function getRealizedHours() {
+        $stmt = $this->pdo->prepare("
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, date, COALESCE(end_date, DATE_ADD(date, INTERVAL 4 HOUR)))), 0) 
+            FROM events 
+            WHERE status = 'Aprovado' 
+            AND date < NOW() 
+            AND YEAR(date) = YEAR(CURDATE())
+        ");
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
+    public function getAnalyticsData($year) {
+        $stats = [
+            'location_stats' => [],
+            'hours_stats' => ['today' => 0, 'week' => 0, 'month' => 0, 'year' => 0],
+            'timeline_stats' => [],
+            'status_stats' => ['realized' => 0, 'scheduled' => 0],
+            'total_events' => 0
+        ];
+
+        // 1. Location Stats
+        $stmt = $this->pdo->prepare("
+            SELECT COALESCE(l.name, e.custom_location) as name, COUNT(e.id) as total 
+            FROM events e 
+            LEFT JOIN locations l ON e.location_id = l.id 
+            WHERE YEAR(e.date) = ? AND e.status = 'Aprovado' 
+            GROUP BY COALESCE(l.name, e.custom_location)
+            ORDER BY total DESC
+        ");
+        $stmt->execute([$year]);
+        $stats['location_stats'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // 2. Hours Stats (Approximation: 4h default if end_date missing)
+        // Today
+        $stmt = $this->pdo->prepare("
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, date, COALESCE(end_date, DATE_ADD(date, INTERVAL 4 HOUR)))), 0) 
+            FROM events WHERE status = 'Aprovado' AND DATE(date) = CURDATE()
+        ");
+        $stmt->execute();
+        $stats['hours_stats']['today'] = $stmt->fetchColumn();
+
+        // This Week
+        $stmt = $this->pdo->prepare("
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, date, COALESCE(end_date, DATE_ADD(date, INTERVAL 4 HOUR)))), 0) 
+            FROM events WHERE status = 'Aprovado' AND YEAR(date) = YEAR(CURDATE()) AND WEEK(date) = WEEK(CURDATE())
+        ");
+        $stmt->execute();
+        $stats['hours_stats']['week'] = $stmt->fetchColumn();
+
+        // This Month
+        $stmt = $this->pdo->prepare("
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, date, COALESCE(end_date, DATE_ADD(date, INTERVAL 4 HOUR)))), 0) 
+            FROM events WHERE status = 'Aprovado' AND YEAR(date) = YEAR(CURDATE()) AND MONTH(date) = MONTH(CURDATE())
+        ");
+        $stmt->execute();
+        $stats['hours_stats']['month'] = $stmt->fetchColumn();
+
+        // Total Year
+        $stmt = $this->pdo->prepare("
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, date, COALESCE(end_date, DATE_ADD(date, INTERVAL 4 HOUR)))), 0) 
+            FROM events WHERE status = 'Aprovado' AND YEAR(date) = ?
+        ");
+        $stmt->execute([$year]);
+        $stats['hours_stats']['year'] = $stmt->fetchColumn();
+
+        // 3. Timeline & Status Stats
+        // Group by Month
+        $stmt = $this->pdo->prepare("
+            SELECT 
+                MONTH(date) as month,
+                SUM(CASE WHEN date < NOW() THEN 1 ELSE 0 END) as realized,
+                SUM(CASE WHEN date >= NOW() THEN 1 ELSE 0 END) as scheduled
+            FROM events 
+            WHERE status = 'Aprovado' AND YEAR(date) = ?
+            GROUP BY MONTH(date)
+            ORDER BY month ASC
+        ");
+        $stmt->execute([$year]);
+        $monthlyData = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        // Initialize all 12 months with 0
+        for ($i = 1; $i <= 12; $i++) {
+            $stats['timeline_stats'][$i] = ['realized' => 0, 'scheduled' => 0];
+        }
+
+        foreach ($monthlyData as $row) {
+            $stats['timeline_stats'][$row['month']] = [
+                'realized' => (int)$row['realized'],
+                'scheduled' => (int)$row['scheduled']
+            ];
+            $stats['status_stats']['realized'] += (int)$row['realized'];
+            $stats['status_stats']['scheduled'] += (int)$row['scheduled'];
+        }
+        
+        $stats['total_events'] = $stats['status_stats']['realized'] + $stats['status_stats']['scheduled'];
+
+        return $stats;
+    }
 }
-?>
