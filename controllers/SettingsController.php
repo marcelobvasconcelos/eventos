@@ -34,7 +34,8 @@ class SettingsController {
             'footer_col1_subtitle',
             'footer_address',
             'footer_email',
-            'footer_phone'
+            'footer_phone',
+            'email_notifications_enabled'
         ];
         
         foreach ($defaultKeys as $key) {
@@ -68,12 +69,18 @@ class SettingsController {
                 'footer_col1_subtitle',
                 'footer_address',
                 'footer_email',
-                'footer_phone'
+                'footer_phone',
+                'email_notifications_enabled'
             ];
 
             // Update text fields
+            // Update text fields
             foreach ($allowedKeys as $key) {
-                if (isset($_POST[$key])) {
+                if ($key === 'email_notifications_enabled') {
+                    // Checkbox handling: if POSTed (even empty/0), use value. If not POSTed, default 0.
+                    $value = $_POST[$key] ?? '0';
+                    $configModel->update($key, $value);
+                } elseif (isset($_POST[$key])) {
                     $configModel->update($key, $_POST[$key]);
                 }
             }

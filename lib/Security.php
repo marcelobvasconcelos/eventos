@@ -23,7 +23,7 @@ class Security {
      */
     public static function validateCsrfToken($token) {
         if (isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token)) {
-            unset($_SESSION['csrf_token']);
+            // Token is valid. We do not unset it to allow multiple form submissions (e.g. back button, multiple tabs)
             return true;
         }
         return false;

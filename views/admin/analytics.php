@@ -30,10 +30,10 @@ ob_start();
     <div class="col-md-3">
         <div class="card border-0 shadow-sm h-100 overflow-hidden">
             <div class="card-body position-relative">
-                <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                <div class="position-absolute top-0 end-0 p-3" style="opacity: 0.1 !important;">
                     <i class="fas fa-calendar-check fa-4x text-primary"></i>
                 </div>
-                <h6 class="text-uppercase text-muted fw-bold small">Total de Eventos (<?php echo $year; ?>)</h6>
+                <h6 class="text-uppercase text-muted fw-bold small pe-5">Total de Eventos (<?php echo $year; ?>)</h6>
                 <h2 class="fw-bold display-5 mb-0 text-primary"><?php echo $analyticsData['total_events']; ?></h2>
                 <div class="small mt-2 text-success">
                     <i class="fas fa-check-circle me-1"></i> <?php echo $analyticsData['status_stats']['realized']; ?> Realizados

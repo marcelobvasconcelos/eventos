@@ -48,15 +48,28 @@ ob_start();
                                     <td class="text-center">
                                         <span class="badge bg-light text-dark border"><i class="fas fa-users me-1"></i><?php echo htmlspecialchars($location['capacity']); ?></span>
                                     </td>
-                                    <?php if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
+                                    <?php if (isset($_SESSION['user_role']) && in_array($_SESSION['user_role'], ['admin', 'gestor'])): ?>
                                     <td class="text-end pe-4">
-                                        <button class="btn btn-sm btn-outline-primary rounded-pill px-2 me-1" 
-                                                onclick="editLocation(<?php echo $location['id']; ?>, '<?php echo addslashes($location['name']); ?>', '<?php echo addslashes($location['description']); ?>', <?php echo $location['capacity']; ?>, <?php echo htmlspecialchars(json_encode($location['images'])); ?>)">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2" onclick="confirmDeleteLocation(<?php echo $location['id']; ?>)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                        <div class="d-flex justify-content-end align-items-center">
+                                            <button class="btn btn-sm btn-outline-info px-2 me-1 btn-image-location" 
+                                                    data-id="<?php echo $location['id']; ?>"
+                                                    data-name="<?php echo htmlspecialchars($location['name']); ?>"
+                                                    data-images='<?php echo htmlspecialchars(json_encode($location['images']), ENT_QUOTES, 'UTF-8'); ?>'
+                                                    title="Gerenciar Imagens">
+                                                <i class="fas fa-image"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-primary px-2 me-1 btn-edit-location" 
+                                                    data-id="<?php echo $location['id']; ?>"
+                                                    data-name="<?php echo htmlspecialchars($location['name']); ?>"
+                                                    data-description="<?php echo htmlspecialchars($location['description']); ?>"
+                                                    data-capacity="<?php echo $location['capacity']; ?>"
+                                                    title="Editar Local">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger px-2" onclick="confirmDeleteLocation(<?php echo $location['id']; ?>)" title="Excluir Local">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
                                     </td>
                                     <?php endif; ?>
                                 </tr>
@@ -95,8 +108,11 @@ ob_start();
                     </div>
                      <div class="mb-3">
                         <label for="images" class="form-label">Imagens do Local</label>
-                        <input type="file" name="images[]" id="images" class="form-control" multiple accept="image/*">
-                        <div class="form-text">Selecione múltiplas imagens (Ctrl + Clique)</div>
+                        <input type="file" name="images[]" id="images" class="form-control" multiple accept=".jpg,.jpeg,.png,.webp">
+                        <div class="form-text">
+                            Selecione múltiplas imagens (Ctrl + Clique). <br>
+                            <small class="text-danger">Formatos: JPG, PNG, WEBP. Máx 2MB por imagem. Resolução ideal: 800x600px.</small>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -132,15 +148,7 @@ ob_start();
                         <label for="editCapacity" class="form-label">Capacidade (Pessoas)</label>
                         <input type="number" name="capacity" id="editCapacity" class="form-control" min="1">
                     </div>
-                    <div class="mb-3">
-                        <label for="editImages" class="form-label">Adicionar Imagens</label>
-                        <input type="file" name="images[]" id="editImages" class="form-control" multiple accept="image/*">
-                        <div class="form-text">Novas imagens serão adicionadas às existentes.</div>
-                    </div>
-                    <div class="mb-3">
-                         <label class="form-label">Imagens Atuais</label>
-                         <div id="existingImagesList" class="d-flex flex-wrap gap-2"></div>
-                    </div>
+                    <!-- Imagens removidas do Modal de Edição -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
@@ -151,15 +159,81 @@ ob_start();
     </div>
 </div>
 
+<!-- Image Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Imagens do Local: <span id="imageLocationNameTitle"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/eventos/admin/uploadLocationImages" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
+                    <input type="hidden" name="id" id="imageLocationId">
+                    <div class="mb-3">
+                        <label for="newImages" class="form-label">Adicionar Imagens</label>
+                        <input type="file" name="images[]" id="newImages" class="form-control" multiple accept=".jpg,.jpeg,.png,.webp">
+                        <div class="form-text">
+                             Selecione múltiplas imagens (Ctrl + Clique). <br>
+                             <small class="text-danger">Formatos: JPG, PNG, WEBP. Máx 2MB por imagem. Resolução ideal: 800x600px.</small>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                         <label class="form-label">Imagens Atuais</label>
+                         <div id="modalImagesList" class="d-flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Imagens</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
-function editLocation(id, name, description, capacity, images) {
+document.addEventListener('DOMContentLoaded', function() {
+    const editButtons = document.querySelectorAll('.btn-edit-location');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            const description = this.getAttribute('data-description');
+            const capacity = this.getAttribute('data-capacity');
+            
+            openEditModal(id, name, description, capacity);
+        });
+    });
+
+    const imageButtons = document.querySelectorAll('.btn-image-location');
+    imageButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const name = this.getAttribute('data-name');
+            const images = JSON.parse(this.getAttribute('data-images') || '[]');
+            
+            openImageModal(id, name, images);
+        });
+    });
+});
+
+function openEditModal(id, name, description, capacity) {
     document.getElementById('editId').value = id;
     document.getElementById('editName').value = name;
     document.getElementById('editDescription').value = description;
     document.getElementById('editCapacity').value = capacity;
+
+    new bootstrap.Modal(document.getElementById('editModal')).show();
+}
+
+function openImageModal(id, name, images) {
+    document.getElementById('imageLocationId').value = id;
+    document.getElementById('imageLocationNameTitle').innerText = name;
     
     // Render existing images
-    const container = document.getElementById('existingImagesList');
+    const container = document.getElementById('modalImagesList');
     container.innerHTML = '';
     if (images && images.length > 0) {
         images.forEach(img => {
@@ -188,7 +262,7 @@ function editLocation(id, name, description, capacity, images) {
         container.innerHTML = '<span class="text-muted small">Nenhuma imagem cadastrada.</span>';
     }
 
-    new bootstrap.Modal(document.getElementById('editModal')).show();
+    new bootstrap.Modal(document.getElementById('imageModal')).show();
 }
 
 function deleteLocationImage(id, element) {

@@ -114,13 +114,25 @@ ob_start();
                             if ($hasEvents) {
                                 $dayContent .= '<ul class="list-unstyled mb-0 small">';
                                 $count = 0;
+                                $renderedBlocksHover = [];
                                 foreach ($eventsByDate[$currentDate] as $ev) {
+                                    if (($ev['type'] ?? '') === 'bloqueio_administrativo') {
+                                        if (in_array($ev['name'], $renderedBlocksHover)) continue;
+                                        $renderedBlocksHover[] = $ev['name'];
+                                    }
+
                                     if ($count >= 5) {
                                         $dayContent .= '<li><em>e mais ' . (count($eventsByDate[$currentDate]) - 5) . '...</em></li>';
                                         break;
                                     }
                                     $evTime = date('H:i', strtotime($ev['date']));
                                     $evName = htmlspecialchars($ev['name']);
+                                    if (($ev['type'] ?? '') === 'informativo_calendario') {
+                                        $dayContent .= "<li><i class='fas fa-info-circle text-primary me-1'></i>{$evName}</li>";
+                                        $count++;
+                                        continue;
+                                    }
+                                    
                                     // Privacy check for popover content as well
                                     $evIsPublic = $ev['is_public'] ?? 1;
                                     $evIsAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
@@ -150,88 +162,85 @@ ob_start();
                             
                             if (isset($eventsByDate[$currentDate])) {
                                 echo '<div class="mt-2 d-grid gap-1">';
+                                $renderedBlocksCell = [];
                                 foreach ($eventsByDate[$currentDate] as $event) {
                                     $eventName = $event['name'];
                                     $isPublic = $event['is_public'] ?? 1;
                                     $isAdmin = isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin';
                                     $isOwner = isset($_SESSION['user_id']) && $_SESSION['user_id'] == ($event['created_by'] ?? 0);
+                                    $type = $event['type'] ?? 'evento_publico';
 
-                                    if (!$isPublic && !$isAdmin && !$isOwner) {
-                                        // $eventName remains visible
-                                    }
-                                    
-                                     // Popover content for event
-                                    $startTs = strtotime($event['date']);
-                                    $endTs = $event['end_date'] ? strtotime($event['end_date']) : $startTs + 3600;
-                                    
-                                    if (date('Y-m-d', $startTs) !== date('Y-m-d', $endTs)) {
-                                        $endTime = date('d/m H:i', $endTs);
+                                    // Block Logic
+                                    if ($type === 'bloqueio_administrativo') {
+                                        if (in_array($eventName, $renderedBlocksCell)) continue;
+                                        $renderedBlocksCell[] = $eventName;
+                                        
+                                        $style = ['bg' => '#6c757d', 'text' => '#ffffff']; // Dark Gray
+                                        // No popover detailed info needed? "Interatividade: Não deve levar para a página... apenas mostrar o informativo"
+                                        // We can still show popover with just title/reason.
                                     } else {
-                                        $endTime = date('H:i', $endTs);
+                                        // Normal Event Logic
+                                        if (!$isPublic && !$isAdmin && !$isOwner) {
+                                            // $eventName remains visible
+                                        }
+                                        
+                                        // Color Logic based on Location (Same palette as day_timeline)
+                                        $colors = [
+                                            ['bg' => '#0d6efd', 'text' => '#ffffff'], // Blue
+                                            ['bg' => '#198754', 'text' => '#ffffff'], // Green
+                                            ['bg' => '#dc3545', 'text' => '#ffffff'], // Red
+                                            ['bg' => '#ffc107', 'text' => '#000000'], // Yellow
+                                            ['bg' => '#0dcaf0', 'text' => '#000000'], // Cyan
+                                            ['bg' => '#6f42c1', 'text' => '#ffffff'], // Purple
+                                            ['bg' => '#fd7e14', 'text' => '#ffffff'], // Orange
+                                            ['bg' => '#20c997', 'text' => '#ffffff'], // Teal
+                                            ['bg' => '#d63384', 'text' => '#ffffff'], // Pink
+                                            ['bg' => '#6610f2', 'text' => '#ffffff'], // Indigo
+                                        ];
+                                        
+                                        $locId = $event['location_id'] ?? 0;
+                                        $colorIndex = $locId % count($colors);
+                                        $style = $colors[$colorIndex];
+                                        
+                                        // Private events override
+                                        if (!$isPublic && !$isAdmin && !$isOwner) {
+                                            $style = ['bg' => '#6c757d', 'text' => '#ffffff'];
+                                        }
+                                        
+                                        $extraStyle = '';
+                                        if (($event['status']??'') === 'Cancelado') {
+                                            $style = ['bg' => '#dc3545', 'text' => '#ffffff'];
+                                            $extraStyle = 'text-decoration: line-through; opacity: 0.8;';
+                                        }
                                     }
-                                    
-                                    $imgPop = !empty($event['image_path']) ? $event['image_path'] : '/eventos/lib/banner.jpeg';
-                                    
-                                    $eventPopover = "<div class='mb-2'>";
-                                    $eventPopover .= "<img src='" . htmlspecialchars($imgPop) . "' class='img-fluid rounded shadow-sm' style='width: 100%; height: 100px; object-fit: cover;'>";
-                                    $eventPopover .= "</div>";
-                                    $eventPopover .= "<strong>Hora:</strong> " . date('H:i', $startTs) . " - " . $endTime . "<br>";
-                                    // $eventPopover ... (truncated for brevity in original code, but keeping essential part)
-                                    $eventDesc = $event['description'] ?? ''; // Re-fetch needed vars
-                                    // ... recreating popover content string properly would be tedious to copy paste, 
-                                    // but we just need to wrap the table. 
-                                    
-                                    // Let's use the provided replacement which includes the original logic wrapped.
-                                    // Actually, to respond correctly, I must ensure I don't break the PHP logic inside the loop since I'm replacing the whole block.
-                                    // The simpler way is to replace lines 64-221 with the wrapped version AND the new mobile version.
-                                    
-                                    // ... [Simulating the continuation of logic reuse]
-                                    
-                                    // Color Logic based on Location (Same palette as day_timeline)
-                                    $colors = [
-                                        ['bg' => '#0d6efd', 'text' => '#ffffff'], // Blue
-                                        ['bg' => '#198754', 'text' => '#ffffff'], // Green
-                                        ['bg' => '#dc3545', 'text' => '#ffffff'], // Red
-                                        ['bg' => '#ffc107', 'text' => '#000000'], // Yellow
-                                        ['bg' => '#0dcaf0', 'text' => '#000000'], // Cyan
-                                        ['bg' => '#6f42c1', 'text' => '#ffffff'], // Purple
-                                        ['bg' => '#fd7e14', 'text' => '#ffffff'], // Orange
-                                        ['bg' => '#20c997', 'text' => '#ffffff'], // Teal
-                                        ['bg' => '#d63384', 'text' => '#ffffff'], // Pink
-                                        ['bg' => '#6610f2', 'text' => '#ffffff'], // Indigo
-                                    ];
-                                    
-                                    $locId = $event['location_id'] ?? 0;
-                                    $colorIndex = $locId % count($colors);
-                                    $style = $colors[$colorIndex];
-                                    
-                                    // Private events override
-                                    if (!$isPublic && !$isAdmin && !$isOwner) {
-                                        $style = ['bg' => '#6c757d', 'text' => '#ffffff'];
+
+                                    // Display Logic
+                                    if ($type === 'bloqueio_administrativo') {
+                                        echo '<span class="badge text-decoration-none text-truncate d-block text-start py-1 px-2" 
+                                                 style="background-color: ' . $style['bg'] . '; color: ' . $style['text'] . '; cursor: default;"
+                                                 title="' . htmlspecialchars($eventName) . '">';
+                                        echo '<i class="fas fa-ban fa-xs me-1" style="opacity: 0.7;"></i>' . htmlspecialchars($eventName);
+                                        echo '</span>';
+                                    } elseif ($type === 'informativo_calendario') {
+                                        $hColor = $event['custom_location'] ?? '#ffc107';
+                                        $hDesc = $event['description'] ?? '';
+                                        echo '<div class="d-block text-start py-1 px-2 mb-1 rounded-1" 
+                                                 style="background-color: ' . htmlspecialchars($hColor) . '33; border-left: 3px solid ' . htmlspecialchars($hColor) . '; color: #333; font-size: 0.8rem; cursor: default;"
+                                                 data-bs-toggle="popover" data-bs-trigger="hover" data-bs-placement="top" data-bs-content="' . htmlspecialchars($hDesc) . '"
+                                                 onclick="event.stopPropagation();">';
+                                        echo '<i class="fas fa-info-circle me-1" style="color: ' . htmlspecialchars($hColor) . ';"></i>' . htmlspecialchars($eventName);
+                                        echo '</div>';
+                                    } else {
+                                        echo '<a href="javascript:void(0);" 
+                                                 class="badge text-decoration-none text-truncate d-block text-start py-1 px-2" 
+                                                 style="background-color: ' . $style['bg'] . '; color: ' . $style['text'] . '; ' . ($extraStyle??'') . '"
+                                                 onclick="handleEventClick(event, ' . $event['id'] . ');"
+                                                 data-bs-toggle="popover" data-bs-trigger="hover" data-bs-html="true" data-bs-placement="right"
+                                                 title="' . htmlspecialchars($eventName) . '"
+                                                 data-bs-content="Ver Detalhes">'; 
+                                        echo '<i class="fas fa-circle fa-xs me-1" style="opacity: 0.7;"></i>' . htmlspecialchars($eventName);
+                                        echo '</a>';
                                     }
-                                    
-                                    $extraStyle = '';
-                                    if (($event['status']??'') === 'Cancelado') {
-                                        $style = ['bg' => '#dc3545', 'text' => '#ffffff'];
-                                        $extraStyle = 'text-decoration: line-through; opacity: 0.8;';
-                                    }
-                                    
-                                    // Rebuilding popover content string locally to be safe or reusing existing logic if not changing it?
-                                    // IMPORTANT: The block replaces lines 64 to 221.
-                                    // I am duplicating the logic from the view_file into the replacement content.
-                                    // It's safer to reproduce it exactly or simplify if permitted. 
-                                    // Since I have the content from view_file, I will reproduce it.
-                                    
-                                    // ... (HTML generation for desktop link) ...
-                                    echo '<a href="javascript:void(0);" 
-                                             class="badge text-decoration-none text-truncate d-block text-start py-1 px-2" 
-                                             style="background-color: ' . $style['bg'] . '; color: ' . $style['text'] . '; ' . $extraStyle . '"
-                                             onclick="handleEventClick(event, ' . $event['id'] . ');"
-                                             data-bs-toggle="popover" data-bs-trigger="hover" data-bs-html="true" data-bs-placement="right"
-                                             title="' . htmlspecialchars($eventName) . '"
-                                             data-bs-content="Ver Detalhes">'; // Simplification for safety in replacement
-                                    echo '<i class="fas fa-circle fa-xs me-1" style="opacity: 0.7;"></i>' . htmlspecialchars($eventName);
-                                    echo '</a>';
                                 }
                                 echo '</div>';
                             }
@@ -345,6 +354,20 @@ ob_start();
                     let html = '<div class="timeline">';
                     dayEvents.forEach(ev => {
                         let name = ev.name;
+                        
+                        // Handle Highlight inside Modal
+                        if (ev.type === 'informativo_calendario') {
+                            const customColor = ev.custom_location || '#ffc107';
+                            html += `
+                                <div class="card mb-3 border-0 shadow-sm" style="background: ${customColor}22; border-left: 4px solid ${customColor} !important; border-radius: 12px;">
+                                    <div class="card-body p-3">
+                                        <h6 class="fw-bold mb-1" style="color: ${customColor};"><i class="fas fa-bullhorn me-2"></i>${name}</h6>
+                                        <div class="small mt-1 text-dark">${ev.description || ''}</div>
+                                    </div>
+                                </div>`;
+                            return; // skip to next
+                        }
+
                         const time = ev.date.split(' ')[1].substring(0, 5);
                         
                         html += `

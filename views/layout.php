@@ -94,6 +94,12 @@
                     <i class="fas fa-chevron-right small opacity-50"></i>
                 </a>
 
+                <a href="https://suporte.uast.ufrpe.br/eventos/public/locations" class="mobile-menu-link" target="_blank" onclick="toggleMobileMenu()">
+                    <div class="icon-box"><i class="fas fa-map-marked-alt"></i></div>
+                    <span class="flex-grow-1">Veja Nossos Espaços</span>
+                    <i class="fas fa-chevron-right small opacity-50"></i>
+                </a>
+
                 <?php if (!isset($_SESSION['user_id'])): ?>
                     <a href="/eventos/auth/login" class="mobile-menu-link highlight-link mt-2" onclick="toggleMobileMenu()">
                         <div class="icon-box"><i class="fas fa-sign-in-alt"></i></div>
@@ -110,7 +116,7 @@
                         <span class="flex-grow-1">Minhas Requisições</span>
                     </a>
 
-                    <?php if ($_SESSION['user_role'] == 'admin'): ?>
+                    <?php if ($_SESSION['user_role'] == 'admin' || $_SESSION['user_role'] == 'gestor'): ?>
                         <div class="menu-divider text-white-50 small text-uppercase fw-bold mt-3 mb-2">Administração</div>
                         
                         <a href="/eventos/admin/dashboard" class="mobile-menu-link" onclick="toggleMobileMenu()">
@@ -169,6 +175,8 @@
                     
                     <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/public/'); ?>" href="/eventos/public/calendar"><i class="fas fa-calendar-alt"></i>Calendário</a></li>
                     
+                    <li class="nav-item"><a class="nav-link" href="https://suporte.uast.ufrpe.br/eventos/public/locations" target="_blank"><i class="fas fa-map-marked-alt"></i>Espaços</a></li>
+                    
                     <?php if (!isset($_SESSION['user_id'])): ?>
                         <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/auth/login'); ?>" href="/eventos/auth/login"><i class="fas fa-sign-in-alt"></i>Entrar</a></li>
 
@@ -176,7 +184,7 @@
                         <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/request/form'); ?>" href="/eventos/request/form"><i class="fas fa-calendar-plus"></i>Solicitar Evento</a></li>
                         <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/request/my_requests'); ?>" href="/eventos/request/my_requests"><i class="fas fa-list-ul"></i>Minhas Requisições</a></li>
                         <!-- Equipamentos and Locais removed from navbar as per request -->
-                        <?php if ($_SESSION['user_role'] == 'admin'): ?>
+                        <?php if ($_SESSION['user_role'] == 'admin' || $_SESSION['user_role'] == 'gestor'): ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle <?php echo (strpos($uri, '/eventos/admin') === 0) ? 'active' : ''; ?>" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                     <i class="fas fa-tachometer-alt"></i> Dashboard
@@ -192,6 +200,8 @@
                                     </li>
                                     <li><a class="dropdown-item" href="/eventos/admin/analytics"><i class="fas fa-chart-pie me-2"></i>Analytics</a></li>
                                     <li><a class="dropdown-item" href="/eventos/admin/reports"><i class="fas fa-chart-line me-2"></i>Relatórios</a></li>
+                                    <li><a class="dropdown-item" href="/eventos/admin/block"><i class="fas fa-ban me-2"></i>Bloquear Locais</a></li>
+                                    <li><a class="dropdown-item" href="/eventos/admin/highlights"><i class="fas fa-bullhorn me-2"></i>Destaques (Calendário)</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="/eventos/admin/events"><i class="fas fa-calendar-check me-2"></i>Eventos</a></li>
                                 </ul>
@@ -288,7 +298,10 @@
                         <?php echo htmlspecialchars($globalConfigs['footer_col1_title'] ?? 'Seção de Eventos'); ?>
                         <i class="fas fa-chevron-down ms-2 d-lg-none text-muted small" id="footerChevron"></i>
                     </div>
-                    <div class="small text-secondary"><?php echo htmlspecialchars($globalConfigs['footer_col1_subtitle'] ?? 'UAST / UFRPE'); ?></div>
+                    <div class="small text-secondary mt-1">
+                        <i class="fas fa-map-marker-alt text-danger me-1"></i>
+                        <?php echo htmlspecialchars($globalConfigs['footer_col1_subtitle'] ?? 'UAST / UFRPE'); ?>
+                    </div>
                 </div>
 
                 <!-- Collapsible Wrapper for Mobile -->
@@ -296,8 +309,7 @@
                     <div class="row g-3 align-items-center">
                         <!-- Coluna 2: Endereço (Compacto) -->
                         <div class="col-lg-6 col-md-6 text-center text-lg-start px-lg-4 border-end-lg" style="border-right-color: #dee2e6;">
-                            <div class="d-flex align-items-start justify-content-center justify-content-lg-start gap-2">
-                                <i class="fas fa-map-marker-alt text-danger mt-1"></i>
+                            <div class="d-flex align-items-start justify-content-center justify-content-lg-start gap-2 mt-1">
                                 <div class="lh-sm text-secondary">
                                     <?php echo $globalConfigs['footer_address'] ?? 'Endereço não definido'; // Allow HTML ?>
                                 </div>

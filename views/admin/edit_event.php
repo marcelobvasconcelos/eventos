@@ -174,6 +174,57 @@ ob_start();
         <textarea name="description" id="description" class="form-control" rows="4" required><?php echo htmlspecialchars($event['description']); ?></textarea>
     </div>
 
+    <!-- Advanced Options Section -->
+    <div class="col-12 mt-3">
+        <div class="card border-0 bg-light">
+            <div class="card-header bg-transparent border-0 px-0 pb-0">
+                <button class="btn btn-link text-decoration-none fw-bold text-secondary d-flex align-items-center" type="button" data-bs-toggle="collapse" data-bs-target="#advancedOptions" aria-expanded="false" aria-controls="advancedOptions">
+                    <i class="fas fa-cog me-2"></i> Opções Avançadas (Inscrições e Certificados)
+                    <i class="fas fa-chevron-down ms-auto transform-icon"></i>
+                </button>
+            </div>
+            <div class="collapse" id="advancedOptions">
+                <div class="card-body pt-2">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch p-3 bg-white border rounded">
+                                <input class="form-check-input" type="checkbox" role="switch" id="requires_registration" name="requires_registration" value="1" <?php echo (isset($event['requires_registration']) && $event['requires_registration'] == '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label fw-semibold text-dark" for="requires_registration">Habilitar Inscrições Prévias</label>
+                                <div class="form-text small mt-1 text-muted">Se ativado, os participantes deverão se inscrever antes do evento.</div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                                <div class="form-check form-switch p-3 bg-white border rounded">
+                                <input class="form-check-input" type="checkbox" role="switch" id="has_certificate" name="has_certificate" value="1" <?php echo (isset($event['has_certificate']) && $event['has_certificate'] == '1') ? 'checked' : ''; ?>>
+                                <label class="form-check-label fw-semibold text-dark" for="has_certificate">Emitir Certificado</label>
+                                <div class="form-text small mt-1 text-muted">Exigirá CPF/RG no registro de presença para emissão futura.</div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-12" id="max_participants_container" style="<?php echo (isset($event['requires_registration']) && $event['requires_registration'] == '1') ? '' : 'display: none;'; ?>">
+                            <label for="max_participants" class="form-label fw-semibold text-secondary">Limite de Vagas (Inscrições)</label>
+                            <input type="number" class="form-control" id="max_participants" name="max_participants" min="1" placeholder="Ex: 100" value="<?php echo htmlspecialchars($event['max_participants'] ?? ''); ?>">
+                            <div class="form-text text-muted">Deixe em branco para ilimitado (respeitando a capacidade do local se houver).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('requires_registration').addEventListener('change', function() {
+            const container = document.getElementById('max_participants_container');
+            if (this.checked) {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+                document.getElementById('max_participants').value = '';
+            }
+        });
+    </script>
+
     <!-- Asset Selection Section -->
     <div class="col-12 mt-4">
         <h5 class="mb-3 text-white">Equipamentos Solicitados</h5>

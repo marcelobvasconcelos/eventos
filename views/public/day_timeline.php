@@ -20,7 +20,7 @@ $currentDate = $date; // Mapping for consistency with new logic
             </a>
             
             <div class="text-center">
-                <h3 class="fw-bold text-primary mb-0"><?php echo date('d/m/Y', strtotime($date)); ?></h3>
+                <h3 class="fw-bold text-white mb-0" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);"><?php echo date('d/m/Y', strtotime($date)); ?></h3>
                 <?php
                 $days = [
                     'Sunday' => 'Domingo', 'Monday' => 'Segunda-feira', 'Tuesday' => 'Terça-feira', 
@@ -29,7 +29,7 @@ $currentDate = $date; // Mapping for consistency with new logic
                 ];
                 $dayName = date('l', strtotime($date));
                 ?>
-                <span class="text-muted text-uppercase small"><?php echo $days[$dayName]; ?></span>
+                <span class="text-white text-uppercase fw-medium small" style="text-shadow: 1px 1px 3px rgba(0,0,0,0.5);"><?php echo $days[$dayName]; ?></span>
             </div>
             
             <a href="/eventos/public/day?date=<?php echo $nextDay; ?>" class="btn btn-outline-secondary rounded-pill">
@@ -38,16 +38,19 @@ $currentDate = $date; // Mapping for consistency with new logic
         </div>
 
         <div class="card shadow-sm border-0">
-            <div class="card-body p-0 position-relative" style="overflow: auto; max-height: 70vh;">
+            <div class="card-body px-0 pt-3 pb-0 position-relative" style="overflow-x: auto;">
                 
+                <?php 
+                $startHour = 7;
+                $endHour = 22;
+                $hourHeight = 50; // px
+                $totalHeight = ($endHour - $startHour + 1) * $hourHeight;
+                ?>
                 <!-- Timeline Container -->
-                <div class="timeline-container ps-2" style="min-width: 600px; position: relative; height: 960px;"> <!-- 16 hours * 60px/hour -->
+                <div class="timeline-container ps-2" style="min-width: 600px; position: relative; height: <?php echo $totalHeight; ?>px;">
                     
                     <!-- Grid Lines & Hours -->
                     <?php 
-                    $startHour = 7;
-                    $endHour = 22;
-                    $hourHeight = 60; // px
                     
                     for ($h = $startHour; $h <= $endHour; $h++): 
                         $top = ($h - $startHour) * $hourHeight;

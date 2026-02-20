@@ -269,8 +269,30 @@ class PublicController {
             // So `$name` is the variable.
             // Using `$name` is safer. Original code might have had a bug or `$title` was alias.
             // I'll use `$name` instead of `$title`.
+            
+            // Access Control Fields
+            $requiresRegistration = isset($_POST['requires_registration']) ? 1 : 0;
+            $hasCertificate = isset($_POST['has_certificate']) ? 1 : 0;
+            $maxParticipants = !empty($_POST['max_participants']) ? (int)$_POST['max_participants'] : null;
+
             $eventModel = new Event();
-            $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation);
+            try {
+                $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation, $requiresRegistration, $maxParticipants, $hasCertificate);
+            } catch (Exception $e) {
+                // Handle database errors gracefully
+                $errorMessages = 'Erro ao criar evento: ' . $e->getMessage();
+                // ... (re-fetch data code would go here in a real scenario, but for now we let it fall through or it's handled by global error handler)
+                // Re-rendering view with error is best practice
+                $locationModel = new Location();
+                $locations = $locationModel->getLocationsWithAvailability($startDateTime, $endDateTime ?: $startDateTime);
+                $categoryModel = new Category();
+                $categories = $categoryModel->getAllCategories();
+                $assetModel = new Asset();
+                $assets = $assetModel->getAllAssetsWithAvailability($startDateTime, $endDateTime ?: $startDateTime);
+                require_once __DIR__ . '/../models/Config.php'; $configModel = new Config(); $globalConfigs = $configModel->getAll();
+                include __DIR__ . '/../views/public/create.php';
+                return;
+            }
 
             // Handle asset loans
             $selectedAssets = $_POST['assets'] ?? [];

@@ -11,9 +11,9 @@ class EventRequest {
         $this->pdo = $pdo;
     }
 
-    public function createRequest($userId, $eventId) {
-        $stmt = $this->pdo->prepare("INSERT INTO event_requests (user_id, event_id, status) VALUES (?, ?, 'Pendente')");
-        $stmt->execute([$userId, $eventId]);
+    public function createRequest($userId, $eventId, $status = 'Pendente') {
+        $stmt = $this->pdo->prepare("INSERT INTO event_requests (user_id, event_id, status) VALUES (?, ?, ?)");
+        $stmt->execute([$userId, $eventId, $status]);
         return $this->pdo->lastInsertId();
     }
 

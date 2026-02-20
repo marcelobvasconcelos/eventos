@@ -205,11 +205,42 @@ class RequestController {
         $linkTitle = trim($_POST['link_title'] ?? '');
         $publicEstimation = (int)($_POST['public_estimation'] ?? 0);
 
+        // Access Control Fields
+        $requiresRegistration = isset($_POST['requires_registration']) ? 1 : 0;
+        $hasCertificate = isset($_POST['has_certificate']) ? 1 : 0;
+        $maxParticipants = !empty($_POST['max_participants']) ? (int)$_POST['max_participants'] : null;
+
         $eventModel = new Event();
-        $eventId = $eventModel->createEvent($title, $description, $formattedDate, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation);
+        
+        // Auto-approve if user is admin
+        $initialStatus = 'Pendente';
+        if (isset($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin') {
+            $initialStatus = 'Aprovado';
+        }
+
+        // Check availability
+        $locationModel = new Location();
+        
+        // Check for specific blocking event first
+        $blockingEvent = $locationModel->getBlockingEvent($locationId, $formattedDate, $endDateTime);
+        if ($blockingEvent) {
+            if ($blockingEvent['type'] === 'bloqueio_administrativo') {
+                 // Use the blocking event's name or description as the reason
+                 $reason = !empty($blockingEvent['description']) ? $blockingEvent['description'] : $blockingEvent['name'];
+                 header('Location: /eventos/request/my_requests?error=' . urlencode("Este local está reservado para: " . $reason));
+                 exit;
+            }
+        }
+
+        if (!$locationModel->isAvailable($locationId, $formattedDate, $endDateTime)) {
+            header('Location: /eventos/request/my_requests?error=' . urlencode('O local selecionado já está ocupado neste horário.'));
+            exit;
+        }
+
+        $eventId = $eventModel->createEvent($title, $description, $formattedDate, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $initialStatus, 'evento_publico', $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation, $requiresRegistration, $maxParticipants, $hasCertificate);
         
         $requestModel = new EventRequest();
-        $requestId = $requestModel->createRequest($_SESSION['user_id'], $eventId);
+        $requestId = $requestModel->createRequest($_SESSION['user_id'], $eventId, $initialStatus);
 
         // Handle Assets
         $selectedAssets = $_POST['assets'] ?? [];
@@ -262,10 +293,19 @@ class RequestController {
              require_once __DIR__ . '/../lib/Notification.php';
              global $pdo;
              $notification = new Notification($pdo);
-             $notification->sendConfirmation($_SESSION['user_id'], $eventId);
-             $notification->sendAdminAlert($eventId);
+             
+             if ($initialStatus === 'Aprovado') {
+                 // If auto-approved (admin), send approval email immediately
+                 $notification->sendApproval($_SESSION['user_id'], $eventId, true);
+             } else {
+                 // If pending, send confirmation of receipt
+                 $notification->sendConfirmation($_SESSION['user_id'], $eventId);
+                 // And alert admins
+                 $notification->sendAdminAlert($eventId);
+             }
              
              $msg = 'Solicitação enviada com sucesso! Um e-mail de confirmação foi enviado para você.' . $warningMsg;
+             header('Location: /eventos/request/my_requests?message=' . urlencode($msg));
         }
         exit;
     }

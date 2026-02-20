@@ -31,7 +31,12 @@ ob_start();
 
                     <ul class="nav nav-tabs mb-4" id="configTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="images-tab" data-bs-toggle="tab" data-bs-target="#images" type="button" role="tab" aria-controls="images" aria-selected="true">
+                            <button class="nav-link active" id="system-tab" data-bs-toggle="tab" data-bs-target="#system" type="button" role="tab" aria-controls="system" aria-selected="true">
+                                <i class="fas fa-server me-2"></i>Sistema
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="images-tab" data-bs-toggle="tab" data-bs-target="#images" type="button" role="tab" aria-controls="images" aria-selected="false">
                                 <i class="fas fa-images me-2"></i>Imagens
                             </button>
                         </li>
@@ -49,8 +54,32 @@ ob_start();
 
                     <div class="tab-content" id="configTabsContent">
                         
+                        <!-- System Tab -->
+                        <div class="tab-pane fade show active" id="system" role="tabpanel" aria-labelledby="system-tab">
+                             <div class="mb-4">
+                                <h5 class="text-secondary border-bottom pb-2 mb-3">Notificações e E-mails</h5>
+                                <div class="form-check form-switch p-3 border rounded bg-light">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="email_notifications_enabled_switch" 
+                                           <?php echo (!isset($configs['email_notifications_enabled']) || $configs['email_notifications_enabled'] === '1' || $configs['email_notifications_enabled'] === '') ? 'checked' : ''; ?>>
+                                    <input type="hidden" name="email_notifications_enabled" id="email_notifications_enabled" 
+                                           value="<?php echo (!isset($configs['email_notifications_enabled']) || $configs['email_notifications_enabled'] === '1' || $configs['email_notifications_enabled'] === '') ? '1' : '0'; ?>">
+                                    <label class="form-check-label fw-bold ms-2" for="email_notifications_enabled_switch">Habilitar Envio de E-mails</label>
+                                    <div class="form-text ms-1 mt-1">
+                                        Se desativado, o sistema <strong>não enviará nenhum e-mail</strong> (confirmações, recuperações de senha, notificações). 
+                                        Útil durante importação de dados ou manutenção.
+                                    </div>
+                                </div>
+                                
+                                <script>
+                                    document.getElementById('email_notifications_enabled_switch').addEventListener('change', function() {
+                                        document.getElementById('email_notifications_enabled').value = this.checked ? '1' : '0';
+                                    });
+                                </script>
+                            </div>
+                        </div>
+
                         <!-- Images Tab -->
-                        <div class="tab-pane fade show active" id="images" role="tabpanel" aria-labelledby="images-tab">
+                        <div class="tab-pane fade" id="images" role="tabpanel" aria-labelledby="images-tab">
                             
                             <div class="mb-4">
                                 <label for="home_banner_image" class="form-label fw-bold">Banner da Página Inicial</label>

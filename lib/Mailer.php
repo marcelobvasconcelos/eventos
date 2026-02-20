@@ -33,6 +33,15 @@ class Mailer {
     }
 
     public function send($to, $subject, $body) {
+        // Check global email setting
+        require_once __DIR__ . '/../models/Config.php';
+        $configModel = new Config();
+        $emailEnabled = $configModel->get('email_notifications_enabled', '1');
+
+        if ($emailEnabled === '0') {
+            return true; // Simulate success
+        }
+
         try {
             $this->mail->addAddress($to);
             $this->mail->isHTML(true);

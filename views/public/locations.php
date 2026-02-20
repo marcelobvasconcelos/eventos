@@ -58,7 +58,7 @@ ob_start();
                             </span>
                         </div>
                         
-                        <p class="card-text text-muted">
+                        <p class="card-text text-muted" style="text-align: justify;">
                             <?php echo nl2br(htmlspecialchars($location['description'])); ?>
                         </p>
                     </div>

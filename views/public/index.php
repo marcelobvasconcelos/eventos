@@ -38,7 +38,7 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
                 <i class="fas fa-bolt fa-lg" style="color: #001f3f;"></i>
             </div>
             <div>
-                <h3 class="fw-bold mb-0" style="color: #001f3f;">Acontece agora</h3>
+                <h3 class="fw-bold mb-0" style="color: #001f3f;">Acontece Agora</h3>
                 <small style="color: #001f3f;">Eventos em andamento neste exato momento</small>
             </div>
         </div>
@@ -286,13 +286,13 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
         flex-wrap: nowrap !important; 
         overflow-x: auto; 
         scroll-snap-type: x mandatory; 
-        padding-bottom: 1rem; 
+        padding-bottom: 2rem !important; /* Manted shadows and buttons visible */
         -webkit-overflow-scrolling: touch; 
         scrollbar-width: none; 
-        margin-right: -0.5rem; 
-        margin-left: -0.5rem; 
-        padding-left: 0.5rem; 
-        padding-right: 0.5rem; 
+        margin-right: -1rem; 
+        margin-left: -1rem; 
+        padding-left: 1rem; 
+        padding-right: 1rem; 
     }
     #eventsContainer::-webkit-scrollbar { display: none; }
     .event-item { 
@@ -300,12 +300,12 @@ $cardDefaultImage = getImagePath($globalConfigs['event_card_default_image'] ?? '
         width: 85% !important; 
         max-width: 85% !important; 
         scroll-snap-align: center; 
-        margin-right: 15px; 
+        margin-right: 1rem; 
         margin-bottom: 0 !important; 
         padding-left: 0;
         padding-right: 0;
     }
-    .event-item:last-child { margin-right: 20px; }
+    .event-item:last-child { margin-right: 2rem; }
     .event-card { height: 100%; width: 100%; border-radius: 20px !important; box-shadow: 0 4px 15px rgba(0,0,0,0.1) !important; }
     .card-img-wrapper { height: 200px !important; background-color: #f8f9fa; /* Light gray background for contain mode */ }
     .event-card-img { object-fit: contain !important; /* Ensure full image is visible */ }

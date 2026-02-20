@@ -62,6 +62,19 @@ ob_start();
             <div class="col-12 col-sm-6 col-lg-4 mb-4 extra-card collapse d-md-block">
                 <div class="card dashboard-card h-100 shadow-sm border-0">
                     <div class="card-body text-center d-flex flex-column align-items-center">
+                        <i class="fas fa-ban fa-3x mb-3 text-secondary"></i>
+                        <h5 class="card-title fw-bold">Bloquear Locais</h5>
+                        <p class="card-text text-muted">Reservar locais administrativamente.</p>
+                        <a href="/eventos/admin/block" class="btn btn-outline-secondary rounded-pill px-5 mt-auto">Acessar</a>
+                         <div class="mt-3 invisible">
+                            <span class="badge px-3 py-2 border">Placeholder</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-lg-4 mb-4 extra-card collapse d-md-block">
+                <div class="card dashboard-card h-100 shadow-sm border-0">
+                    <div class="card-body text-center d-flex flex-column align-items-center">
                         <i class="fas fa-tags fa-3x mb-3 text-secondary"></i>
                         <h5 class="card-title fw-bold">Gerenciar Categorias</h5>
                         <p class="card-text text-muted">Categorias de eventos.</p>

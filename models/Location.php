@@ -83,6 +83,7 @@ class Location {
                     SELECT 1 FROM events e 
                     WHERE e.location_id = l.id 
                     AND e.status IN ('Aprovado', 'Pendente')
+                    AND e.type != 'informativo_calendario'
                     AND (? < COALESCE(e.end_date, DATE_ADD(e.date, INTERVAL 1 HOUR))) 
                     AND (? > e.date)";
         
@@ -128,12 +129,10 @@ class Location {
         $sql = "SELECT COUNT(*) FROM events 
                 WHERE location_id = ? 
                 AND status IN ('Aprovado', 'Pendente') 
+                AND type != 'informativo_calendario'
                 AND (? < COALESCE(end_date, DATE_ADD(date, INTERVAL 1 HOUR))) 
                 AND (? > date)";
         
-        // Correct overlap logic: (NewStart < ExistingEnd) AND (NewEnd > ExistingStart)
-        // 1st param (?): compared to ExistingEnd. Should be NewStart.
-        // 2nd param (?): compared to ExistingStart. Should be NewEnd.
         $params = [$locationId, $startDateTime, $endDateTime];
 
         if ($excludeEventId) {
@@ -144,6 +143,28 @@ class Location {
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchColumn() == 0;
+    }
+
+    public function getBlockingEvent($locationId, $startDateTime, $endDateTime, $excludeEventId = null) {
+        $sql = "SELECT * FROM events 
+                WHERE location_id = ? 
+                AND status IN ('Aprovado', 'Pendente') 
+                AND type != 'informativo_calendario'
+                AND (? < COALESCE(end_date, DATE_ADD(date, INTERVAL 1 HOUR))) 
+                AND (? > date)";
+        
+        $params = [$locationId, $startDateTime, $endDateTime];
+
+        if ($excludeEventId) {
+            $sql .= " AND id != ?";
+            $params[] = $excludeEventId;
+        }
+        
+        $sql .= " LIMIT 1";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     public function getLocationCount() {
