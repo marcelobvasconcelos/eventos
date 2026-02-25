@@ -48,9 +48,7 @@ ob_start();
                         </tr>
                     <?php else: ?>
                         <?php foreach($highlights as $h): 
-                            $startDate = date('d/m/Y', strtotime($h['date']));
-                            $endDate = date('d/m/Y', strtotime($h['end_date'] ?? $h['date']));
-                            $period = ($startDate === $endDate) ? $startDate : "$startDate até $endDate";
+                            $period = date('d/m/Y', strtotime($h['date']));
                             $color = htmlspecialchars($h['custom_location'] ?? '#ffc107');
                         ?>
                             <tr>

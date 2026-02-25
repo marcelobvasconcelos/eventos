@@ -84,10 +84,11 @@ class Location {
                     WHERE e.location_id = l.id 
                     AND e.status IN ('Aprovado', 'Pendente')
                     AND e.type != 'informativo_calendario'
-                    AND (? < COALESCE(e.end_date, DATE_ADD(e.date, INTERVAL 1 HOUR))) 
-                    AND (? > e.date)";
+                    AND e.date = DATE(?)
+                    AND (? < DATE_FORMAT(CONCAT(e.date, ' ', e.end_time), '%Y-%m-%d %H:%i:%s')) 
+                    AND (? > DATE_FORMAT(CONCAT(e.date, ' ', e.start_time), '%Y-%m-%d %H:%i:%s'))";
         
-        $params = [$startDateTime, $endDateTime];
+        $params = [date('Y-m-d', strtotime($startDateTime)), $startDateTime, $endDateTime];
         
         if ($excludeEventId) {
             $sql .= " AND e.id != ?";
@@ -130,10 +131,11 @@ class Location {
                 WHERE location_id = ? 
                 AND status IN ('Aprovado', 'Pendente') 
                 AND type != 'informativo_calendario'
-                AND (? < COALESCE(end_date, DATE_ADD(date, INTERVAL 1 HOUR))) 
-                AND (? > date)";
+                AND date = DATE(?)
+                AND (? < DATE_FORMAT(CONCAT(date, ' ', end_time), '%Y-%m-%d %H:%i:%s')) 
+                AND (? > DATE_FORMAT(CONCAT(date, ' ', start_time), '%Y-%m-%d %H:%i:%s'))";
         
-        $params = [$locationId, $startDateTime, $endDateTime];
+        $params = [$locationId, $startDateTime, $startDateTime, $endDateTime];
 
         if ($excludeEventId) {
             $sql .= " AND id != ?";
@@ -150,10 +152,11 @@ class Location {
                 WHERE location_id = ? 
                 AND status IN ('Aprovado', 'Pendente') 
                 AND type != 'informativo_calendario'
-                AND (? < COALESCE(end_date, DATE_ADD(date, INTERVAL 1 HOUR))) 
-                AND (? > date)";
+                AND date = DATE(?)
+                AND (? < DATE_FORMAT(CONCAT(date, ' ', end_time), '%Y-%m-%d %H:%i:%s')) 
+                AND (? > DATE_FORMAT(CONCAT(date, ' ', start_time), '%Y-%m-%d %H:%i:%s'))";
         
-        $params = [$locationId, $startDateTime, $endDateTime];
+        $params = [$locationId, $startDateTime, $startDateTime, $endDateTime];
 
         if ($excludeEventId) {
             $sql .= " AND id != ?";

@@ -65,23 +65,17 @@ ob_start();
                         </select>
                     </div>
 
-                    <div class="col-md-6">
-                        <label for="date" class="form-label fw-semibold text-secondary">Data Início</label>
+                    <div class="col-md-4">
+                        <label for="date" class="form-label fw-semibold text-secondary">Data do Evento</label>
                         <input type="date" name="date" id="date" class="form-control" value="<?php echo htmlspecialchars($_POST['date'] ?? ''); ?>" required>
                     </div>
 
-                    <div class="col-md-6">
-                        <label for="end_date" class="form-label fw-semibold text-secondary">Data Término</label>
-                        <input type="date" name="end_date" id="end_date_input" class="form-control" value="<?php echo htmlspecialchars($_POST['end_date'] ?? ''); ?>">
-                        <div class="form-text small">Deixe em branco para eventos de um dia.</div>
+                    <div class="col-md-4">
+                        <label for="start_time" class="form-label fw-semibold text-secondary">Hora Início</label>
+                        <input type="time" name="start_time" id="start_time" class="form-control" value="<?php echo htmlspecialchars($_POST['start_time'] ?? $_POST['time'] ?? ''); ?>" required>
                     </div>
-
-                    <div class="col-md-6">
-                        <label for="time" class="form-label fw-semibold text-secondary">Hora Início</label>
-                        <input type="time" name="time" id="time" class="form-control" value="<?php echo htmlspecialchars($_POST['time'] ?? ''); ?>" required>
-                    </div>
-
-                    <div class="col-md-6">
+ 
+                    <div class="col-md-4">
                         <label for="end_time" class="form-label fw-semibold text-secondary">Hora Término</label>
                         <input type="time" name="end_time" id="end_time" class="form-control" value="<?php echo htmlspecialchars($_POST['end_time'] ?? ''); ?>" required>
                     </div>
@@ -376,20 +370,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Validations (Start vs End Date)
     const form = document.querySelector('form');
     const startInput = document.getElementById('date');
-    const endInput = document.getElementById('end_date_input');
-    const startTimeInput = document.getElementById('time');
+    const startTimeInput = document.getElementById('start_time');
     const endTimeInput = document.getElementById('end_time');
 
     form.addEventListener('submit', function(e) {
         const start = new Date(startInput.value + 'T' + startTimeInput.value);
-        
-        // Handle optional end date by assuming start date if empty
-        let endDateValue = endInput.value || startInput.value;
-        const end = new Date(endDateValue + 'T' + endTimeInput.value);
-
+        const end = new Date(startInput.value + 'T' + endTimeInput.value);
+ 
         if (end <= start) {
             e.preventDefault();
-            alert('A data e hora de término devem ser posteriores ao início.');
+            alert('A hora de término deve ser posterior ao início.');
         }
     });
 

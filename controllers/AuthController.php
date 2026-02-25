@@ -3,6 +3,8 @@
 require_once __DIR__ . '/../models/User.php';
 require_once __DIR__ . '/../lib/Security.php';
 require_once __DIR__ . '/../lib/Mailer.php';
+require_once __DIR__ . '/../lib/Notification.php';
+require_once __DIR__ . '/../config/database.php';
 
 class AuthController {
 
@@ -79,7 +81,12 @@ class AuthController {
                 if ($userId) {
                     $token = $userModel->createToken($userId, 'activation');
                     
-                    // Send Email
+                    // Send Alert to Admins
+                    global $pdo;
+                    $notification = new Notification($pdo);
+                    $notification->sendAdminRegistrationAlert($userId);
+
+                    // Send Email to User
                     $mailer = new Mailer();
                     $link = "http://" . $_SERVER['HTTP_HOST'] . "/eventos/auth/reset_password?token=$token&type=activation";
                     $body = "Olá $name,<br><br>Bem-vindo ao sistema de eventos. Por favor, clique no link abaixo para definir sua senha e ativar sua conta:<br><br><a href='$link'>$link</a><br><br>Este link expira em 1 hora.";

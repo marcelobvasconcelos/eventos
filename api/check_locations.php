@@ -16,7 +16,7 @@ $endDate = $_GET['end_date'] ?? null;
 
 if (!$startDate || !$endDate) {
     http_response_code(400);
-    echo json_encode(['error' => 'Missing start_date or end_date parameters']);
+    echo json_encode(['error' => 'Parâmetros start_date ou end_date ausentes']);
     exit;
 }
 

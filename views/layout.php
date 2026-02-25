@@ -16,6 +16,7 @@
     // Navigation Logic & Data Fetching (Available for both Mobile and Desktop)
     require_once __DIR__ . '/../models/Config.php';
     require_once __DIR__ . '/../models/Event.php';
+    require_once __DIR__ . '/../models/User.php';
     require_once __DIR__ . '/../models/PendingItem.php';
 
     $configModel = new Config();
@@ -29,21 +30,24 @@
 
     // Badges Counts
     $pendingEventsCount = 0;
+    $pendingUsersCount = 0;
     $adminPendingCount = 0;
     $userPendingCount = 0;
 
     if (isset($_SESSION['user_id'])) {
+        $tempUserModel = new User();
+        $tempEventModel = new Event();
+        $tempPendingModel = new PendingItem();
+
         if ($_SESSION['user_role'] == 'admin') {
-            $tempEventModel = new Event();
             $pendingEventsCount = $tempEventModel->getPendingEventsCount();
-            
-            $tempPendingModel = new PendingItem();
+            $pendingUsersCount = $tempUserModel->getPendingUsersCount();
             $adminPendingCount = $tempPendingModel->getAllPendingCount();
         }
         
-        $tempPendingModel = new PendingItem(); // Re-instantiate or reuse
         $userPendingCount = $tempPendingModel->getPendingCountByUser($_SESSION['user_id']);
     }
+    $totalAdminNotifications = $pendingEventsCount + $pendingUsersCount;
     ?>
 
     <!-- Mobile Hamburger Button -->
@@ -119,11 +123,11 @@
                     <?php if ($_SESSION['user_role'] == 'admin' || $_SESSION['user_role'] == 'gestor'): ?>
                         <div class="menu-divider text-white-50 small text-uppercase fw-bold mt-3 mb-2">Administração</div>
                         
-                        <a href="/eventos/admin/dashboard" class="mobile-menu-link" onclick="toggleMobileMenu()">
+                        <a href="/eventos/admin/dashboard" class="mobile-menu-link <?php echo (strpos($uri, '/eventos/admin/dashboard') === 0) ? 'active' : ''; ?>" onclick="toggleMobileMenu()">
                             <div class="icon-box"><i class="fas fa-tachometer-alt"></i></div>
-                            <span class="flex-grow-1">Painel Admin</span>
-                            <?php if ($pendingEventsCount > 0): ?>
-                                <span class="badge bg-danger rounded-pill"><?php echo $pendingEventsCount; ?></span>
+                            <span class="flex-grow-1">Dashboard</span>
+                            <?php if ($totalAdminNotifications > 0): ?>
+                                <span class="badge bg-danger rounded-pill"><?php echo $totalAdminNotifications; ?></span>
                             <?php endif; ?>
                         </a>
                         
@@ -185,26 +189,13 @@
                         <li class="nav-item"><a class="nav-link <?php echo isActive($uri, '/eventos/request/my_requests'); ?>" href="/eventos/request/my_requests"><i class="fas fa-list-ul"></i>Minhas Requisições</a></li>
                         <!-- Equipamentos and Locais removed from navbar as per request -->
                         <?php if ($_SESSION['user_role'] == 'admin' || $_SESSION['user_role'] == 'gestor'): ?>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle <?php echo (strpos($uri, '/eventos/admin') === 0) ? 'active' : ''; ?>" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <li class="nav-item">
+                                <a class="nav-link <?php echo (strpos($uri, '/eventos/admin/dashboard') === 0) ? 'active' : ''; ?>" href="/eventos/admin/dashboard">
                                     <i class="fas fa-tachometer-alt"></i> Dashboard
+                                    <?php if ($totalAdminNotifications > 0): ?>
+                                        <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7em;"><?php echo $totalAdminNotifications; ?></span>
+                                    <?php endif; ?>
                                 </a>
-                                <ul class="dropdown-menu" aria-labelledby="adminDropdown">
-                                    <li>
-                                        <a class="dropdown-item" href="/eventos/admin/dashboard">
-                                            <i class="fas fa-home me-2"></i>Visão Geral
-                                            <?php if ($pendingEventsCount > 0): ?>
-                                                <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.7em;"><?php echo $pendingEventsCount; ?></span>
-                                            <?php endif; ?>
-                                        </a>
-                                    </li>
-                                    <li><a class="dropdown-item" href="/eventos/admin/analytics"><i class="fas fa-chart-pie me-2"></i>Analytics</a></li>
-                                    <li><a class="dropdown-item" href="/eventos/admin/reports"><i class="fas fa-chart-line me-2"></i>Relatórios</a></li>
-                                    <li><a class="dropdown-item" href="/eventos/admin/block"><i class="fas fa-ban me-2"></i>Bloquear Locais</a></li>
-                                    <li><a class="dropdown-item" href="/eventos/admin/highlights"><i class="fas fa-bullhorn me-2"></i>Destaques (Calendário)</a></li>
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="/eventos/admin/events"><i class="fas fa-calendar-check me-2"></i>Eventos</a></li>
-                                </ul>
                             </li>
                             <!-- Settings Link removed from navbar, moved to Admin Dashboard -->
                             

@@ -19,14 +19,14 @@ $loanModel = new Loan();
 echo "Checking for overdue returns...\n";
 
 $stmt = $pdo->prepare("
-    SELECT l.id, l.user_id, l.event_id, e.name as event_name, e.end_date, ai.identification as item_name, a.name as asset_name
+    SELECT l.id, l.user_id, l.event_id, e.name as event_name, e.date, e.start_time, e.end_time, ai.identification as item_name, a.name as asset_name
     FROM loans l
     JOIN events e ON l.event_id = e.id
     JOIN asset_items ai ON l.item_id = ai.id
     JOIN assets a ON ai.asset_id = a.id
     WHERE l.status = 'Emprestado' 
-    AND e.end_date < NOW()
-    AND e.end_date > DATE_SUB(NOW(), INTERVAL 24 HOUR) -- Only recent events to avoid spamming old ones repeatedly, or add a flag
+    AND CONCAT(e.date, ' ', e.end_time) < NOW()
+    AND CONCAT(e.date, ' ', e.end_time) > DATE_SUB(NOW(), INTERVAL 24 HOUR)
 ");
 
 // Ideally we need a 'notification_sent' flag in loans or separate table, 

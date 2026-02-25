@@ -53,27 +53,18 @@ ob_start();
                     </div>
 
                     <div class="col-md-6">
-                        <label for="date" class="form-label fw-semibold text-secondary">Data Início</label>
+                        <label for="date" class="form-label fw-semibold text-secondary">Data do Evento</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-calendar"></i></span>
                             <input type="date" name="date" id="date" class="form-control border-start-0 ps-0 bg-light" value="<?php echo htmlspecialchars($_POST['date'] ?? ''); ?>" required>
                         </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <label for="end_date" class="form-label fw-semibold text-secondary">Data Término <span class="small fw-normal">(se evento durar mais de um dia)</span></label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-calendar-check"></i></span>
-                            <input type="date" name="end_date" id="end_date_input" class="form-control border-start-0 ps-0 bg-light" value="<?php echo htmlspecialchars($_POST['end_date'] ?? ''); ?>" placeholder="Se vazio, igual a data início">
-                        </div>
-                        <div class="form-text">Deixe em branco p/ evento de 1 dia.</div>
-                    </div>
-
                     <div class="col-md-3">
-                        <label for="time" class="form-label fw-semibold text-secondary">Hora Início</label>
+                        <label for="start_time" class="form-label fw-semibold text-secondary">Hora Início</label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-clock"></i></span>
-                            <input type="time" name="time" id="time" class="form-control border-start-0 ps-0 bg-light" value="<?php echo htmlspecialchars($_POST['time'] ?? ''); ?>" required>
+                            <input type="time" name="start_time" id="start_time" class="form-control border-start-0 ps-0 bg-light" value="<?php echo htmlspecialchars($_POST['start_time'] ?? ''); ?>" required>
                         </div>
                     </div>
                     
@@ -86,62 +77,6 @@ ob_start();
                     </div>
 
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const dateInput = document.getElementById('date');
-    const endDateInput = document.getElementById('end_date_input');
-    const timeInput = document.getElementById('time');
-    const endTimeInput = document.getElementById('end_time');
-    const locationSelect = document.getElementById('location');
-
-    function checkAvailability() {
-        const date = dateInput.value;
-        const endDateRaw = endDateInput.value;
-        const time = timeInput.value;
-        const endTime = endTimeInput.value;
-
-        if (!date || !time) return;
-
-        const effectiveEndDate = endDateRaw || date;
-        const effectiveEndTime = endTime || '23:59';
-        
-        const startDateTime = `${date} ${time}`;
-        const endDateTime = `${effectiveEndDate} ${effectiveEndTime}`;
-
-        fetch(`/eventos/api/check_locations.php?start_date=${encodeURIComponent(startDateTime)}&end_date=${encodeURIComponent(endDateTime)}`)
-            .then(response => response.json())
-            .then(data => {
-                const occupancyMap = new Map(data.map(loc => [loc.id, loc.is_occupied]));
-
-                Array.from(locationSelect.options).forEach(option => {
-                    if (option.value === "") return;
-
-                    const isOccupied = occupancyMap.get(parseInt(option.value));
-                    const originalText = option.text.replace(/ \(Ocupado neste horário\)$/, '');
-
-                    if (isOccupied) {
-                        option.disabled = true;
-                        option.text = originalText + ' (Ocupado neste horário)';
-                    } else {
-                        option.disabled = false;
-                        option.text = originalText;
-                    }
-                });
-            })
-            .catch(error => console.error('Error checking availability:', error));
-    }
-
-    dateInput.addEventListener('change', checkAvailability);
-    endDateInput.addEventListener('change', checkAvailability);
-    timeInput.addEventListener('change', checkAvailability);
-    endTimeInput.addEventListener('change', checkAvailability);
-    
-    // Initial check
-    if (dateInput.value && timeInput.value) {
-        checkAvailability();
-    }
-});
-</script>
 
                     <div class="col-md-6">
                         <label for="location" class="form-label fw-semibold text-secondary">
@@ -460,19 +395,19 @@ document.addEventListener('DOMContentLoaded', function() {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const dateInput = document.getElementById('date');
-    const timeInput = document.getElementById('time');
+    const startTimeInput = document.getElementById('start_time');
     const endTimeInput = document.getElementById('end_time');
     const locationSelect = document.getElementById('location');
 
     function checkAvailability() {
         const date = dateInput.value;
-        const time = timeInput.value;
+        const startTime = startTimeInput.value;
         const endTime = endTimeInput.value;
 
-        if (!date || !time) return;
+        if (!date || !startTime) return;
 
         const effectiveEndTime = endTime || '23:59';
-        const startDateTime = `${date} ${time}`;
+        const startDateTime = `${date} ${startTime}`;
         const endDateTime = `${date} ${effectiveEndTime}`;
 
         fetch(`/eventos/api/check_locations.php?start_date=${encodeURIComponent(startDateTime)}&end_date=${encodeURIComponent(endDateTime)}`)
@@ -484,7 +419,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (option.value === "") return;
 
                     const isOccupied = occupancyMap.get(parseInt(option.value));
-                    // Regex to robustly remove existing occupied text if present
                     const originalText = option.text.replace(/ \(Ocupado neste horário\)$/, '');
 
                     if (isOccupied) {
@@ -500,11 +434,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     dateInput.addEventListener('change', checkAvailability);
-    timeInput.addEventListener('change', checkAvailability);
+    startTimeInput.addEventListener('change', checkAvailability);
     endTimeInput.addEventListener('change', checkAvailability);
     
     // Initial check
-    if (dateInput.value && timeInput.value) {
+    if (dateInput.value && startTimeInput.value) {
         checkAvailability();
     }
 });

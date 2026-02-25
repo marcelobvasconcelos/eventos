@@ -93,11 +93,11 @@ echo "Assets inserted.\n";
 
 // Insert sample asset items
 $assetItems = [
-    ['asset_id' => 1, 'identification' => 'PROJ-001', 'status' => 'Disponível'],
-    ['asset_id' => 1, 'identification' => 'PROJ-002', 'status' => 'Disponível'],
-    ['asset_id' => 2, 'identification' => 'MIC-001', 'status' => 'Disponível'],
-    ['asset_id' => 2, 'identification' => 'MIC-002', 'status' => 'Disponível'],
-    ['asset_id' => 3, 'identification' => 'CHAIR-001', 'status' => 'Disponível'],
+    ['asset_id' => 1, 'identification' => 'PROJ-001', 'status' => 'Disponivel'],
+    ['asset_id' => 1, 'identification' => 'PROJ-002', 'status' => 'Disponivel'],
+    ['asset_id' => 2, 'identification' => 'MIC-001', 'status' => 'Disponivel'],
+    ['asset_id' => 2, 'identification' => 'MIC-002', 'status' => 'Disponivel'],
+    ['asset_id' => 3, 'identification' => 'CHAIR-001', 'status' => 'Disponivel'],
 ];
 
 foreach ($assetItems as $item) {

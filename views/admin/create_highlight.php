@@ -32,14 +32,9 @@ ob_start();
             </div>
 
             <div class="row g-4 mb-4">
-                <div class="col-md-6">
-                    <label for="date_start" class="form-label fw-semibold">Data Inicial <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" id="date_start" name="date_start" required>
-                </div>
-                <div class="col-md-6">
-                    <label for="date_end" class="form-label fw-semibold">Data Final</label>
-                    <input type="date" class="form-control" id="date_end" name="date_end">
-                    <div class="form-text">Deixe em branco para um único dia.</div>
+                <div class="col-md-12">
+                    <label for="date" class="form-label fw-semibold">Data do Destaque <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="date" name="date" required>
                 </div>
             </div>
 

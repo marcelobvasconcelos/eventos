@@ -30,12 +30,7 @@ class Event {
     }
 
     public function getApprovedEventsByDate($date) {
-        $startDate = $date . ' 00:00:00';
-        $endDate = $date . ' 23:59:59';
-        // Left join to get location and creator, important for display
-        // Logic change: Include events that overlap this day, not just start on it.
-        // Overlap Condition: (Start <= DayEnd) AND (End >= DayStart)
-        // Handling NULL end_date: Treat as same as start date (point event or short duration)
+        // Logic change: Single day events with start/end time
         $stmt = $this->pdo->prepare("
             SELECT e.*, COALESCE(l.name, e.custom_location) as location_name, c.name as category_name, u.name as creator_name 
             FROM events e 
@@ -45,11 +40,10 @@ class Event {
             WHERE e.status IN ('Aprovado', 'Cancelado') 
             AND e.type != 'bloqueio_administrativo'
             AND e.type != 'informativo_calendario'
-            AND e.date <= ? 
-            AND COALESCE(e.end_date, e.date) >= ?
-            ORDER BY e.date ASC
+            AND DATE(e.date) = ?
+            ORDER BY e.start_time ASC
         ");
-        $stmt->execute([$endDate, $startDate]);
+        $stmt->execute([$date]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -62,12 +56,10 @@ class Event {
             WHERE e.status = 'Aprovado' 
             AND e.type != 'bloqueio_administrativo'
             AND e.type != 'informativo_calendario'
-            AND (
-                (e.date <= NOW() AND e.end_date >= NOW())
-                OR 
-                (e.end_date IS NULL AND e.date <= NOW() AND e.date >= DATE_SUB(NOW(), INTERVAL 4 HOUR))
-            )
-            ORDER BY e.date ASC
+            AND DATE(e.date) = CURDATE()
+            AND e.start_time <= CURTIME() 
+            AND e.end_time >= CURTIME()
+            ORDER BY e.start_time ASC
         ");
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -123,9 +115,9 @@ class Event {
         }
     }
 
-    public function updateEvent($id, $name, $description, $date, $endDate, $locationId, $categoryId, $status, $isPublic, $imagePath = null, $externalLink = null, $linkTitle = null, $publicEstimation = 0, $scheduleFilePath = null, $customLocation = null, $requiresRegistration = 0, $maxParticipants = null, $hasCertificate = 0) {
-        $sql = "UPDATE events SET name = ?, description = ?, date = ?, end_date = ?, location_id = ?, category_id = ?, status = ?, is_public = ?, external_link = ?, link_title = ?, public_estimation = ?, custom_location = ?, requires_registration = ?, max_participants = ?, has_certificate = ?";
-        $params = [$name, $description, $date, $endDate ?: null, $locationId ?: null, $categoryId ?: null, $status, $isPublic, $externalLink, $linkTitle, $publicEstimation, $customLocation, $requiresRegistration, $maxParticipants, $hasCertificate];
+    public function updateEvent($id, $name, $description, $date, $startTime, $endTime, $locationId, $categoryId, $status, $isPublic, $imagePath = null, $externalLink = null, $linkTitle = null, $publicEstimation = 0, $scheduleFilePath = null, $customLocation = null, $requiresRegistration = 0, $maxParticipants = null, $hasCertificate = 0) {
+        $sql = "UPDATE events SET name = ?, description = ?, date = ?, start_time = ?, end_time = ?, location_id = ?, category_id = ?, status = ?, is_public = ?, external_link = ?, link_title = ?, public_estimation = ?, custom_location = ?, requires_registration = ?, max_participants = ?, has_certificate = ?";
+        $params = [$name, $description, $date, $startTime, $endTime, $locationId ?: null, $categoryId ?: null, $status, $isPublic, $externalLink, $linkTitle, $publicEstimation, $customLocation, $requiresRegistration, $maxParticipants, $hasCertificate];
         
         if ($imagePath !== null) { 
             $sql .= ", image_path = ?";
@@ -176,14 +168,15 @@ class Event {
         }
     }
 
-    public function createEvent($name, $description, $date, $end_date, $location_id, $category_id, $created_by, $status = 'Pendente', $type = 'evento_publico', $is_public = 1, $image_path = null, $external_link = null, $link_title = null, $public_estimation = 0, $schedule_file_path = null, $custom_location = null, $requires_registration = 0, $max_participants = null, $has_certificate = 0) {
-        $sql = "INSERT INTO events (name, description, date, end_date, location_id, category_id, created_by, status, type, is_public, image_path, external_link, link_title, public_estimation, schedule_file_path, custom_location, requires_registration, max_participants, has_certificate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    public function createEvent($name, $description, $date, $startTime, $endTime, $location_id, $category_id, $created_by, $status = 'Pendente', $type = 'evento_publico', $is_public = 1, $image_path = null, $external_link = null, $link_title = null, $public_estimation = 0, $schedule_file_path = null, $custom_location = null, $requires_registration = 0, $max_participants = null, $has_certificate = 0) {
+        $sql = "INSERT INTO events (name, description, date, start_time, end_time, location_id, category_id, created_by, status, type, is_public, image_path, external_link, link_title, public_estimation, schedule_file_path, custom_location, requires_registration, max_participants, has_certificate) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
             $name, 
             $description, 
             $date, 
-            $end_date,
+            $startTime,
+            $endTime,
             $location_id, 
             $category_id, 
             $created_by,
@@ -270,14 +263,14 @@ class Event {
     }
     public function getRealizedHours() {
         $stmt = $this->pdo->prepare("
-            SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, date, COALESCE(end_date, DATE_ADD(date, INTERVAL 4 HOUR)))), 0) 
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, start_time, end_time) / 60.0), 0) 
             FROM events 
             WHERE status = 'Aprovado' AND type != 'bloqueio_administrativo' AND type != 'informativo_calendario'
-            AND date < NOW() 
+            AND date < CURDATE() 
             AND YEAR(date) = YEAR(CURDATE())
         ");
         $stmt->execute();
-        return $stmt->fetchColumn();
+        return round($stmt->fetchColumn(), 1);
     }
 
     public function getAnalyticsData($year) {
@@ -301,38 +294,38 @@ class Event {
         $stmt->execute([$year]);
         $stats['location_stats'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        // 2. Hours Stats (Approximation: 4h default if end_date missing)
+        // 2. Hours Stats
         // Today
         $stmt = $this->pdo->prepare("
-            SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, date, COALESCE(end_date, DATE_ADD(date, INTERVAL 4 HOUR)))), 0) 
-            FROM events WHERE status = 'Aprovado' AND type != 'bloqueio_administrativo' AND type != 'informativo_calendario' AND DATE(date) = CURDATE()
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, start_time, end_time) / 60.0), 0) 
+            FROM events WHERE status = 'Aprovado' AND type != 'bloqueio_administrativo' AND type != 'informativo_calendario' AND date = CURDATE()
         ");
         $stmt->execute();
-        $stats['hours_stats']['today'] = $stmt->fetchColumn();
+        $stats['hours_stats']['today'] = round($stmt->fetchColumn(), 1);
 
         // This Week
         $stmt = $this->pdo->prepare("
-            SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, date, COALESCE(end_date, DATE_ADD(date, INTERVAL 4 HOUR)))), 0) 
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, start_time, end_time) / 60.0), 0) 
             FROM events WHERE status = 'Aprovado' AND type != 'bloqueio_administrativo' AND type != 'informativo_calendario' AND YEAR(date) = YEAR(CURDATE()) AND WEEK(date) = WEEK(CURDATE())
         ");
         $stmt->execute();
-        $stats['hours_stats']['week'] = $stmt->fetchColumn();
+        $stats['hours_stats']['week'] = round($stmt->fetchColumn(), 1);
 
         // This Month
         $stmt = $this->pdo->prepare("
-            SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, date, COALESCE(end_date, DATE_ADD(date, INTERVAL 4 HOUR)))), 0) 
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, start_time, end_time) / 60.0), 0) 
             FROM events WHERE status = 'Aprovado' AND type != 'bloqueio_administrativo' AND type != 'informativo_calendario' AND YEAR(date) = YEAR(CURDATE()) AND MONTH(date) = MONTH(CURDATE())
         ");
         $stmt->execute();
-        $stats['hours_stats']['month'] = $stmt->fetchColumn();
+        $stats['hours_stats']['month'] = round($stmt->fetchColumn(), 1);
 
         // Total Year
         $stmt = $this->pdo->prepare("
-            SELECT COALESCE(SUM(TIMESTAMPDIFF(HOUR, date, COALESCE(end_date, DATE_ADD(date, INTERVAL 4 HOUR)))), 0) 
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(MINUTE, start_time, end_time) / 60.0), 0) 
             FROM events WHERE status = 'Aprovado' AND type != 'bloqueio_administrativo' AND type != 'informativo_calendario' AND YEAR(date) = ?
         ");
         $stmt->execute([$year]);
-        $stats['hours_stats']['year'] = $stmt->fetchColumn();
+        $stats['hours_stats']['year'] = round($stmt->fetchColumn(), 1);
 
         // 3. Timeline & Status Stats
         // Group by Month

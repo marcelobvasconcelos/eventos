@@ -75,7 +75,7 @@ CREATE TABLE asset_items (
     id INT PRIMARY KEY AUTO_INCREMENT,
     asset_id INT NOT NULL,
     identification VARCHAR(255) NOT NULL,
-    status ENUM('Disponível', 'Emprestado') NOT NULL DEFAULT 'Disponível',
+    status ENUM('Disponivel', 'Emprestado') NOT NULL DEFAULT 'Disponivel',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (asset_id) REFERENCES assets(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;

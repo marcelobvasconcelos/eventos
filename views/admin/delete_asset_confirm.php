@@ -1,46 +1,94 @@
 <?php
 $title = 'Confirmar Exclusão de Equipamento';
-include __DIR__ . '/../layout.php'; // Wait, layout includes content variable? 
-// layout.php structure: expects $content. 
-// So I should ob_start(); ... ob_get_clean(); include layout.
-// AdminController just includes this file.
 ob_start();
 ?>
 <div class="row justify-content-center">
-    <div class="col-md-8">
-        <h1 class="text-white mb-4 text-center">Confirmar Exclusão</h1>
-        <div class="card border-warning mb-3">
-            <div class="card-header bg-warning text-dark fw-bold">
-                <i class="fas fa-exclamation-triangle me-2"></i> Atenção: Conflito de Agendamento
+    <div class="col-lg-8">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded-circle mb-3" style="width: 70px; height: 70px;">
+                <i class="fas fa-exclamation-triangle fa-2x"></i>
             </div>
-            <div class="card-body">
-                <h5 class="card-title">O equipamento "<?php echo htmlspecialchars($asset['name']); ?>" possui reservas futuras.</h5>
-                <p class="card-text">
-                    A exclusão deste item removerá automaticamente as reservas associadas aos seguintes eventos, o que pode deixá-los sem os equipamentos necessários:
-                </p>
-                
-                <div class="list-group mb-4">
-                    <?php foreach ($futureReservations as $res): ?>
-                        <div class="list-group-item list-group-item-action">
-                            <div class="d-flex w-100 justify-content-between">
-                                <h6 class="mb-1"><?php echo htmlspecialchars($res['name']); ?></h6>
-                                <small><?php echo date('d/m/Y', strtotime($res['date'])); ?></small>
+            <h1 class="fw-bold text-white shadow-sm">Confirmar Exclusão</h1>
+            <p class="text-white-50">Esta ação não pode ser desfeita</p>
+        </div>
+
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-danger text-white py-3">
+                <h5 class="card-title mb-0 fw-bold">
+                    <i class="fas fa-trash-alt me-2"></i> Você está prestes a excluir: <?php echo htmlspecialchars($asset['name']); ?>
+                </h5>
+            </div>
+            
+            <div class="card-body p-4 p-md-5">
+                <?php if (!empty($futureReservations)): ?>
+                    <div class="alert alert-warning border-0 shadow-sm rounded-3 mb-4">
+                        <div class="d-flex">
+                            <div class="me-3">
+                                <i class="fas fa-calendar-times fa-2x text-warning"></i>
                             </div>
-                            <small class="text-muted">ID do Evento: <?php echo $res['id']; ?></small>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1">Aviso de Conflito de Agendamento</h6>
+                                <p class="text-muted small mb-0">
+                                    Este equipamento possui <strong><?php echo count($futureReservations); ?></strong> reserva(s) futura(s). 
+                                    A exclusão removerá automaticamente as reservas dos eventos abaixo:
+                                </p>
+                            </div>
                         </div>
-                    <?php endforeach; ?>
-                </div>
-                
-                <p class="mb-0 fw-bold text-danger">Tem certeza que deseja prosseguir?</p>
+                    </div>
+                    
+                    <div class="list-group list-group-flush border rounded-3 overflow-hidden mb-4">
+                        <?php foreach ($futureReservations as $res): ?>
+                            <div class="list-group-item list-group-item-action py-3">
+                                <div class="d-flex w-100 justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded p-2 me-3">
+                                            <i class="fas fa-calendar-day text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-0 fw-bold text-dark"><?php echo htmlspecialchars($res['name']); ?></h6>
+                                            <small class="text-muted">ID: <?php echo $res['id']; ?></small>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill">
+                                        <?php echo date('d/m/Y', strtotime($res['date'])); ?>
+                                    </span>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    
+                    <p class="text-danger fw-bold text-center mb-0">
+                        <i class="fas fa-info-circle me-1"></i> 
+                        Confirmar a exclusão afetará todos os eventos listados acima.
+                    </p>
+                <?php else: ?>
+                    <div class="text-center py-4">
+                        <p class="lead text-dark mb-4">
+                            Tem certeza que deseja excluir o equipamento <strong>"<?php echo htmlspecialchars($asset['name']); ?>"</strong>?
+                        </p>
+                        <p class="text-muted small mb-0">
+                            Não existem reservas futuras associadas a este item no momento.
+                        </p>
+                    </div>
+                <?php endif; ?>
             </div>
-            <div class="card-footer bg-transparent border-warning">
-                <form action="/eventos/admin/deleteAsset" method="POST" class="d-flex justify-content-end gap-2">
+
+            <div class="card-footer bg-light py-4 px-4 p-md-5 border-0">
+                <form action="/eventos/admin/deleteAsset" method="POST" class="row g-3">
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     <input type="hidden" name="id" value="<?php echo htmlspecialchars($asset['id']); ?>">
                     <input type="hidden" name="confirm_delete" value="1">
                     
-                    <a href="/eventos/admin/assets" class="btn btn-secondary">Cancelar</a>
-                    <button type="submit" class="btn btn-danger">Sim, Excluir Equipamento e Reservas</button>
+                    <div class="col-md-6 order-2 order-md-1">
+                        <a href="/eventos/admin/assets" class="btn btn-outline-secondary w-100 py-3 rounded-pill fw-bold">
+                            <i class="fas fa-times me-2"></i>Cancelar
+                        </a>
+                    </div>
+                    <div class="col-md-6 order-1 order-md-2">
+                        <button type="submit" class="btn btn-danger w-100 py-3 rounded-pill fw-bold shadow-sm">
+                            <i class="fas fa-trash-alt me-2"></i>Sim, Excluir Equipamento
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -48,12 +96,5 @@ ob_start();
 </div>
 <?php
 $content = ob_get_clean();
-// include Layout.php logic requires $content to be set.
-// AdminController included this view directly. 
-// But AdminController usually sets content? No.
-// Let's check AdminController::assets(). It does logic then `include view`.
-// Does the view include layout?
-// My `assets.php` (Line 1) did `$title = ...; ob_start(); ... include layout.php`.
-// So YES, this file must include layout.
 include __DIR__ . '/../layout.php';
 ?>

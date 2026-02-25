@@ -19,11 +19,17 @@ class EventRequest {
 
     public function getRequestsByUserId($userId) {
         $stmt = $this->pdo->prepare("
-            SELECT er.*, e.name as event_name, e.date as event_date, e.status as event_status, e.status as status 
-            FROM event_requests er 
-            JOIN events e ON er.event_id = e.id 
-            WHERE er.user_id = ? 
-            ORDER BY er.request_date DESC
+            SELECT 
+                id as event_id, 
+                id,
+                name as event_name, 
+                date as event_date, 
+                status as event_status, 
+                status as status,
+                created_at as request_date
+            FROM events 
+            WHERE created_by = ? 
+            ORDER BY created_at DESC
         ");
         $stmt->execute([$userId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

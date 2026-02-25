@@ -46,6 +46,32 @@ class PublicController {
         include __DIR__ . '/../views/public/calendar.php';
     }
 
+    public function iframeCalendar() {
+        $eventModel = new Event();
+
+        $month = $_GET['month'] ?? date('m');
+        $year = $_GET['year'] ?? date('Y');
+
+        $month = (int)$month;
+        $year = (int)$year;
+
+        if ($month < 1 || $month > 12) {
+            $month = (int)date('m');
+            $year = (int)date('Y');
+        }
+
+        $startDate = sprintf('%04d-%02d-01', $year, $month);
+        $endDate = date('Y-m-t', strtotime($startDate));
+
+        $events = $eventModel->getEventsByDateRange($startDate, $endDate);
+
+        // Fetch location names for rendering
+        $locationModel = new Location();
+        $locations = $locationModel->getAllLocations();
+        
+        include __DIR__ . '/../views/public/iframe_calendar.php';
+    }
+
     public function day() {
         $date = $_GET['date'] ?? date('Y-m-d');
         
@@ -122,9 +148,8 @@ class PublicController {
             $name = trim($_POST['name'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $date = $_POST['date'] ?? '';
-            $time = $_POST['time'] ?? '';
+            $startTime = $_POST['start_time'] ?? $_POST['time'] ?? '';
             $endTime = $_POST['end_time'] ?? '';
-            $endDateInput = !empty($_POST['end_date']) ? $_POST['end_date'] : $date;
             $locationPost = $_POST['location'] ?? '';
             $customLocation = null;
             $locationId = null;
@@ -148,7 +173,7 @@ class PublicController {
                 $errors[] = 'Data válida é obrigatória.';
             }
 
-            if (empty($time) || !preg_match('/^\d{2}:\d{2}$/', $time)) {
+            if (empty($startTime) || !preg_match('/^\d{2}:\d{2}$/', $startTime)) {
                 $errors[] = 'Hora válida é obrigatória (HH:MM).';
             }
 
@@ -166,8 +191,8 @@ class PublicController {
                 $errors[] = 'Categoria é obrigatória.';
             }
 
-            $startDateTime = $date . ' ' . $time;
-            $endDateTime = $endTime ? ($endDateInput . ' ' . $endTime) : null;
+            $startDateTime = $date . ' ' . $startTime;
+            $endDateTime = $date . ' ' . $endTime;
 
             // Validate Start Time in the future
             if (strtotime($startDateTime) && strtotime($startDateTime) <= time()) {
@@ -277,19 +302,24 @@ class PublicController {
 
             $eventModel = new Event();
             try {
-                $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation, $requiresRegistration, $maxParticipants, $hasCertificate);
+                // Corrected argument order: $type ('evento_publico') comes before $isPublic
+                $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], 'Pendente', 'evento_publico', $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation, $requiresRegistration, $maxParticipants, $hasCertificate);
             } catch (Exception $e) {
-                // Handle database errors gracefully
-                $errorMessages = 'Erro ao criar evento: ' . $e->getMessage();
-                // ... (re-fetch data code would go here in a real scenario, but for now we let it fall through or it's handled by global error handler)
-                // Re-rendering view with error is best practice
+                // Handle database errors gracefully with a friendly message
+                $errorMessages = 'Não foi possível salvar o evento. Verifique se todos os campos obrigatórios foram preenchidos.';
+                
+                // Re-fetch necessary data for re-rendering the view
                 $locationModel = new Location();
                 $locations = $locationModel->getLocationsWithAvailability($startDateTime, $endDateTime ?: $startDateTime);
                 $categoryModel = new Category();
                 $categories = $categoryModel->getAllCategories();
                 $assetModel = new Asset();
                 $assets = $assetModel->getAllAssetsWithAvailability($startDateTime, $endDateTime ?: $startDateTime);
-                require_once __DIR__ . '/../models/Config.php'; $configModel = new Config(); $globalConfigs = $configModel->getAll();
+                require_once __DIR__ . '/../models/Config.php';
+                $configModel = new Config();
+                $globalConfigs = $configModel->getAll();
+                
+                $csrf_token = Security::generateCsrfToken();
                 include __DIR__ . '/../views/public/create.php';
                 return;
             }
@@ -322,7 +352,7 @@ class PublicController {
                 $datetime = strtotime($_GET['date']);
                 if ($datetime) {
                     $_POST['date'] = date('Y-m-d', $datetime);
-                    $_POST['time'] = date('H:i', $datetime);
+                    $_POST['start_time'] = date('H:i', $datetime);
                 }
             }
             $locationModel = new Location();
@@ -330,10 +360,9 @@ class PublicController {
             // Define range for initial check. If times not set, it returns available.
             // But if users pre-fills time via GET?
             $checkDate = $_POST['date'] ?? date('Y-m-d');
-            $checkEndDate = $_POST['end_date'] ?? $checkDate;
             
-            $startDateTime = $checkDate . ' ' . ($_POST['time'] ?? '00:00');
-            $endDateTime = $checkEndDate . ' ' . ($_POST['end_time'] ?? '23:59');
+            $startDateTime = $checkDate . ' ' . ($_POST['start_time'] ?? $_POST['time'] ?? '00:00');
+            $endDateTime = $checkDate . ' ' . ($_POST['end_time'] ?? '23:59');
             
             $locations = $locationModel->getLocationsWithAvailability($startDateTime, $endDateTime);
             

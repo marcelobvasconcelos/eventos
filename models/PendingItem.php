@@ -18,7 +18,7 @@ class PendingItem {
 
     public function getPendingByUser($userId) {
         $stmt = $this->pdo->prepare("
-            SELECT pi.*, e.name as event_name, e.date as event_date, e.end_date as event_end_date 
+            SELECT pi.*, e.name as event_name, e.date as event_date, e.start_time as event_start_time, e.end_time as event_end_time 
             FROM pending_items pi 
             JOIN events e ON pi.event_id = e.id 
             WHERE pi.user_id = ? AND pi.status != 'completed' 
@@ -30,7 +30,7 @@ class PendingItem {
 
     public function getAllItemsByUser($userId) {
         $stmt = $this->pdo->prepare("
-            SELECT pi.*, e.name as event_name, e.date as event_date, e.end_date as event_end_date 
+            SELECT pi.*, e.name as event_name, e.date as event_date, e.start_time as event_start_time, e.end_time as event_end_time 
             FROM pending_items pi 
             JOIN events e ON pi.event_id = e.id 
             WHERE pi.user_id = ?

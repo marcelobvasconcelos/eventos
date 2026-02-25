@@ -24,10 +24,10 @@ ob_start();
                     <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token); ?>">
                     
                     <div class="col-12">
-                        <label for="name" class="form-label fw-semibold text-secondary">Nome do Equipamento</label>
+                        <label for="name" class="form-label fw-semibold text-secondary">Nome do Equipamento <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-tag"></i></span>
-                            <input type="text" name="name" id="name" class="form-control border-start-0 ps-0 bg-light" placeholder="Ex: Projetor Epson" value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>" required>
+                            <input type="text" name="name" id="name" class="form-control border-start-0 ps-0 bg-light <?php echo (isset($error) && empty($_POST['name'])) ? 'is-invalid' : ''; ?>" placeholder="Ex: Projetor Epson" value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>" required>
                         </div>
                     </div>
 
@@ -37,10 +37,10 @@ ob_start();
                     </div>
 
                     <div class="col-md-6">
-                        <label for="category_id" class="form-label fw-semibold text-secondary">Categoria</label>
+                        <label for="category_id" class="form-label fw-semibold text-secondary">Categoria <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-tags"></i></span>
-                            <select name="category_id" id="category_id" class="form-select border-start-0 ps-0 bg-light" required>
+                            <select name="category_id" id="category_id" class="form-select border-start-0 ps-0 bg-light <?php echo (isset($error) && empty($_POST['category_id'])) ? 'is-invalid' : ''; ?>" required>
                                 <option value="">Selecione uma categoria...</option>
                                 <?php if (!empty($categories)): ?>
                                     <?php foreach ($categories as $category): ?>
@@ -51,13 +51,16 @@ ob_start();
                                 <?php endif; ?>
                             </select>
                         </div>
+                        <?php if (isset($error) && empty($_POST['category_id'])): ?>
+                            <div class="invalid-feedback d-block">Por favor, preencha este campo para continuar.</div>
+                        <?php endif; ?>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="quantity" class="form-label fw-semibold text-secondary">Quantidade Total</label>
+                        <label for="quantity" class="form-label fw-semibold text-secondary">Quantidade Total <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 text-muted"><i class="fas fa-sort-numeric-up"></i></span>
-                            <input type="number" name="quantity" id="quantity" class="form-control border-start-0 ps-0 bg-light" value="<?php echo htmlspecialchars($_POST['quantity'] ?? '1'); ?>" min="1" required>
+                            <input type="number" name="quantity" id="quantity" class="form-control border-start-0 ps-0 bg-light <?php echo (isset($error) && (int)($_POST['quantity'] ?? 0) < 1) ? 'is-invalid' : ''; ?>" value="<?php echo htmlspecialchars($_POST['quantity'] ?? '1'); ?>" min="1" required>
                         </div>
                         <div class="form-text">O sistema criará itens individuais automaticamente.</div>
                     </div>

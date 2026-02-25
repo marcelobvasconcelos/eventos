@@ -188,6 +188,18 @@ class User {
         return $stmt->fetchColumn();
     }
 
+    public function getPendingUsersCount() {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM users WHERE status = 'Pendente'");
+        $stmt->execute();
+        return $stmt->fetchColumn();
+    }
+
+    public function getPendingUsers() {
+        $stmt = $this->pdo->prepare("SELECT id, name, email, created_at FROM users WHERE status = 'Pendente' ORDER BY created_at DESC");
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
 }
 
 ?>

@@ -20,7 +20,7 @@ class Asset {
             $assetId = $this->pdo->lastInsertId();
 
             // 2. Insert Asset Items
-            $stmtItem = $this->pdo->prepare("INSERT INTO asset_items (asset_id, identification, status) VALUES (?, ?, 'Disponível')");
+            $stmtItem = $this->pdo->prepare("INSERT INTO asset_items (asset_id, identification, status) VALUES (?, ?, 'Disponivel')");
             for ($i = 1; $i <= $quantity; $i++) {
                 // Simple identification strategy: AssetName-ID-Index
                 // Cleaning name for ID: remove spaces, uppercase
@@ -31,10 +31,11 @@ class Asset {
 
             $this->pdo->commit();
             return $assetId;
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->pdo->rollBack();
-            // Log error?
-            return false;
+            // Log error or throw to be caught by controller
+            error_log("Error in addAsset: " . $e->getMessage());
+            throw $e;
         }
     }
 
@@ -60,12 +61,15 @@ class Asset {
 
                     SELECT COUNT(*) 
                     FROM loans l 
+                    JOIN events e ON l.event_id = e.id
                     JOIN asset_items ai ON l.item_id = ai.id 
                     WHERE ai.asset_id = a.id 
                     AND l.status = 'Emprestado' 
-                    AND (l.loan_date < ? AND DATE_ADD(COALESCE(l.return_date, l.loan_date), INTERVAL 24 HOUR) > ?)";
+                    AND e.date = DATE(?)
+                    AND (? < DATE_FORMAT(CONCAT(e.date, ' ', e.end_time), '%Y-%m-%d %H:%i:%s')) 
+                    AND (? > DATE_FORMAT(CONCAT(e.date, ' ', e.start_time), '%Y-%m-%d %H:%i:%s'))";
             
-            $params = [$endDateTime, $startDateTime];
+            $params = [$startDateTime, $startDateTime, $endDateTime];
             if ($excludeEventId) {
                 $sql .= " AND l.event_id != ?";
                 $params[] = $excludeEventId;
@@ -160,7 +164,7 @@ class Asset {
 
     public function getFutureReservations($asset_id) {
         $stmt = $this->pdo->prepare("
-            SELECT DISTINCT e.id, e.name, e.date, e.end_date
+            SELECT DISTINCT e.id, e.name, e.date, e.start_time, e.end_time
             FROM events e
             JOIN loans l ON e.id = l.event_id
             JOIN asset_items ai ON l.item_id = ai.id

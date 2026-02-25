@@ -20,7 +20,7 @@ foreach ($assets as $asset) {
             $diff = $asset['quantity'] - $itemCount;
             echo " -> Repairing... Adding $diff items.<br>";
             
-            $stmtItem = $pdo->prepare("INSERT INTO asset_items (asset_id, identification, status) VALUES (?, ?, 'Disponível')");
+            $stmtItem = $pdo->prepare("INSERT INTO asset_items (asset_id, identification, status) VALUES (?, ?, 'Disponivel')");
             for ($i = 1; $i <= $diff; $i++) {
                 // Generate simple ID
                 $cleanName = strtoupper(preg_replace('/[^a-zA-Z0-9]/', '', substr($asset['name'], 0, 3)));

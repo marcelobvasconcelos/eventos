@@ -42,7 +42,7 @@ class PendingManager {
         $sql = "
             SELECT * FROM events 
             WHERE status IN ('Aprovado', 'Concluido') 
-            AND (end_date < NOW() OR (end_date IS NULL AND date < DATE_SUB(NOW(), INTERVAL 4 HOUR)))
+            AND (CONCAT(date, ' ', end_time) < NOW())
         ";
         // Retrieve waiting for optimization limit
         // Optimization: In a real system, we'd add a flag 'pending_items_generated' to table.

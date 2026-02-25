@@ -40,6 +40,20 @@ class AdminController {
 
         $realizedHours = $eventModel->getRealizedHours();
 
+        // Fetch pending items for quick list
+        $pendingUsers = $userModel->getPendingUsers();
+        $pendingEvents = $eventModel->getPendingEvents();
+        
+        // Fetch counts for badges
+        $pendingUsersCount = $userModel->getPendingUsersCount();
+        $pendingEventsCount = $eventModel->getPendingEventsCount();
+        
+        require_once __DIR__ . '/../models/EventEdit.php';
+        $editModel = new EventEdit();
+        $pendingProposalsCount = $editModel->getPendingCount();
+        
+        $csrf_token = Security::generateCsrfToken();
+
         include __DIR__ . '/../views/admin/dashboard.php';
     }
 
@@ -638,47 +652,58 @@ class AdminController {
             $name = trim($_POST['name'] ?? '');
             $description = trim($_POST['description'] ?? '');
             $date = $_POST['date'] ?? '';
-            $time = $_POST['time'] ?? '';
-            $endDateInput = $_POST['end_date'] ?? '';
-            $endTimeInput = $_POST['end_time'] ?? '';
+            $startTime = $_POST['time'] ?? $_POST['start_time'] ?? '';
+            $endTime = $_POST['end_time'] ?? '';
             
-            $formattedDate = $date . ' ' . $time;
-            $formattedEndDate = null;
-            if (!empty($endDateInput) && !empty($endTimeInput)) {
-                $formattedEndDate = $endDateInput . ' ' . $endTimeInput;
-            }
+            $startDateTime = $date . ' ' . $startTime;
+            $endDateTime = $date . ' ' . $endTime;
 
             $locationId = (int)($_POST['location'] ?? 0);
             $categoryId = (int)($_POST['category'] ?? 0);
             $status = $_POST['status'] ?? 'Pendente';
             $isPublic = (int)($_POST['is_public'] ?? 1);
-        $externalLink = trim($_POST['external_link'] ?? '');
-        $linkTitle = trim($_POST['link_title'] ?? '');
+            $externalLink = trim($_POST['external_link'] ?? '');
+            $linkTitle = trim($_POST['link_title'] ?? '');
             $customLocation = trim($_POST['custom_location'] ?? '');
+            $publicEstimation = (int)($_POST['public_estimation'] ?? 0);
             
             // Access Control Fields
-            $requiresRegistration = isset($_POST['requires_registration']) ? 1 : 0;
-            $hasCertificate = isset($_POST['has_certificate']) ? 1 : 0;
+            $requiresRegistration = isset($_POST['requires_registration']) || (isset($_POST['requires_registration']) && $_POST['requires_registration'] == '1') ? 1 : 0;
+            $hasCertificate = isset($_POST['has_certificate']) || (isset($_POST['has_certificate']) && $_POST['has_certificate'] == '1') ? 1 : 0;
             $maxParticipants = !empty($_POST['max_participants']) ? (int)$_POST['max_participants'] : null;
 
             // 1. Validate Location Availability (excluding current event)
             require_once __DIR__ . '/../models/Location.php';
             $locationModel = new Location();
-            $checkEnd = $formattedEndDate ?: date('Y-m-d H:i:s', strtotime($formattedDate . ' +1 hour'));
             
-            if (!$locationModel->isAvailable($locationId, $formattedDate, $checkEnd, $id)) {
+            if (!$locationModel->isAvailable($locationId, $startDateTime, $endDateTime, $id)) {
                  header('Location: /eventos/admin/editEvent?id=' . $id . '&return_url=' . urlencode($returnUrl) . '&error=' . urlencode('O local selecionado já está ocupado neste horário.'));
                  exit;
             }
 
-            // ... (Asset Validation omitted for brevity in match, but ensures context is correct if needed)
+            // ... (Image and Schedule upload logic remains same but I should ensure variables are set)
+            $imagePath = null;
+            if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../public/uploads/events/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+                $fileName = md5(time() . $_FILES['image']['name']) . '.' . strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
+                if (move_uploaded_file($_FILES['image']['tmp_name'], $uploadDir . $fileName)) {
+                    $imagePath = '/eventos/public/uploads/events/' . $fileName;
+                }
+            }
 
-            // ... (Image upload logic omitted)
-
-            // ... (Schedule file upload logic omitted)
+            $scheduleFilePath = null;
+            if (isset($_FILES['schedule_file']) && $_FILES['schedule_file']['error'] === UPLOAD_ERR_OK) {
+                $uploadDir = __DIR__ . '/../public/uploads/schedules/';
+                if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
+                $fileName = md5(time() . $_FILES['schedule_file']['name']) . '.' . strtolower(pathinfo($_FILES['schedule_file']['name'], PATHINFO_EXTENSION));
+                if (move_uploaded_file($_FILES['schedule_file']['tmp_name'], $uploadDir . $fileName)) {
+                    $scheduleFilePath = '/eventos/public/uploads/schedules/' . $fileName;
+                }
+            }
 
             $eventModel = new Event();
-            $eventModel->updateEvent($id, $name, $description, $formattedDate, $formattedEndDate, $locationId, $categoryId, $status, $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation, $requiresRegistration, $maxParticipants, $hasCertificate);
+            $eventModel->updateEvent($id, $name, $description, $date, $startTime, $endTime, $locationId, $categoryId, $status, $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation, $requiresRegistration, $maxParticipants, $hasCertificate);
             
             // --- Asset Update Logic ---
             require_once __DIR__ . '/../models/Loan.php';
@@ -981,22 +1006,19 @@ class AdminController {
                 header('Location: /eventos/admin/assets?error=Invalid CSRF token');
                 exit;
             }
-            $id = (int)($_POST['id'] ?? 0);
-            $confirmed = isset($_POST['confirm_delete']);
 
+            $id = (int)($_POST['id'] ?? 0);
             require_once __DIR__ . '/../models/Asset.php';
             $assetModel = new Asset();
-            
+            $confirmed = isset($_POST['confirm_delete']);
+
             if (!$confirmed) {
-                // Check for future reservations
+                // Show confirmation page for ALL asset deletions
                 $futureReservations = $assetModel->getFutureReservations($id);
-                if (!empty($futureReservations)) {
-                    // Show confirmation warning page
-                    $asset = $assetModel->getAssetById($id);
-                    $csrf_token = $_POST['csrf_token']; // Reuse token
-                    include __DIR__ . '/../views/admin/delete_asset_confirm.php';
-                    exit;
-                }
+                $asset = $assetModel->getAssetById($id);
+                $csrf_token = $_POST['csrf_token']; // Reuse token
+                include __DIR__ . '/../views/admin/delete_asset_confirm.php';
+                exit;
             }
 
             // Fetch Asset details BEFORE deletion for the email
@@ -1178,20 +1200,24 @@ class AdminController {
                     continue;
                 }
 
-                // Create Blocking Event
-                $eventModel->createEvent(
-                    $reason, // Name
-                    $reason, // Description
-                    $currentDatetime,
-                    $endDatetime,
-                    $locId,
-                    null, // No category
-                    $_SESSION['user_id'],
-                    'Aprovado', // Status
-                    'bloqueio_administrativo', // Type
-                    1 // is_public
-                );
-                $successCount++;
+                try {
+                    // Create Blocking Event
+                    $eventModel->createEvent(
+                        $reason, // Name
+                        $reason, // Description
+                        $currentDatetime,
+                        $endDatetime,
+                        $locId,
+                        null, // No category
+                        $_SESSION['user_id'],
+                        'Aprovado', // Status
+                        'bloqueio_administrativo', // Type
+                        1 // is_public
+                    );
+                    $successCount++;
+                } catch (Exception $e) {
+                    $failCount++;
+                }
             }
 
             $msg = "";
@@ -1241,43 +1267,43 @@ class AdminController {
 
             $title = trim($_POST['title'] ?? '');
             $description = trim($_POST['description'] ?? '');
-            $dateStart = $_POST['date_start'] ?? '';
-            $dateEnd = $_POST['date_end'] ?? '';
+            $date = $_POST['date'] ?? $_POST['date_start'] ?? '';
             $color = $_POST['color'] ?? '#ffc107'; // Default color
             
-            if (empty($title) || empty($dateStart)) {
-                die("Título e Data Inicial são obrigatórios.");
-            }
-            if (empty($dateEnd)) {
-                $dateEnd = $dateStart;
+            if (empty($title) || empty($date)) {
+                die("Campos obrigatórios faltando.");
             }
 
-            $startDateTime = $dateStart . ' 00:00:00';
-            $endDateTime = $dateEnd . ' 23:59:59';
+            $startDateTime = $date . ' 00:00:00';
+            $endDateTime = $date . ' 23:59:59';
             
             $eventModel = new Event();
             // Saving highlight using custom_location for the color
-            $eventModel->createEvent(
-                $title, 
-                $description, 
-                $startDateTime, 
-                $endDateTime, 
-                null, // No location
-                null, // No category
-                $_SESSION['user_id'], 
-                'Aprovado', // Status auto
-                'informativo_calendario', // Type
-                1, // is_public
-                null, // image_path
-                null, // external_link
-                null, // link_title
-                0, // public_estimation
-                null, // schedule_file_path
-                $color, // Storing color in custom_location safely
-                0, // requires_registration
-                null, // max_participants
-                0 // has_certificate
-            );
+            try {
+                $eventModel->createEvent(
+                    $title, 
+                    $description, 
+                    $startDateTime, 
+                    $endDateTime, 
+                    null, // No location
+                    null, // No category
+                    $_SESSION['user_id'], 
+                    'Aprovado', // Status auto
+                    'informativo_calendario', // Type
+                    1, // is_public
+                    null, // image_path
+                    null, // external_link
+                    null, // link_title
+                    0, // public_estimation
+                    null, // schedule_file_path
+                    $color, // Storing color in custom_location safely
+                    0, // requires_registration
+                    null, // max_participants
+                    0 // has_certificate
+                );
+            } catch (Exception $e) {
+                die("Erro ao salvar destaque: " . $e->getMessage());
+            }
 
             header('Location: /eventos/admin/highlights?message=Destaque+criado+com+sucesso.');
             exit;
@@ -1322,19 +1348,15 @@ class AdminController {
             $id = $_POST['id'] ?? null;
             $title = trim($_POST['title'] ?? '');
             $description = trim($_POST['description'] ?? '');
-            $dateStart = $_POST['date_start'] ?? '';
-            $dateEnd = $_POST['date_end'] ?? '';
+            $date = $_POST['date'] ?? $_POST['date_start'] ?? '';
             $color = $_POST['color'] ?? '#ffc107'; 
             
-            if (empty($id) || empty($title) || empty($dateStart)) {
+            if (empty($id) || empty($title) || empty($date)) {
                 die("Campos obrigatórios faltando.");
             }
-            if (empty($dateEnd)) {
-                $dateEnd = $dateStart;
-            }
 
-            $startDateTime = $dateStart . ' 00:00:00';
-            $endDateTime = $dateEnd . ' 23:59:59';
+            $startDateTime = $date . ' 00:00:00';
+            $endDateTime = $date . ' 23:59:59';
             
             $eventModel = new Event();
             
@@ -1396,6 +1418,64 @@ class AdminController {
         exit;
     }
 
+    public function listProposals() {
+        $this->checkAdminAccess();
+        require_once __DIR__ . '/../models/EventEdit.php';
+        require_once __DIR__ . '/../models/Category.php';
+        $editModel = new EventEdit();
+        $categoryModel = new Category();
+        
+        $proposals = $editModel->getPendingProposals();
+        $categories = $categoryModel->getAllCategories();
+        
+        // Create a mapping for easier access in view
+        $categoryMap = [];
+        foreach ($categories as $cat) {
+            $categoryMap[$cat['id']] = $cat['name'];
+        }
+        
+        $csrf_token = Security::generateCsrfToken();
+        include __DIR__ . '/../views/admin/edit_proposals.php';
+    }
+
+    public function approveProposal() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proposal_id'])) {
+            if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                header('Location: /eventos/admin/listProposals?error=Token CSRF inválido');
+                exit;
+            }
+            $proposalId = (int)$_POST['proposal_id'];
+            require_once __DIR__ . '/../models/EventEdit.php';
+            $editModel = new EventEdit();
+            
+            if ($editModel->applyProposal($proposalId, $_SESSION['user_id'])) {
+                header('Location: /eventos/admin/listProposals?message=' . urlencode('Alteração aprovada e aplicada com sucesso.'));
+            } else {
+                header('Location: /eventos/admin/listProposals?error=' . urlencode('Erro ao aplicar alteração.'));
+            }
+        }
+        exit;
+    }
+
+    public function rejectProposal() {
+        $this->checkAdminAccess();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['proposal_id'])) {
+            if (!Security::validateCsrfToken($_POST['csrf_token'] ?? '')) {
+                header('Location: /eventos/admin/listProposals?error=Token CSRF inválido');
+                exit;
+            }
+            $proposalId = (int)$_POST['proposal_id'];
+            $adminNotes = trim($_POST['admin_notes'] ?? '');
+            
+            require_once __DIR__ . '/../models/EventEdit.php';
+            $editModel = new EventEdit();
+            $editModel->updateStatus($proposalId, 'Rejeitado', $_SESSION['user_id'], $adminNotes);
+            
+            header('Location: /eventos/admin/listProposals?message=' . urlencode('Alteração rejeitada.'));
+        }
+        exit;
+    }
 }
 
 ?>

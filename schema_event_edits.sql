@@ -1,0 +1,31 @@
+DROP TABLE IF EXISTS event_edits;
+
+CREATE TABLE event_edits (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  event_id int(11) NOT NULL,
+  user_id int(11) NOT NULL,
+  name varchar(255) DEFAULT NULL,
+  description text DEFAULT NULL,
+  date date DEFAULT NULL,
+  start_time time DEFAULT NULL,
+  end_time time DEFAULT NULL,
+  category_id int(11) DEFAULT NULL,
+  is_public tinyint(1) DEFAULT NULL,
+  external_link varchar(255) DEFAULT NULL,
+  link_title varchar(255) DEFAULT NULL,
+  image_path varchar(255) DEFAULT NULL,
+  schedule_file_path varchar(255) DEFAULT NULL,
+  custom_location varchar(255) DEFAULT NULL,
+  status enum('Pendente','Aprovado','Rejeitado') DEFAULT 'Pendente',
+  admin_notes text DEFAULT NULL,
+  created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  processed_at timestamp NULL DEFAULT NULL,
+  processed_by int(11) DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY event_id (event_id),
+  KEY user_id (user_id),
+  KEY processed_by (processed_by),
+  CONSTRAINT event_edits_ibfk_1 FOREIGN KEY (event_id) REFERENCES events (id) ON DELETE CASCADE,
+  CONSTRAINT event_edits_ibfk_2 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE,
+  CONSTRAINT event_edits_ibfk_3 FOREIGN KEY (processed_by) REFERENCES users (id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

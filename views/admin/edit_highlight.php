@@ -2,8 +2,7 @@
 $title = 'Editar Destaque no Calendário';
 ob_start();
 
-$dateStart = isset($highlight['date']) ? date('Y-m-d', strtotime($highlight['date'])) : '';
-$dateEnd = isset($highlight['end_date']) ? date('Y-m-d', strtotime($highlight['end_date'])) : '';
+$date = isset($highlight['date']) ? date('Y-m-d', strtotime($highlight['date'])) : '';
 ?>
 <div class="card shadow-sm border-0 rounded-lg">
     <div class="card-header bg-white border-0 py-4">
@@ -36,14 +35,9 @@ $dateEnd = isset($highlight['end_date']) ? date('Y-m-d', strtotime($highlight['e
             </div>
 
             <div class="row g-4 mb-4">
-                <div class="col-md-6">
-                    <label for="date_start" class="form-label fw-semibold">Data Inicial <span class="text-danger">*</span></label>
-                    <input type="date" class="form-control" id="date_start" name="date_start" required value="<?php echo $dateStart; ?>">
-                </div>
-                <div class="col-md-6">
-                    <label for="date_end" class="form-label fw-semibold">Data Final</label>
-                    <input type="date" class="form-control" id="date_end" name="date_end" value="<?php echo $dateEnd; ?>">
-                    <div class="form-text">Deixe em branco para um único dia.</div>
+                <div class="col-md-12">
+                    <label for="date" class="form-label fw-semibold">Data do Destaque <span class="text-danger">*</span></label>
+                    <input type="date" class="form-control" id="date" name="date" required value="<?php echo $date; ?>">
                 </div>
             </div>
 

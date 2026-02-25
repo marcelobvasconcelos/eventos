@@ -60,12 +60,12 @@
                 <span class="value"><?php echo htmlspecialchars($event['location_name'] ?? 'N/A'); ?></span>
             </div>
             <div class="info-item">
-                <span class="label">Início:</span>
-                <span class="value"><?php echo date('d/m/Y H:i', strtotime($event['date'])); ?></span>
+                <span class="label">Horário Início:</span>
+                <span class="value"><?php echo date('H:i', strtotime($event['start_time'])); ?></span>
             </div>
             <div class="info-item">
-                <span class="label">Término:</span>
-                <span class="value"><?php echo !empty($event['end_date']) ? date('d/m/Y H:i', strtotime($event['end_date'])) : 'N/A'; ?></span>
+                <span class="label">Horário Término:</span>
+                <span class="value"><?php echo date('H:i', strtotime($event['end_time'])); ?></span>
             </div>
         </div>
         <div class="info-item" style="margin-top: 15px;">

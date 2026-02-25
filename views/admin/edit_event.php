@@ -91,22 +91,17 @@ ob_start();
         <label for="name" class="form-label text-white">Título</label>
         <input type="text" name="name" id="name" class="form-control" value="<?php echo htmlspecialchars($event['name']); ?>" required>
     </div>
-    <div class="col-md-3">
-        <label for="date" class="form-label text-white">Data de Início</label>
+    <div class="col-md-4">
+        <label for="date" class="form-label text-white">Data do Evento</label>
         <input type="date" name="date" id="date" class="form-control" value="<?php echo htmlspecialchars(date('Y-m-d', strtotime($event['date']))); ?>" required>
     </div>
-    <div class="col-md-3">
-        <label for="time" class="form-label text-white">Hora de Início</label>
-        <input type="time" name="time" id="time" class="form-control" value="<?php echo htmlspecialchars(date('H:i', strtotime($event['date']))); ?>" required>
+    <div class="col-md-4">
+        <label for="start_time" class="form-label text-white">Hora de Início</label>
+        <input type="time" name="start_time" id="start_time" class="form-control" value="<?php echo htmlspecialchars(date('H:i', strtotime($event['start_time']))); ?>" required>
     </div>
-    
-    <div class="col-md-3">
-        <label for="end_date" class="form-label text-white">Data de Término</label>
-        <input type="date" name="end_date" id="end_date" class="form-control" value="<?php echo !empty($event['end_date']) ? htmlspecialchars(date('Y-m-d', strtotime($event['end_date']))) : ''; ?>">
-    </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <label for="end_time" class="form-label text-white">Hora de Término</label>
-        <input type="time" name="end_time" id="end_time" class="form-control" value="<?php echo !empty($event['end_date']) ? htmlspecialchars(date('H:i', strtotime($event['end_date']))) : ''; ?>">
+        <input type="time" name="end_time" id="end_time" class="form-control" value="<?php echo htmlspecialchars(date('H:i', strtotime($event['end_time']))); ?>" required>
     </div>
     <div class="col-md-6">
         <label for="location" class="form-label text-white">Localização</label>
@@ -359,8 +354,7 @@ ob_start();
     const form = document.querySelector('form');
     // ... existing validation if any ...
     const startInput = document.getElementById('date');
-    const startTimeInput = document.getElementById('time');
-    const endInput = document.getElementById('end_date');
+    const startTimeInput = document.getElementById('start_time');
     const endTimeInput = document.getElementById('end_time');
 
     if (form && startInput && startTimeInput) {
@@ -371,20 +365,11 @@ ob_start();
 
             const start = new Date(startDate + 'T' + startTime);
             
-            let endDateVal = endInput && endInput.value ? endInput.value : startDate;
-            let endTimeVal = endTimeInput && endTimeInput.value ? endTimeInput.value : '23:59';
-            
-            // If end time is empty, maybe don't validate or assume valid?
-            if (endTimeInput && !endTimeInput.value) {
-                // If end date is set but no time? 
-                return; 
-            }
-            
-            const end = new Date(endDateVal + 'T' + endTimeVal);
+            const end = new Date(startDate + 'T' + endTimeVal);
             
             if (end <= start) {
                 e.preventDefault();
-                alert('A data e hora de término devem ser posteriores ao início.');
+                alert('A hora de término deve ser posterior à de início.');
             }
          });
     }

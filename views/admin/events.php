@@ -29,8 +29,9 @@ ob_start();
                                 <?php echo htmlspecialchars($event['name']); ?>
                              </span>
                         </h5>
-                         <p class="card-text text-white mb-2" style="font-size: 1rem; font-weight: 500;">
-                            <i class="far fa-calendar me-1"></i> <?php echo date('d/m/Y H:i', strtotime($event['date'])); ?>
+                          <p class="card-text text-white mb-2" style="font-size: 1rem; font-weight: 500;">
+                            <i class="far fa-calendar me-1"></i> <?php echo date('d/m/Y', strtotime($event['date'])); ?> 
+                            <span class="ms-2"><i class="far fa-clock me-1"></i> <?php echo date('H:i', strtotime($event['start_time'])); ?> - <?php echo date('H:i', strtotime($event['end_time'])); ?></span>
                         </p>
                         <p class="card-text text-white small text-truncate">
                             <i class="fas fa-map-marker-alt me-1"></i> <?php echo htmlspecialchars($event['location_name'] ?? 'N/A'); ?>

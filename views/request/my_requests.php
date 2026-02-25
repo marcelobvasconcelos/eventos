@@ -38,24 +38,36 @@ ob_start();
                                     <th>Evento</th>
                                     <th>Status</th>
                                     <th>Data Solicitação</th>
+                                    <th>Ações</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <?php foreach ($requests as $request): ?>
                                     <tr>
-                                        <td><?php echo date('d/m/Y H:i', strtotime($request['event_date'])); ?></td>
+                                        <td><?php echo date('d/m/Y', strtotime($request['event_date'])); ?></td>
                                         <td class="fw-bold"><?php echo htmlspecialchars($request['event_name']); ?></td>
                                         <td>
                                             <?php
                                                 $status = $request['status'];
                                                 $badgeClass = 'bg-secondary';
                                                 if ($status == 'Aprovado') $badgeClass = 'bg-success';
-                                                elseif ($status == 'Rejeitado') $badgeClass = 'bg-danger';
+                                                elseif ($status == 'Rejeitado' || $status == 'Cancelado') $badgeClass = 'bg-danger';
                                                 elseif ($status == 'Pendente') $badgeClass = 'bg-warning text-dark';
                                             ?>
                                             <span class="badge <?php echo $badgeClass; ?>"><?php echo htmlspecialchars($status); ?></span>
                                         </td>
                                         <td class="text-muted small"><?php echo date('d/m/Y H:i', strtotime($request['request_date'] ?? 'now')); ?></td>
+                                        <td>
+                                            <?php 
+                                            $eventTimestamp = strtotime(substr($request['event_date'], 0, 10));
+                                            $todayTimestamp = strtotime(date('Y-m-d'));
+                                            if ($eventTimestamp >= $todayTimestamp): 
+                                            ?>
+                                                <a href="/eventos/request/edit?id=<?php echo $request['id']; ?>" class="btn btn-sm btn-outline-primary rounded-pill px-3" title="Editar">
+                                                    <i class="fas fa-edit me-1"></i> Editar
+                                                </a>
+                                            <?php endif; ?>
+                                        </td>
                                     </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -98,10 +110,22 @@ ob_start();
                                             <span class="fw-medium text-dark"><?php echo date('d/m/Y H:i', strtotime($request['event_date'])); ?></span>
                                         </div>
 
-                                        <div>
+                                        <div class="mb-3">
                                             <small class="text-muted text-uppercase fw-bold">Solicitado em</small><br>
                                             <span class="text-secondary small"><?php echo date('d/m/Y H:i', strtotime($request['request_date'] ?? 'now')); ?></span>
                                         </div>
+
+                                        <?php 
+                                        $eventTimestamp = strtotime(substr($request['event_date'], 0, 10));
+                                        $todayTimestamp = strtotime(date('Y-m-d'));
+                                        if ($eventTimestamp >= $todayTimestamp): 
+                                        ?>
+                                            <div class="mt-3">
+                                                <a href="/eventos/request/edit?id=<?php echo $request['id']; ?>" class="btn btn-outline-primary rounded-pill w-100">
+                                                    <i class="fas fa-edit me-2"></i>Editar Solicitação
+                                                </a>
+                                            </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             </div>

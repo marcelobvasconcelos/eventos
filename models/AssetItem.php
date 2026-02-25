@@ -17,7 +17,7 @@ class AssetItem {
             $stmt = $this->pdo->prepare("
                 SELECT ai.*, a.name as asset_name, a.description as asset_description FROM asset_items ai
                 JOIN assets a ON ai.asset_id = a.id
-                WHERE ai.status = 'Disponível'
+                WHERE ai.status = 'Disponivel'
                 AND ai.id NOT IN (
                     SELECT l.item_id FROM loans l
                     WHERE l.status = 'Emprestado'
@@ -30,7 +30,7 @@ class AssetItem {
             $stmt = $this->pdo->prepare("
                 SELECT ai.*, a.name as asset_name, a.description as asset_description FROM asset_items ai
                 JOIN assets a ON ai.asset_id = a.id
-                WHERE ai.status = 'Disponível'
+                WHERE ai.status = 'Disponivel'
                 ORDER BY a.name ASC, ai.identification ASC
             ");
             $stmt->execute();

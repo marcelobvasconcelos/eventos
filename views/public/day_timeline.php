@@ -78,14 +78,8 @@ $currentDate = $date; // Mapping for consistency with new logic
                         $gridEndTs = strtotime($currentDate . ' 23:59:59');
 
                         foreach ($events as $event) {
-                            $eventStartTimestamp = strtotime($event['date']);
-                            
-                            // Determine End Timestamp
-                            if (!empty($event['end_date'])) {
-                                $eventEndTimestamp = strtotime($event['end_date']);
-                            } else {
-                                $eventEndTimestamp = $eventStartTimestamp + 3600; // Default 1h
-                            }
+                            $eventStartTimestamp = strtotime($event['date'] . ' ' . $event['start_time']);
+                            $eventEndTimestamp = strtotime($event['date'] . ' ' . $event['end_time']);
 
                             // Skip if event is completely outside the current day's visible grid
                             // (Ends before grid start OR Starts after grid end)
@@ -213,12 +207,8 @@ $currentDate = $date; // Mapping for consistency with new logic
                             $eventDesc = $event['description'] ?? '';
                             if (!$canViewDetails) $eventDesc = "Detalhes restritos.";
                             
-                            $pStart = $item['original_start_ts'];
-                            $pEnd = $item['original_end_ts'];
-                            // Check if dates differ from view date
-                            $viewDateStr = date('Ymd', strtotime($currentDate));
-                            $pStartStr = (date('Ymd', $pStart) != $viewDateStr) ? date('d/m H:i', $pStart) : date('H:i', $pStart);
-                            $pEndStr = (date('Ymd', $pEnd) != $viewDateStr) ? date('d/m H:i', $pEnd) : date('H:i', $pEnd);
+                            $pStartStr = date('H:i', strtotime($event['start_time']));
+                            $pEndStr = date('H:i', strtotime($event['end_time']));
 
                             $popoverContent = "<strong>Horário:</strong> " . $pStartStr . " até " . $pEndStr . "<br>";
                             $popoverContent .= "<strong>Local:</strong> " . htmlspecialchars($eventLocation) . "<br>";

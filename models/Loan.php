@@ -73,7 +73,7 @@ class Loan {
             $stmt->execute([$loan_id]);
 
             // Update item status
-            $stmt = $this->pdo->prepare("UPDATE asset_items SET status = 'Disponível' WHERE id = ?");
+            $stmt = $this->pdo->prepare("UPDATE asset_items SET status = 'Disponivel' WHERE id = ?");
             $stmt->execute([$item_id]);
 
             // Increment available_quantity
@@ -141,7 +141,7 @@ class Loan {
             $stmt->execute([$loan_id]);
 
             // Update item status
-            $stmt = $this->pdo->prepare("UPDATE asset_items SET status = 'Disponível' WHERE id = ?");
+            $stmt = $this->pdo->prepare("UPDATE asset_items SET status = 'Disponivel' WHERE id = ?");
             $stmt->execute([$item_id]);
 
             // Increment available_quantity

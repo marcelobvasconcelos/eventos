@@ -172,4 +172,31 @@ class Notification {
         }
         return false;
     }
+
+    public function sendAdminRegistrationAlert($userId) {
+        // Fetch new user info
+        $stmt = $this->pdo->prepare("SELECT name, email FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($user) {
+            // Fetch all admins
+            $stmtAdmins = $this->pdo->prepare("SELECT email FROM users WHERE role = 'admin'");
+            $stmtAdmins->execute();
+            $admins = $stmtAdmins->fetchAll(PDO::FETCH_COLUMN);
+
+            $subject = 'Novo cadastro pendente na UAST-UFRPE';
+            $body = "<h2>Alerta de Novo Cadastro</h2>";
+            $body .= "<p>Um novo usuário solicitou acesso ao sistema e aguarda aprovação administrativa.</p>";
+            $body .= "<ul>";
+            $body .= "<li><strong>Nome:</strong> {$user['name']}</li>";
+            $body .= "<li><strong>E-mail:</strong> {$user['email']}</li>";
+            $body .= "</ul>";
+            $body .= "<p><a href='http://" . $_SERVER['HTTP_HOST'] . "/eventos/admin/users'>Acessar Controle de Usuários</a></p>";
+
+            foreach ($admins as $email) {
+                $this->mailer->send($email, $subject, $body);
+            }
+        }
+    }
 }

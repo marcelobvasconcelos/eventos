@@ -68,18 +68,11 @@ ob_start();
         $daysInMonth = date('t', $firstDay);
         $dayOfWeek = date('w', $firstDay); // 0 (Sun) to 6 (Sat)
 
-        // Group events by date, considering multi-day events
+        // Group events by date
         $eventsByDate = [];
         foreach ($events as $event) {
-            $startDate = date('Y-m-d', strtotime($event['date']));
-            $endDate = $event['end_date'] ? date('Y-m-d', strtotime($event['end_date'])) : $startDate;
-            $current = strtotime($startDate);
-            $end = strtotime($endDate);
-            while ($current <= $end) {
-                $dateKey = date('Y-m-d', $current);
-                $eventsByDate[$dateKey][] = $event;
-                $current = strtotime('+1 day', $current);
-            }
+            $dateKey = date('Y-m-d', strtotime($event['date']));
+            $eventsByDate[$dateKey][] = $event;
         }
         ?>
         <!-- Desktop Calendar View (Hidden on Mobile) -->
@@ -125,7 +118,7 @@ ob_start();
                                         $dayContent .= '<li><em>e mais ' . (count($eventsByDate[$currentDate]) - 5) . '...</em></li>';
                                         break;
                                     }
-                                    $evTime = date('H:i', strtotime($ev['date']));
+                                    $evTime = date('H:i', strtotime($ev['start_time']));
                                     $evName = htmlspecialchars($ev['name']);
                                     if (($ev['type'] ?? '') === 'informativo_calendario') {
                                         $dayContent .= "<li><i class='fas fa-info-circle text-primary me-1'></i>{$evName}</li>";

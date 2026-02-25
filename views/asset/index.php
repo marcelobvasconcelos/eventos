@@ -65,7 +65,7 @@ ob_start();
                                             <a href="/eventos/admin/editAsset?id=<?php echo $asset['id']; ?>" class="btn btn-sm btn-outline-primary rounded-pill px-2 me-1" title="Editar">
                                                 <i class="fas fa-edit"></i>
                                             </a>
-                                            <form action="/eventos/admin/deleteAsset" method="POST" class="d-inline me-1" onsubmit="return confirm('Tem certeza?');">
+                                            <form action="/eventos/admin/deleteAsset" method="POST" class="d-inline me-1">
                                                 <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($csrf_token ?? ''); ?>">
                                                 <input type="hidden" name="id" value="<?php echo $asset['id']; ?>">
                                                 <button class="btn btn-sm btn-outline-danger rounded-pill px-2" title="Excluir">

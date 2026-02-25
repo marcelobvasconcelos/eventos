@@ -51,19 +51,26 @@ class AssetController {
             $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : null;
             $requires_patrimony = isset($_POST['requires_patrimony']) ? 1 : 0;
 
-            if (empty($name) || $quantity < 1) {
-                $error = 'Nome e quantidade válida são obrigatórios.';
+            if (empty($name) || $quantity < 1 || empty($category_id)) {
+                $error = 'Nome, quantidade válida e Categoria são obrigatórios.';
                 $csrf_token = Security::generateCsrfToken();
+                $categoryModel = new AssetCategory();
+                $categories = $categoryModel->getAll();
                 include __DIR__ . '/../views/asset/create.php';
                 return;
             }
 
+            // DEBUG POINT 2
+            // die('DEBUG: REACHED POINT BEFORE ASSET MODEL CALL');
+
             $assetModel = new Asset();
-            if ($assetModel->addAsset($name, $description, $quantity, $category_id, $requires_patrimony)) {
-                header('Location: /eventos/asset?message=Ativo criado com sucesso');
-                exit;
-            } else {
-                $error = 'Erro ao criar ativo.';
+            try {
+                if ($assetModel->addAsset($name, $description, $quantity, $category_id, $requires_patrimony)) {
+                    header('Location: /eventos/asset?message=Ativo criado com sucesso');
+                    exit;
+                }
+            } catch (Throwable $e) {
+                $error = 'Erro ao criar ativo: ' . $e->getMessage();
                 $csrf_token = Security::generateCsrfToken();
                 $categoryModel = new AssetCategory();
                 $categories = $categoryModel->getAll();
