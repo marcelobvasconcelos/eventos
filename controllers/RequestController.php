@@ -190,7 +190,7 @@ class RequestController {
         $eventModel = new Event();
         $event = $eventModel->getEventById($id);
 
-        if (!$event || ($event['created_by'] != $_SESSION['user_id'] && $_SESSION['user_role'] !== 'admin')) {
+        if (!$event || ($event['created_by'] != $_SESSION['user_id'] && !in_array($_SESSION['user_role'], ['admin', 'gestor']))) {
             header('Location: /eventos/request/my_requests?error=Acesso negado.');
             exit;
         }
@@ -228,7 +228,7 @@ class RequestController {
         $eventModel = new Event();
         $event = $eventModel->getEventById($id);
 
-        if (!$event || ($event['created_by'] != $_SESSION['user_id'] && $_SESSION['user_role'] !== 'admin')) {
+        if (!$event || ($event['created_by'] != $_SESSION['user_id'] && !in_array($_SESSION['user_role'], ['admin', 'gestor']))) {
             header('Location: /eventos/request/my_requests?error=Acesso negado.');
             exit;
         }

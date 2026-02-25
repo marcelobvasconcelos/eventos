@@ -302,8 +302,8 @@ class PublicController {
 
             $eventModel = new Event();
             try {
-                // Corrected argument order: $type ('evento_publico') comes before $isPublic
-                $eventId = $eventModel->createEvent($name, $description, $startDateTime, $endDateTime, $locationId, $categoryId, $_SESSION['user_id'], 'Pendente', 'evento_publico', $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation, $requiresRegistration, $maxParticipants, $hasCertificate);
+                // Corrected argument order: $date, $startTime, $endTime
+                $eventId = $eventModel->createEvent($name, $description, $date, $startTime, $endTime, $locationId, $categoryId, $_SESSION['user_id'], 'Pendente', 'evento_publico', $isPublic, $imagePath, $externalLink, $linkTitle, $publicEstimation, $scheduleFilePath, $customLocation, $requiresRegistration, $maxParticipants, $hasCertificate);
             } catch (Exception $e) {
                 // Handle database errors gracefully with a friendly message
                 $errorMessages = 'Não foi possível salvar o evento. Verifique se todos os campos obrigatórios foram preenchidos.';

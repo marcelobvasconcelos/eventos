@@ -6,109 +6,105 @@ ob_start();
 </div>
 
 <?php if (!empty($pendingUsers) || !empty($pendingEvents)): ?>
-<div class="row mt-2 animate-slide-down">
+<div class="row mt-2 animate-slide-down mb-4">
     <div class="col-12">
-        <div class="card shadow border-0 bg-light text-dark mb-5" style="border: 1px solid rgba(0,0,0,0.1) !important;">
-            <div class="card-header bg-transparent border-0 pt-4 px-4 d-flex align-items-center">
-                <i class="fas fa-bolt text-warning me-2"></i>
-                <h4 class="mb-0 fw-bold">Lista Rápida de Aprovações</h4>
-            </div>
-            <div class="card-body p-4">
-                <div class="row g-4">
-                    <!-- Pending Users -->
-                    <?php if (!empty($pendingUsers)): ?>
-                    <div class="col-md-6">
-                        <div class="bg-white bg-opacity-10 rounded-4 p-3 border border-white border-opacity-10 h-100">
-                            <h5 class="fw-bold mb-3 d-flex align-items-center">
-                                <i class="fas fa-user-clock text-info me-2"></i> Novos Usuários
-                                <span class="badge bg-info ms-auto rounded-pill"><?php echo count($pendingUsers); ?></span>
-                            </h5>
-                            <div class="list-group list-group-flush bg-transparent">
-                                <?php foreach ($pendingUsers as $pUser): ?>
-                                <div class="list-group-item bg-transparent text-dark border-dark border-opacity-10 px-0 d-flex align-items-center justify-content-between">
-                                    <div class="me-3 overflow-hidden">
-                                        <div class="fw-bold text-truncate"><?php echo htmlspecialchars($pUser['name']); ?></div>
-                                        <small class="text-muted"><?php echo htmlspecialchars($pUser['email']); ?></small>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <form action="/eventos/admin/approveUser" method="POST" class="m-0">
-                                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                            <input type="hidden" name="user_id" value="<?php echo $pUser['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-success rounded-pill px-3" title="Aceitar">
-                                                <i class="fas fa-check"></i>
-                                            </button>
-                                        </form>
-                                        <form action="/eventos/admin/rejectUser" method="POST" class="m-0">
-                                            <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
-                                            <input type="hidden" name="user_id" value="<?php echo $pUser['id']; ?>">
-                                            <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3" title="Rejeitar">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-                            </div>
+        <div class="accordion border-0 shadow-sm rounded-4 overflow-hidden" id="accordionApprovals">
+            <div class="accordion-item border-0">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed bg-white text-dark py-3 px-4 border-0" type="button" data-bs-toggle="collapse" data-bs-target="#collapseApprovals" aria-expanded="false" aria-controls="collapseApprovals">
+                        <div class="d-flex align-items-center w-100">
+                            <i class="fas fa-bell text-warning me-2 small"></i>
+                            <span class="fw-bold small text-uppercase tracking-wider">Solicitações Pendentes</span>
+                            <span class="badge bg-danger rounded-pill ms-2 animate-pulse" style="font-size: 0.75rem;">
+                                <?php echo count($pendingUsers) + count($pendingEvents) + ($pendingProposalsCount ?? 0); ?>
+                            </span>
+                            <small class="text-muted ms-auto me-3 d-none d-sm-inline">Clique para ver e processar rapidamente</small>
                         </div>
-                    </div>
-                    <?php endif; ?>
-
-                    <!-- Pending Events and Proposals -->
-                    <?php if (!empty($pendingEvents) || $pendingProposalsCount > 0): ?>
-                    <div class="col-md-6">
-                        <div class="bg-white bg-opacity-10 rounded-4 p-3 border border-white border-opacity-10 h-100">
-                            <h5 class="fw-bold mb-3 d-flex align-items-center">
-                                <i class="fas fa-calendar-alt text-warning me-2"></i> Solicitações de Eventos
-                                <span class="badge bg-warning text-dark ms-auto rounded-pill"><?php echo count($pendingEvents) + $pendingProposalsCount; ?></span>
-                            </h5>
-                            <div class="list-group list-group-flush bg-transparent">
-                                <!-- New Events -->
-                                <?php foreach ($pendingEvents as $pEvent): ?>
-                                <div class="list-group-item bg-transparent text-dark border-dark border-opacity-10 px-0 d-flex align-items-center justify-content-between">
-                                    <div class="me-3 overflow-hidden">
-                                        <div class="fw-bold text-truncate"><?php echo htmlspecialchars($pEvent['name']); ?></div>
-                                        <small class="text-muted">Novo Evento • <?php echo date('d/m/Y', strtotime($pEvent['date'])); ?></small>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <a href="/eventos/admin/events" class="btn btn-sm btn-outline-warning rounded-pill px-3" title="Analisar Novo">
-                                            <i class="fas fa-search"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                                <?php endforeach; ?>
-
-                                <!-- Proposals -->
-                                <?php 
-                                    require_once __DIR__ . '/../../models/EventEdit.php';
-                                    $editModel = new EventEdit();
-                                    $quickProposals = $editModel->getPendingProposals();
-                                    foreach (array_slice($quickProposals, 0, 5) as $prop): 
-                                ?>
-                                <div class="list-group-item bg-transparent text-dark border-dark border-opacity-10 px-0 d-flex align-items-center justify-content-between">
-                                    <div class="me-3 overflow-hidden">
-                                        <div class="fw-bold text-truncate"><?php echo htmlspecialchars($prop['original_name']); ?></div>
-                                        <small class="text-info">Proposta de Edição • <?php echo date('d/m/Y', strtotime($prop['proposed_at'])); ?></small>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <a href="/eventos/admin/listProposals" class="btn btn-sm btn-outline-info rounded-pill px-3" title="Analisar Edição">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
+                    </button>
+                </h2>
+                <div id="collapseApprovals" class="accordion-collapse collapse" data-bs-parent="#accordionApprovals">
+                    <div class="accordion-body p-4 bg-white bg-opacity-50">
+                        <div class="row g-4">
+                            <!-- Pending Users -->
+                            <?php if (!empty($pendingUsers)): ?>
+                            <div class="col-md-6 border-end border-light">
+                                <div class="p-2">
+                                    <h6 class="fw-bold mb-3 d-flex align-items-center text-muted">
+                                        <i class="fas fa-user-clock text-info me-2"></i> Novos Usuários
+                                    </h6>
+                                    <div class="list-group list-group-flush bg-transparent">
+                                        <?php foreach ($pendingUsers as $pUser): ?>
+                                        <div class="list-group-item bg-transparent text-dark border-light px-0 py-2 d-flex align-items-center justify-content-between">
+                                            <div class="me-3 overflow-hidden">
+                                                <div class="small fw-bold text-truncate"><?php echo htmlspecialchars($pUser['name']); ?></div>
+                                                <small class="text-muted x-small"><?php echo htmlspecialchars($pUser['email']); ?></small>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <form action="/eventos/admin/approveUser" method="POST" class="m-0">
+                                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                                    <input type="hidden" name="user_id" value="<?php echo $pUser['id']; ?>">
+                                                    <button type="submit" class="btn btn-xs btn-outline-success rounded-pill" title="Aceitar">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                                <form action="/eventos/admin/rejectUser" method="POST" class="m-0">
+                                                    <input type="hidden" name="csrf_token" value="<?php echo $csrf_token; ?>">
+                                                    <input type="hidden" name="user_id" value="<?php echo $pUser['id']; ?>">
+                                                    <button type="submit" class="btn btn-xs btn-outline-danger rounded-pill" title="Rejeitar">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        <?php endforeach; ?>
                                     </div>
                                 </div>
-                                <?php endforeach; ?>
                             </div>
-                            <?php if ($pendingProposalsCount > 5): ?>
-                                <div class="text-center mt-2">
-                                    <small class="text-muted">+ <?php echo $pendingProposalsCount - 5; ?> outras edições pendentes</small>
+                            <?php endif; ?>
+
+                            <!-- Pending Events and Proposals -->
+                            <?php if (!empty($pendingEvents) || ($pendingProposalsCount ?? 0) > 0): ?>
+                            <div class="col-md-<?php echo !empty($pendingUsers) ? '6' : '12'; ?>">
+                                <div class="p-2">
+                                    <h6 class="fw-bold mb-3 d-flex align-items-center text-muted">
+                                        <i class="fas fa-calendar-alt text-warning me-2"></i> Solicitações de Eventos
+                                    </h6>
+                                    <div class="list-group list-group-flush bg-transparent">
+                                        <?php foreach ($pendingEvents as $pEvent): ?>
+                                        <div class="list-group-item bg-transparent text-dark border-light px-0 py-2 d-flex align-items-center justify-content-between">
+                                            <div class="me-3 overflow-hidden">
+                                                <div class="small fw-bold text-truncate"><?php echo htmlspecialchars($pEvent['name']); ?></div>
+                                                <small class="text-muted x-small">Novo Evento • <?php echo date('d/m/Y', strtotime($pEvent['date'])); ?></small>
+                                            </div>
+                                            <a href="/eventos/admin/events" class="btn btn-xs btn-outline-warning rounded-pill" title="Analisar Novo">
+                                                <i class="fas fa-search"></i>
+                                            </a>
+                                        </div>
+                                        <?php endforeach; ?>
+
+                                        <?php 
+                                            require_once __DIR__ . '/../../models/EventEdit.php';
+                                            $editModel = new EventEdit();
+                                            $quickProposals = $editModel->getPendingProposals();
+                                            foreach (array_slice($quickProposals, 0, 3) as $prop): 
+                                        ?>
+                                        <div class="list-group-item bg-transparent text-dark border-light px-0 py-2 d-flex align-items-center justify-content-between">
+                                            <div class="me-3 overflow-hidden">
+                                                <div class="small fw-bold text-truncate"><?php echo htmlspecialchars($prop['original_name']); ?></div>
+                                                <small class="text-info x-small">Edição • <?php echo date('d/m/Y', strtotime($prop['proposed_at'])); ?></small>
+                                            </div>
+                                            <a href="/eventos/admin/listProposals" class="btn btn-xs btn-outline-info rounded-pill" title="Analisar Edição">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        </div>
+                                        <?php endforeach; ?>
+                                    </div>
                                 </div>
+                            </div>
                             <?php endif; ?>
                         </div>
                     </div>
-                    <?php endif; ?>
                 </div>
-            </div>
-            <div class="card-footer bg-transparent border-0 pb-4 px-4 text-end">
-                 <small class="text-muted">* Clique na lupa ou no lápis para analisar detalhadamente.</small>
             </div>
         </div>
     </div>

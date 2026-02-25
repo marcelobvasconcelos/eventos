@@ -87,7 +87,7 @@ class Event {
             LEFT JOIN event_requests er ON e.id = er.event_id
 
             LEFT JOIN users approver ON e.approved_by = approver.id
-            WHERE e.id = ? AND (e.status = 'Aprovado' OR e.status = 'Concluido' OR e.status = 'Pendente' OR e.status = 'Cancelado')
+            WHERE e.id = ? AND (e.status = 'Aprovado' OR e.status = 'Concluido' OR e.status = 'Pendente' OR e.status = 'Cancelado' OR e.status = 'Rejeitado')
         ");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);

@@ -10,7 +10,7 @@ require_once __DIR__ . '/../lib/Security.php';
 class AdminController {
 
     private function checkAdminAccess() {
-        if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+        if (!isset($_SESSION['user_role']) || !in_array($_SESSION['user_role'], ['admin', 'gestor'])) {
             header('Location: /eventos/');
             exit;
         }
@@ -710,7 +710,7 @@ class AdminController {
             $loanModel = new Loan();
 
             // Sync dates of existing loans
-            $loanModel->updateEventLoans($id, $formattedDate, $formattedEndDate);
+            $loanModel->updateEventLoans($id, $startDateTime, $endDateTime);
 
             // 1. Fetch current active loans for this event
             $currentLoans = $loanModel->getLoansByEvent($id);
@@ -722,6 +722,8 @@ class AdminController {
                 }
             }
 
+            $submittedAssets = $_POST['assets'] ?? [];
+            
             // 2. Process each submitted asset
             foreach ($submittedAssets as $assetId => $qty) {
                 $qty = (int)$qty;
@@ -735,8 +737,8 @@ class AdminController {
                     $borrowerId = $eventInfo['created_by']; 
                     
                     // Use updated time
-                    $loanDate = $formattedDate;
-                    $returnDate = $formattedEndDate ?: date('Y-m-d H:i:s', strtotime($loanDate . ' +1 hour'));
+                    $loanDate = $startDateTime;
+                    $returnDate = $endDateTime ?: date('Y-m-d H:i:s', strtotime($loanDate . ' +1 hour'));
                     
                     $loanModel->requestLoan($assetId, $borrowerId, $id, $loanDate, $returnDate, $diff);
                 } elseif ($qty < $currentCount) {

@@ -46,6 +46,7 @@ ob_start();
                                     <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($user['id']); ?>">
                                     <select name="role" class="form-select form-select-sm d-inline w-auto border-0 bg-light fw-bold <?php echo $user['role'] === 'admin' ? 'text-primary' : 'text-secondary'; ?>" onchange="this.form.submit()" style="cursor: pointer;">
                                         <option value="user" <?php echo $user['role'] === 'user' ? 'selected' : ''; ?>>Usuário</option>
+                                        <option value="gestor" <?php echo $user['role'] === 'gestor' ? 'selected' : ''; ?>>Gestor</option>
                                         <option value="admin" <?php echo $user['role'] === 'admin' ? 'selected' : ''; ?>>Administrador</option>
                                     </select>
                                 </form>

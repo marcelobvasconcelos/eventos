@@ -61,11 +61,11 @@
             </div>
             <div class="info-item">
                 <span class="label">Horário Início:</span>
-                <span class="value"><?php echo date('H:i', strtotime($event['start_time'])); ?></span>
+                <span class="value"><?php echo !empty($event['start_time']) ? date('H:i', strtotime($event['start_time'])) : '--:--'; ?></span>
             </div>
             <div class="info-item">
                 <span class="label">Horário Término:</span>
-                <span class="value"><?php echo date('H:i', strtotime($event['end_time'])); ?></span>
+                <span class="value"><?php echo !empty($event['end_time']) ? date('H:i', strtotime($event['end_time'])) : '--:--'; ?></span>
             </div>
         </div>
         <div class="info-item" style="margin-top: 15px;">

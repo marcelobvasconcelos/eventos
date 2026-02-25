@@ -49,8 +49,8 @@ ob_start();
                                 <h6 class="fw-bold mb-1">Data e Hora</h6>
                                 <p class="mb-0 text-muted">
                                     <?php echo date('d/m/Y', strtotime($event['date'])); ?><br>
-                                    <?php echo date('H:i', strtotime($event['start_time'])); ?>
-                                    até <?php echo date('H:i', strtotime($event['end_time'])); ?>
+                                    <?php echo !empty($event['start_time']) ? date('H:i', strtotime($event['start_time'])) : '--:--'; ?>
+                                    até <?php echo !empty($event['end_time']) ? date('H:i', strtotime($event['end_time'])) : '--:--'; ?>
                                 </p>
                             </div>
                         </div>
